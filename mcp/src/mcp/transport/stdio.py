@@ -35,8 +35,9 @@ class StdioTransport(BaseTransport):
         # Map request types to handler methods
         self._handlers = {
             "search_apis": self._handle_search_api_capabilities,
-            "get_execution_configuration": self._handle_generate_runtime_from_selection_set,
+            "load_execution_info": self._handle_generate_runtime_from_selection_set,
             "generate_code_sample": self._handle_generate_code_sample,
+            "execute": self._handle_execute,  # Add execute handler
         }
 
         # Log available tools
@@ -124,6 +125,16 @@ class StdioTransport(BaseTransport):
         """
         return await self.adapter.generate_code_sample(data)
 
+    async def _handle_execute(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Handle execute request.
+
+        Args:
+            data: Request data.
+        Returns:
+            Response data.
+        """
+        return await self.adapter.execute(data)
+
     async def _handle_jsonrpc_initialize(
         self, params: dict[str, Any], request_id: Any
     ) -> dict[str, Any]:
@@ -174,7 +185,7 @@ class StdioTransport(BaseTransport):
                 "capabilities": {
                     "tools": {}  # Empty object indicates we support tools but don't need special capabilities
                 },
-                "serverInfo": {"name": "jentic-ark2-mcp", "version": "0.1.0"},
+                "serverInfo": {"name": "jentic", "version": "0.1.0"},
             },
         }
 

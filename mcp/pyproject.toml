@@ -1,6 +1,6 @@
 [project]
 name = "jentic-mcp"
-version = "0.1.0"
+version = "0.6.0"
 description = "Jentic MCP Plugin Implementation"
 authors = [
     {name = "Jentic Labs", email = "info@jenticlabs.com"},
@@ -19,32 +19,40 @@ requires-python = ">=3.10"
 readme = "README.md"
 license = {text = "MIT"}
 
-[build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio",
+    "ruff>=0.1.0",
+    "black>=23.0.0",
+    "isort>=5.0.0",
+    "mypy>=1.0.0",
+]
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.pdm.scripts]
-lint = {composite = ["black .", "isort .", "ruff check . --fix", "mypy ."]}
+linter = "ruff check . --fix && ruff format ." # Basic ruff commands
+lint = "pdm run linter && black . && isort . && mypy src/mcp tests" # Composite lint
 test = "pytest"
 test-real-integration = "python scripts/run_real_integration_test.py"
-mcp = "python -m mcp.main"
+# Keep mcp run commands for local pdm testing if desired
 mcp-http = "python -m mcp.main serve --transport http"
 mcp-stdio = "python -m mcp.main serve --transport stdio"
 mcp-mock-http = "python -m mcp.main serve --transport http --mock"
 mcp-mock-stdio = "python -m mcp.main serve --transport stdio --mock"
 mcp-debug-stdio = "python -m mcp.main serve --transport stdio --mock --debug-stdio --log-level DEBUG"
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = "test_*.py"
-python_functions = "test_*"
-asyncio_mode = "strict"
-asyncio_default_fixture_loop_scope = "function"
-markers = [
-    "realtest: marks tests that connect to real external services (deselect with '-m \"not realtest\"')"
-]
-addopts = "-m 'not realtest'"
+[project.scripts]
+mcp = "mcp.main:app"
 
 [tool.black]
 line-length = 100
@@ -72,17 +80,13 @@ target-version = "py310"
 select = ["E", "F", "B", "W", "I", "N", "UP", "YTT", "S"]
 ignore = []
 
-[dependency-groups]
-dev = [
-    "pytest>=7.4.0",
-    "mypy>=1.5.1",
-    "black>=23.7.0",
-    "ruff>=0.0.289",
-    "isort>=5.12.0",
-    "pytest>=7.4.0",
-    "mypy>=1.5.1",
-    "black>=23.7.0",
-    "ruff>=0.0.289",
-    "isort>=5.12.0",
-    "pytest-asyncio>=0.26.0",
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_functions = "test_*"
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "realtest: marks tests that connect to real external services (deselect with '-m \"not realtest\"')"
 ]
+addopts = "-m 'not realtest'"

@@ -44,8 +44,8 @@ async def handle_request(tool_name: str, request: dict[str, Any]) -> dict[str, A
     # Define handlers with the fresh orchestrator and adapter
     tool_handlers = {
         "search_apis": mcp_adapter.search_api_capabilities,
-        "get_execution_configuration": mcp_adapter.generate_runtime_config,
-        "generate_code_sample": mcp_adapter.generate_code_sample,
+        "load_execution_info": mcp_adapter.generate_runtime_config,
+        "execute": mcp_adapter.execute,  # Add the execute tool handler
     }
 
     if tool_name not in tool_handlers:
