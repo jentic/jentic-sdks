@@ -23,13 +23,17 @@ The quickest way to get started is to integrate the Jentic MCP plugin with your 
 The recommended method is to run the server directly from the GitHub repository using `uvx`. 
 You will need to install `uvx` first using:
 
-```bash
-brew install uvx
-``` 
-or 
-```bash
-pip install uvx
-```
+`brew install uvx` or `pip install uvx`
+
+Next, add the following configuration to your MCP client.
+
+The location of the configuration file depends on the client you are using and your OS. Some common examples:
+
+- **Windsurf**: `~/.codeium/windsurf/mcp_config.json`
+- **Claude Desktop**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Claude Code**: `~/.cursor/mcp.json`
+
+For other clients, check your client's documentation for how to add MCP servers.
 
 ```json
 {
@@ -45,14 +49,6 @@ pip install uvx
     }
 }
 ```
-
-The location of the configuration file depends on the client you are using and your OS. Some common examples:
-
-- **Windsurf**: `~/.codeium/windsurf/mcp_config.json`
-- **Claude Desktop**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Claude Code**: `~/.cursor/mcp.json`
-
-For other clients, check your client's documentation for how to add MCP servers.
 
 __Note:__ After saving the configuration file, you may need to restart the client application (Windsurf, Claude Desktop) for the changes to take effect.
 
