@@ -2,7 +2,7 @@
 
 Jentic MCP empowers AI agent builders to discover and integrate external APIs and workflows rapidly—without writing or maintaining API-specific code.
 
-This repository contains the core Jentic SDK and the Jentic MCP (Meta-Controller Protocol) Plugin.
+This repository contains the core Jentic SDK and the Jentic MCP Plugin.
 
 - **[Jentic SDK](#jentic-sdk):** A comprehensive Python library for discovering and executing APIs and workflows, particularly for LLM tool use.
 - **[Jentic MCP Plugin](#jentic-mcp-plugin):** A plugin enabling agents (like Windsurf) to discover and use Jentic capabilities via the MCP standard.
