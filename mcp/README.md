@@ -13,21 +13,26 @@ Jentic MCP empowers developers to discover and integrate external APIs and workf
 
 The Jentic MCP Plugin provides the following tools:
 
-- `search_apis`: Search for APIs in the Jentic directory that match specific functionality needs
-- `get_execution_configuration`: Retrieve detailed specifications for APIs and operations from the Jentic directory
-- `generate_code_sample`: Generate a code sample to quickly allow a coding agent to integrate a codebase with Jentic tools
+1. `search_apis`: Search for APIs in the Jentic directory that match specific functionality needs
+2. `load_execution_info`: Retrieve detailed specifications for APIs and operations from the Jentic directory. **This will include auth information you may need to provide in your `mcpServers.jentic.env` configuration.**
+3. `execute`: Execute a specific API or workflow operation.
 
-## Use Local Jentic SDK
+## Getting Started
 
-To use a local Jentic SDK for development purposes, ensure it's installed in your environment or specified appropriately if using `uvx --from` or similar mechanisms.
+The recommended method is to run the server directly from the GitHub repository using `uvx`. 
+You will need to install `uv` first using:
 
-### Windsurf Integration
+`brew install uv` or `pip install uv`
 
-To integrate the Jentic MCP plugin with Windsurf, create or update your `~/.codeium/windsurf/mcp_config.json` file.
+Next, add the following configuration to your MCP client.
 
-**Recommended Method (Using Remote Repository):**
+The location of the configuration file depends on the client you are using and your OS. Some common examples:
 
-This method fetches the latest code directly from the specified GitHub branch.
+- **Windsurf**: `~/.codeium/windsurf/mcp_config.json`
+- **Claude Desktop**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Claude Code**: `~/.cursor/mcp.json`
+
+For other clients, check your client's documentation for how to add MCP servers.
 
 ```json
 {
@@ -39,6 +44,38 @@ This method fetches the latest code directly from the specified GitHub branch.
                 "git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp",
                 "mcp"
             ]
+        }
+    }
+}
+```
+
+__Note:__ After saving the configuration file, you may need to restart the client application (Windsurf, Claude Desktop) for the changes to take effect.
+
+### MCP Tool Use
+
+Once the MCP server is running, you can easily use the MCP tools in your LLM agent to discover and execute APIs and workflows.
+
+1. `search_apis`: Search for APIs in the Jentic directory that match specific functionality needs
+2. `load_execution_info`: Retrieve detailed specifications for APIs and operations from the Jentic directory. **This will include auth information you may need to provide in your `mcpServers.jentic.env` configuration.**
+3. `execute`: Execute a specific API or workflow operation.
+
+### Environment Variables
+
+When you are using an API that requires authentication, the `load_execution_info` tool will describe the required environment variables. You environment variables via the command line in Windsurf, although in some clients like Claude Desktop, you'll need to add them to your MCP config:
+
+```json
+{
+    "mcpServers": {
+        "jentic": {
+            "command": "uvx",
+            "args": [
+                "--from",
+                "git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp",
+                "mcp"
+            ],
+            "env": {
+                "DISCORD_BOTTOKEN=": "YOUR BOT TOKEN"
+            }
         }
     }
 }
