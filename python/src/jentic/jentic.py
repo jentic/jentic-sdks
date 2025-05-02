@@ -75,7 +75,7 @@ class Jentic:
             }
         return await self._agent_tool_manager.execute_tool(tool_name=tool_name, inputs=inputs)
 
-    async def get_execution_configuration(
+    async def load_execution_info(
         self, workflow_uuids: Optional[List[str]], operation_uuids: Optional[List[str]]
     ):
         """
