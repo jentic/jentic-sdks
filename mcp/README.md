@@ -32,12 +32,12 @@ This method fetches the latest code directly from the specified GitHub branch.
 ```json
 {
     "mcpServers": {
-        "jentic": { // You can choose a name, e.g., 'jentic'
+        "jentic": {
             "command": "uvx",
             "args": [
                 "--from",
-                "git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp", // Use the main branch
-                "mcp" // Specify the script name to run
+                "git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp",
+                "mcp"
             ]
         }
     }
@@ -55,7 +55,7 @@ Use this if you are actively developing the MCP plugin locally. Replace `/path/t
             "command": "uvx",
             "args": [
                 "--from",
-                "/path/to/your/project/mcp", // Explicitly treat the local path as the source
+                "/path/to/your/project/mcp",
                 "mcp" 
             ]
         }
@@ -72,7 +72,7 @@ _Optional:_ Add a `JENTIC_API_URL` environment variable to your `mcp_config.json
             "command": "uvx",
             "args": [
                 "--from",
-                "git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp", // Or your local path
+                "git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp",
                 "mcp"
             ],
             "env": {
@@ -186,25 +186,6 @@ To run in HTTP mode from a remote source:
 uvx --from \
   git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp \
   serve --transport http --port 8080
-```
-
-#### Windsurf Integration with Remote Source
-
-To use a remote source in your `mcp_config.json`:
-
-```json
-{
-    "mcpServers": {
-        "jentic-remote-test": { // Use a descriptive name
-            "command": "uvx",
-            "args": [
-                "--from",
-                "git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp" // Use the main branch
-                // Add other options like "--log-level", "DEBUG" here if needed
-            ]
-        }
-    }
-}
 ```
 
 ### Other Options

@@ -60,7 +60,6 @@ Once the MCP server is running, you can easily use the MCP tools in your LLM age
 If you are developing the MCP plugin locally, you can configure your client to run it from your local path. Replace `/absolute/path/to/sdk/mcp` with the correct absolute path to the `mcp` directory in this repository:
 
 ```json
-// Example for Windsurf (adjust path and key for Claude Desktop)
 {
     "mcpServers": {
         "jentic-local": {
