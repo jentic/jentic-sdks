@@ -21,9 +21,9 @@ The Jentic SDK is backed by the data in the [Open Agentic Knowledge (OAK)](https
 The quickest way to get started is to integrate the Jentic MCP plugin with your preferred MCP client (like Windsurf, Claude Desktop or Cursor).
 
 The recommended method is to run the server directly from the GitHub repository using `uvx`. 
-You will need to install `uvx` first using:
+You will need to install `uv` first using:
 
-`brew install uvx` or `pip install uvx`
+`brew install uv` or `pip install uv`
 
 Next, add the following configuration to your MCP client.
 
