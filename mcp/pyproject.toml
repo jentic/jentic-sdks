@@ -1,5 +1,5 @@
 [project]
-name = "jentic-mcp"
+name = "mcp"
 version = "0.1.0"
 description = "Jentic MCP Plugin Implementation"
 authors = [
@@ -20,12 +20,17 @@ readme = "README.md"
 license = {text = "MIT"}
 
 [build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp"]
 
-[tool.pdm.scripts]
-lint = {composite = ["black .", "isort .", "ruff check . --fix", "mypy ."]}
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.uvx.scripts]
+lint = "black . && isort . && ruff check . --fix && mypy ."
 test = "pytest"
 test-real-integration = "python scripts/run_real_integration_test.py"
 mcp = "python -m mcp.main"
@@ -35,16 +40,8 @@ mcp-mock-http = "python -m mcp.main serve --transport http --mock"
 mcp-mock-stdio = "python -m mcp.main serve --transport stdio --mock"
 mcp-debug-stdio = "python -m mcp.main serve --transport stdio --mock --debug-stdio --log-level DEBUG"
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = "test_*.py"
-python_functions = "test_*"
-asyncio_mode = "strict"
-asyncio_default_fixture_loop_scope = "function"
-markers = [
-    "realtest: marks tests that connect to real external services (deselect with '-m \"not realtest\"')"
-]
-addopts = "-m 'not realtest'"
+[project.scripts]
+mcp = "mcp.main:app"
 
 [tool.black]
 line-length = 100
@@ -86,3 +83,14 @@ dev = [
     "isort>=5.12.0",
     "pytest-asyncio>=0.26.0",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_functions = "test_*"
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "realtest: marks tests that connect to real external services (deselect with '-m \"not realtest\"')"
+]
+addopts = "-m 'not realtest'"

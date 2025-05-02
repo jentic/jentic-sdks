@@ -45,9 +45,9 @@ def setup_logging(log_level: str, transport_mode: str, log_file: str | None = No
         try:
             with open(log_file, "w") as f:
                 f.write("")  # Just create/truncate it
-            print(f"Successfully created log file: {log_file}")
+            logging.info(f"Successfully created log file: {log_file}")
         except Exception as e:
-            print(f"WARNING: Failed to write to log file {log_file}: {e}")
+            logging.warning(f"Failed to write to log file {log_file}: {e}")
             return
 
         # Create file handler
@@ -56,9 +56,9 @@ def setup_logging(log_level: str, transport_mode: str, log_file: str | None = No
             file_handler.setLevel(level)
             file_handler.setFormatter(formatter)
             logging.root.addHandler(file_handler)
-            print(f"Added file handler for {log_file}")
+            logging.info(f"Added file handler for {log_file}")
         except Exception as e:
-            print(f"ERROR: Failed to create file handler: {e}")
+            logging.error(f"Failed to create file handler: {e}")
             return
 
     # In HTTP mode, add a console handler
@@ -72,10 +72,10 @@ def setup_logging(log_level: str, transport_mode: str, log_file: str | None = No
     logging.info("Logging configured successfully")
 
     # Print debug info
-    print(f"Logging configured with level {log_level}")
-    print(f"Root logger has {len(logging.root.handlers)} handlers")
+    logging.debug(f"Logging configured with level {log_level}")
+    logging.debug(f"Root logger has {len(logging.root.handlers)} handlers")
     for i, handler in enumerate(logging.root.handlers):
-        print(f"  Handler {i+1}: {handler}")
+        logging.debug(f"  Handler {i+1}: {handler}")
 
 
 logger = logging.getLogger(__name__)
@@ -155,10 +155,8 @@ def serve(
 
     # Initialize the appropriate transport
     if transport == TransportMode.HTTP:
-        console.print(f"Starting ARK² MCP Plugin HTTP server on {host}:{port}")
         transport_instance = HTTPTransport(adapter, host=host, port=port)
     else:  # stdio mode
-        console.print("Starting ARK² MCP Plugin in stdio mode")
         logger.info("ARK² MCP Plugin initializing in stdio mode")
         logger.info(f"Log file: {log_file or os.path.join(os.getcwd(), 'jentic_ark2_mcp.log')}")
         if debug_stdio:

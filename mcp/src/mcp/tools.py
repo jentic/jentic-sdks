@@ -1,32 +1,29 @@
-"""Tool definitions for the Jentic MCP Plugin.
+"""Tool definitions for the Jentic MCP Plugin, oriented towards a user in a chat app.
 
-This module defines the tools available through the Model Configuration Protocol (MCP).
-The tools follow a specific workflow for API integration:
+This module defines the tools available through the Model Configuration Protocol (MCP)
+for a chat application user.
 
-1. SEARCH: Use search_apis to find relevant APIs based on the developer's needs. ALWAYS keep track of 'api_id's and 'workflow_id's in search results.
-2. VERIFY: Confirm with the developer which APIs and workflows they want to use.
-3. GENERATE: Only when ready and with developer permission, use get_execution_configuration to create
-   configuration and documentation files for the selected APIs and workflows.
-4. CODE SAMPLE [Optional]: Generate a code sample to quickly allow a coding agent to integrate a codebase with Jentic tools. The sample code will never include any API specific code and you will not need to implement any API specific code. You will NOT need to implement API specific environment variable logic for auth. Make as few changes as possible to integrate the sample code with the codebase.
+The typical flow for a user interaction:
 
-Note: Authentication configuration is handled manually after configuration generation, not through these tools.
+1. SEARCH: Use search_apis to find actions based on the user's request (e.g., 'send a Discord message'). Keep track of 'operation_uuid' and 'workflow_uuid'.
+2. CONFIRM: Show the user the best matching action(s) and confirm they want to proceed.
+3. (Optional) LOAD: Use load_execution_info to get details about the action (like required inputs) if needed for clarification or complex actions.
+4. EXECUTE: Use execute to perform the confirmed action for the user.
 
-Always maintain this workflow order and get explicit permission before generating configuration.
-Always show the user the steps you are taking.
+Always clearly communicate the steps to the user.
 """
 
 from typing import Any
 
-# Tool definitions based on the MCP_agent_prompt.md specification
 SEARCH_API_CAPABILITIES_TOOL = {
     "name": "search_apis",
-    "description": "Search for API and workflow capabilities that match specific requirements. Always use this tool FIRST when a developer needs to find or work with external APIs or services. The results from this search will help build a configuration for generating integration code. Once you find relevant APIs, recommend creating a configuration file to proceed with the integration.",
+    "description": "Search for available actions or information based on what the user wants to do (e.g., 'find Discord servers', 'send a message'). Use this first to understand what's possible.",
     "parameters": {
         "type": "object",
         "properties": {
             "capability_description": {
                 "type": "string",
-                "description": "Natural language description of the API capabilities needed (e.g., 'send emails', 'weather forecasting', 'natural language processing')",
+                "description": "Natural language description of the action needed (e.g., 'send emails', 'weather forecasting', 'natural language processing')",
             },
             "keywords": {
                 "type": "array",
@@ -35,7 +32,7 @@ SEARCH_API_CAPABILITIES_TOOL = {
             },
             "max_results": {
                 "type": "integer",
-                "description": "Maximum number of API capabilities to return",
+                "description": "Maximum number of actions to return",
                 "default": 5,
             },
         },
@@ -44,8 +41,8 @@ SEARCH_API_CAPABILITIES_TOOL = {
 }
 
 LOAD_CONFIG_TOOL = {
-    "name": "get_execution_configuration",
-    "description": "Load a configuration based on the user's chosen API IDs and Workflow IDs. This JSON configuration the information needed for all APIs, workflows, and settings. ALWAYS ask the user if they would like to write this configuration to the root of their project, in a file called jentic.json, so that it can be used in their AI agent. NEVER modify the content of the output of this tool.",
+    "name": "load_execution_info",
+    "description": "Get more details about a specific action (like what information it needs from the user) before confirming you want to run it. Usually used if the action requires specific inputs.",
     "parameters": {
         "type": "object",
         "properties": {
@@ -64,22 +61,28 @@ LOAD_CONFIG_TOOL = {
     },
 }
 
-CODE_SAMPLE_TOOL = {
-    "name": "generate_code_sample",
-    "description": "Generate a code sample for using the Jentic agent runtime with a specific AI model format and programming language. Provides templates for integrating Jentic tools with various AI models without writing API specific code. The sample code will never include any API specific code and you will not need to implement any API specific code. You will NOT need to implement API specific environment variable logic for auth. Make as few changes as possible to integrate the sample code with the codebase.",
+EXECUTE_TOOL = {
+    "name": "execute",
+    "description": "Perform the chosen action for the user using the provided details (if any are needed).",
     "parameters": {
         "type": "object",
         "properties": {
-            "format": {
+            "execution_type": {
                 "type": "string",
-                "description": "The AI model format to use (e.g., 'claude', 'chatgpt')",
+                "enum": ["operation", "workflow"],
+                "description": "Specify whether to execute an 'operation' or a 'workflow'.",
             },
-            "language": {
+            "uuid": {
                 "type": "string",
-                "description": "The programming language for the code sample (e.g., 'python')",
+                "description": "The UUID of the operation or workflow to execute.",
+            },
+            "inputs": {
+                "type": "object",
+                "description": "The input parameters required by the operation or workflow.",
+                "additionalProperties": True, # Allow any structure for inputs
             },
         },
-        "required": ["format", "language"],
+        "required": ["execution_type", "uuid", "inputs"],
     },
 }
 
@@ -95,5 +98,5 @@ def get_all_tool_definitions() -> list[dict[str, Any]]:
     return [
         SEARCH_API_CAPABILITIES_TOOL,
         LOAD_CONFIG_TOOL,
-        CODE_SAMPLE_TOOL,
+        EXECUTE_TOOL,
     ]
