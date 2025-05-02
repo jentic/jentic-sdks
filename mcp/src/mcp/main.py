@@ -83,6 +83,7 @@ logger = logging.getLogger(__name__)
 app = typer.Typer(
     name="ark2-mcp",
     help="Jentic ARK² MCP Plugin - Connect agentic environments to Jentic's API Knowledge Hub",
+    invoke_without_command=True,  # Ensure callback runs without command
 )
 console = Console()
 
@@ -92,6 +93,24 @@ class TransportMode(str, Enum):
 
     HTTP = "http"
     STDIO = "stdio"
+
+
+@app.callback()
+def main(ctx: typer.Context):
+    """Default to 'serve --transport stdio' if no subcommand is given."""
+    if ctx.invoked_subcommand is None:
+        # Import serve here if not already available globally in this scope
+        # from .commands import serve # Example if serve is in another module
+        serve(
+            transport=TransportMode.STDIO,
+            port=8010,  # Default port, though not used by stdio
+            host="127.0.0.1", # Default host, though not used by stdio
+            env_file=None,
+            mock=False,
+            log_level="INFO",
+            log_file=None,
+            debug_stdio=False,
+        )
 
 
 @app.command()
