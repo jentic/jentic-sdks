@@ -42,7 +42,11 @@ SEARCH_API_CAPABILITIES_TOOL = {
 
 LOAD_CONFIG_TOOL = {
     "name": "load_execution_info",
-    "description": "Get more details about a specific action (like what information it needs from the user) before confirming you want to run it. Usually used if the action requires specific inputs.",
+    "description": (
+        "Get more details about a specific action (like what information it needs from the user) before confirming you want to run it. "
+        "Usually used if the action requires specific inputs. "
+        "Coding Agents: To provide tools to an LLM that you have selected at runtime, use this tool to retrieve the necessary information and save it to 'jentic.json' at the root of your project."
+    ),
     "parameters": {
         "type": "object",
         "properties": {

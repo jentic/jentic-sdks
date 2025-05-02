@@ -23,7 +23,11 @@ To use a local Jentic SDK for development purposes, ensure it's installed in you
 
 ### Windsurf Integration
 
-To integrate the Jentic MCP plugin with Windsurf, create or update your `~/.codeium/windsurf/mcp_config.json` file. Be sure to update `/path/to/your/project/mcp` to the absolute path of your project directory.
+To integrate the Jentic MCP plugin with Windsurf, create or update your `~/.codeium/windsurf/mcp_config.json` file.
+
+**Recommended Method (Using Remote Repository):**
+
+This method fetches the latest code directly from the specified GitHub branch.
 
 ```json
 {
@@ -32,7 +36,7 @@ To integrate the Jentic MCP plugin with Windsurf, create or update your `~/.code
             "command": "uvx",
             "args": [
                 "--from",
-                "/path/to/your/project/mcp", // Explicitly treat the path as the source
+                "git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp", // Use the main branch
                 "mcp" // Specify the script name to run
             ]
         }
@@ -40,7 +44,26 @@ To integrate the Jentic MCP plugin with Windsurf, create or update your `~/.code
 }
 ```
 
-_Optional:_ Add a `JENTIC_API_URL` environment variable to your `mcp_config.json` file to point to a specific Jentic API:
+**Alternative (Using Local Path for Development):**
+
+Use this if you are actively developing the MCP plugin locally. Replace `/path/to/your/project/mcp` with the absolute path to your project directory.
+
+```json
+{
+    "mcpServers": {
+        "jentic": { 
+            "command": "uvx",
+            "args": [
+                "--from",
+                "/path/to/your/project/mcp", // Explicitly treat the local path as the source
+                "mcp" 
+            ]
+        }
+    }
+}
+```
+
+_Optional:_ Add a `JENTIC_API_URL` environment variable to your `mcp_config.json` file to point to a specific Jentic API (works with both methods):
 
 ```json
 {
@@ -49,7 +72,7 @@ _Optional:_ Add a `JENTIC_API_URL` environment variable to your `mcp_config.json
             "command": "uvx",
             "args": [
                 "--from",
-                "/path/to/your/project/mcp",
+                "git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp", // Or your local path
                 "mcp"
             ],
             "env": {
@@ -83,24 +106,12 @@ pdm install -G dev
 
 The Jentic MCP plugin is designed to be run using `uvx`, which handles environment setup and execution.
 
-### Default Mode (Stdio for Windsurf)
-
-Run the MCP plugin directly using `uvx`, specifying the project directory *as the source* using `--from` and the `mcp` script. This is the standard way to run for Windsurf integration:
-
-```bash
-# Use --from with the project directory and specify the 'mcp' script
-uvx --from /path/to/your/project/mcp mcp
-
-# Or, if running from within the project directory:
-uvx --from . mcp
-```
-
-This automatically uses the default `serve --transport stdio` command defined in the `mcp` script's callback.
-
 ### Default Mode (Stdio)
 
 Run the MCP plugin directly using `uvx`, specifying the project directory *as the source* using `--from` and the `mcp` script:
 
+**From Local Path (Development):**
+
 ```bash
 # Use --from with the project directory and specify the 'mcp' script
 uvx --from /path/to/your/project/mcp mcp
@@ -109,11 +120,21 @@ uvx --from /path/to/your/project/mcp mcp
 uvx --from . mcp
 ```
 
-This will start the server using `serve --transport stdio` implicitly.
+**From Remote Repository (Recommended for general use):**
+
+```bash
+uvx --from \
+  git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp \
+  mcp
+```
+
+This automatically uses the default `serve --transport stdio` command defined in the `mcp` script's callback.
 
 ### HTTP Mode
 
-To run as an HTTP server, explicitly provide the `serve` command and options:
+To run the server in HTTP mode (e.g., for testing with `claude-cli`):
+
+**From Local Path (Development):**
 
 ```bash
 # Default HTTP (port 8010)
@@ -126,6 +147,14 @@ uvx --from /path/to/your/project/mcp mcp serve --transport http --port 8080
 uvx --from /path/to/your/project/mcp mcp serve --transport http --host 0.0.0.0 --port 8080
 ```
 
+**From Remote Repository (Recommended):**
+
+```bash
+uvx --from \
+  git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp \
+  mcp serve --transport http --port 8080
+```
+
 ### Running from a Remote Git Repository
 
 You can also run the MCP server directly from a Git repository URL without cloning it locally using `uvx --from`:
@@ -133,11 +162,11 @@ You can also run the MCP server directly from a Git repository URL without cloni
 ```bash
 # Example from a specific branch and subdirectory
 uvx --from \
-  git+https://github.com/jentic/jentic-tools.git@feat/move-mcp-to-uvx#subdirectory=mcp # Use the correct repo/branch/subdirectory
+  git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp
 
 # Explanation:
 # - git+https://... .git : The repository URL
-# - @feat/move-mcp-to-uvx   : The branch, tag, or commit hash
+# - @main   : The branch, tag, or commit hash
 # - #subdirectory=mcp     : The folder within the repo containing the pyproject.toml
 ```
 
@@ -147,7 +176,7 @@ You can add other arguments like `--log-level DEBUG` or `--mock` after the URL f
 
 ```bash
 uvx --from \
-  git+https://github.com/jentic/jentic-tools.git@feat/move-mcp-to-uvx#subdirectory=mcp \
+  git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp \
   --log-level DEBUG --mock
 ```
 
@@ -155,7 +184,7 @@ To run in HTTP mode from a remote source:
 
 ```bash
 uvx --from \
-  git+https://github.com/jentic/jentic-tools.git@feat/move-mcp-to-uvx#subdirectory=mcp \
+  git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp \
   serve --transport http --port 8080
 ```
 
@@ -170,7 +199,7 @@ To use a remote source in your `mcp_config.json`:
             "command": "uvx",
             "args": [
                 "--from",
-                "git+https://github.com/jentic/jentic-tools.git@feat/move-mcp-to-uvx#subdirectory=mcp" // Use the correct repo/branch/subdirectory
+                "git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp" // Use the main branch
                 // Add other options like "--log-level", "DEBUG" here if needed
             ]
         }
@@ -219,6 +248,20 @@ uvx --from /path/to/your/project/mcp mcp serve --transport http --env-file .env
 ### Using with Claude
 
 The MCP plugin can be used with Claude or other LLMs that support the MCP specification:
+
+**Run from Remote Repository (Recommended):**
+
+```
+# Run the server in HTTP mode first
+uvx --from \
+  git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp \
+  mcp serve --transport http --port 8000
+
+# Then connect claude-cli
+claude-cli --mcp http://localhost:8000
+```
+
+**Run from Local Path (Development):**
 
 ```
 # Run the server in HTTP mode first
