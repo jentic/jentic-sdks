@@ -53,8 +53,6 @@ For other clients, check your client's documentation for how to add MCP servers.
 
 __Note:__ After saving the configuration file, you may need to restart the client application (Windsurf, Claude Desktop) for the changes to take effect.
 
-__Note:__ Claude
-
 ### MCP Tool Use
 
 Once the MCP server is running, you can easily use the MCP tools in your LLM agent to discover and execute APIs and workflows.
