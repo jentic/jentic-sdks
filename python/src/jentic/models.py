@@ -42,7 +42,7 @@ class WorkflowEntry(BaseModel):
 class OperationEntry(BaseModel):
     id: str
     api_version_id: str
-    operation_id: str
+    operation_id: Optional[str] = None
     path: str
     method: str
     summary: Optional[str] = None
