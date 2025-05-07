@@ -141,7 +141,7 @@ async def test_discord_end_to_end_workflow(mcp_transport):
     mcp_transport.sent_responses.clear()
     await mcp_transport.process_message(
         {
-            "type": "get_execution_configuration",
+            "type": "load_execution_info",
             "data": {
                 "api_ids": [discord_api["api_id"]],
                 "workflow_ids": [post_channel_workflow["workflow_id"]],

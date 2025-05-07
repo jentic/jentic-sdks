@@ -61,7 +61,7 @@ class MCPAdapter:
 
         try:
             # Generate configuration from the selection set
-            result = await self.jentic.get_execution_configuration(
+            result = await self.jentic.load_execution_info(
                 workflow_uuids=workflow_uuids, operation_uuids=operation_uuids
             )
 
@@ -102,3 +102,44 @@ class MCPAdapter:
         except Exception as e:
             logger.error(f"Error generating code sample: {str(e)}")
             return {"result": {"success": False, "message": str(e)}}
+
+    async def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        """MCP endpoint for executing an operation or workflow.
+
+        Args:
+            params: MCP tool request parameters containing execution_type, uuid, and inputs.
+
+        Returns:
+            MCP tool response with the execution result.
+        """
+        logger = logging.getLogger(__name__)
+        execution_type = params.get("execution_type")
+        uuid = params.get("uuid")
+        inputs = params.get("inputs", {})
+
+        if not execution_type or execution_type not in ["operation", "workflow"]:
+            logger.error(f"Invalid execution_type: {execution_type}")
+            return {"result": {"success": False, "message": "Invalid execution_type. Must be 'operation' or 'workflow'."}}
+        if not uuid:
+            logger.error("Missing required parameter: uuid")
+            return {"result": {"success": False, "message": "Missing required parameter: uuid"}}
+        if not isinstance(inputs, dict):
+             logger.error(f"Invalid inputs type: {type(inputs)}. Must be a dictionary.")
+             return {"result": {"success": False, "message": "Invalid inputs type. Must be a dictionary."}}
+
+        logger.info(f"Executing {execution_type} with uuid: {uuid} and inputs: {inputs}")
+
+        try:
+            if execution_type == "operation":
+                result = await self.jentic.execute_operation(operation_uuid=uuid, inputs=inputs)
+                # Operations typically return a dict
+                return {"result": {"success": True, "output": result}}
+            elif execution_type == "workflow":
+                result = await self.jentic.execute_workflow(workflow_uuid=uuid, inputs=inputs)
+                # WorkflowResult has its own structure (e.g., .output, .status)
+                # We can return its dict representation for consistency
+                return {"result": {"success": True, "output": result.model_dump()}}
+
+        except Exception as e:
+            logger.error(f"Error executing {execution_type} {uuid}: {str(e)}", exc_info=True)
+            return {"result": {"success": False, "message": f"Error during execution: {str(e)}"}}

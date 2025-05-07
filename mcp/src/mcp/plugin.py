@@ -209,9 +209,6 @@ def serve_plugin(host: str = "127.0.0.1", port: int = 8010) -> None:
     config = load_config()
     mock_mode = "ENABLED" if config.mock.enabled else "DISABLED"
 
-    print(f"Starting ARK² MCP Plugin server at http://{host}:{port}")
-    print(f"Mock mode: {mock_mode}")
-
     # Create FastAPI app
     app = FastAPI(
         title="Jentic ARK² MCP Plugin",
