@@ -1,4 +1,4 @@
-# Jentic SDK & MCP Plugin
+# Jentic SDK & MCP Plugin [Beta]
 
 Jentic MCP empowers AI agent builders to discover and integrate external APIs and workflows rapidly—without writing or maintaining API-specific code.
 
@@ -15,6 +15,29 @@ The Jentic SDK is backed by the data in the [Open Agentic Knowledge (OAK)](https
 
 
 ## Getting Started
+
+### Get Your Jentic UUID
+
+To use the Jentic SDK or MCP Plugin, you must first obtain a Jentic UUID. The easiest way is using the Jentic CLI. You can _optionally_ include an email address for higher rate limits and for early access to new features.
+
+```sh
+pip install jentic
+jentic register --email '<your_email>'
+```
+
+This will print your UUID and an export command to set it in your environment:
+
+```sh
+export JENTIC_UUID=<your-jentic-uuid>
+```
+
+Alternatively, you can use curl to register and obtain your UUID:
+
+```sh
+curl -X POST https://api.jentic.com/api/v1/auth/register \
+     -H "Content-Type: application/json" \
+     -d '{"email": "<your_email>"}'
+```
 
 ### Jentic MCP Server
 
@@ -45,7 +68,10 @@ For other clients, check your client's documentation for how to add MCP servers.
                 "--from",
                 "git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp",
                 "mcp"
-            ]
+            ],
+            "env": {
+                "JENTIC_UUID": "<your-jentic-uuid>"
+            }
         }
     }
 }
@@ -76,7 +102,8 @@ When you are using an API that requires authentication, the `load_execution_info
                 "mcp"
             ],
             "env": {
-                "DISCORD_BOTTOKEN=": "YOUR BOT TOKEN"
+                "JENTIC_UUID": "<your-jentic-uuid>",
+                "DISCORD_BOTTOKEN": "YOUR BOT TOKEN"
             }
         }
     }

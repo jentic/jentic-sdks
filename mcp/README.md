@@ -24,7 +24,22 @@ You will need to install `uv` first using:
 
 `brew install uv` or `pip install uv`
 
-Next, add the following configuration to your MCP client.
+### Get Your Jentic UUID
+
+To use the Jentic SDK, you must first obtain a Jentic UUID. The easiest way is using the Jentic CLI. You can _optionally_ include an email address for higher rate limits and for early access to new features.
+
+```sh
+pip install jentic
+jentic register --email '<your_email>'
+```
+
+This will print your UUID and an export command to set it in your environment:
+
+```sh
+export JENTIC_UUID=<your-jentic-uuid>
+```
+
+Set the Jentic UUID in your MCP client configuration as shown below.
 
 The location of the configuration file depends on the client you are using and your OS. Some common examples:
 
@@ -45,7 +60,10 @@ For other clients, check your client's documentation for how to add MCP servers.
                 "--from",
                 "git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp",
                 "mcp"
-            ]
+            ],
+            "env": {
+                "JENTIC_UUID": "<your-jentic-uuid>"
+            }
         }
     }
 }

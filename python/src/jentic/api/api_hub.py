@@ -30,24 +30,24 @@ class JenticAPIClient:
 
         Args:
             base_url: Base URL for the Jentic API Knowledge Hub.
-            api_key: API key for authentication.
+            api_key: This should contain the Jentic UUID (required for authentication).
         """
         # Set the base URL with default fallback
         self.base_url = base_url or os.environ.get(
-            "JENTIC_API_URL", "https://directory-api.qa1.eu-west-1.jenticdev.net"
+            "JENTIC_API_URL", "https://api.jentic.com"
         )
 
         self.base_url = self.base_url.rstrip("/")
 
-        # Set the API key
-        self.api_key = api_key or os.environ.get("JENTIC_API_KEY", "")
+        # Set the Jentic UUID (from api_key or environment variable)
+        self.user_uuid = api_key or os.environ.get("JENTIC_UUID", "")
 
         logger.info(f"Initialized API Hub client with base_url: {self.base_url}")
 
         # Set up headers
         self.headers = {}
-        if self.api_key:
-            self.headers["Authorization"] = f"Bearer {self.api_key}"
+        if self.user_uuid:
+            self.headers["X-Jentic-User-UUID"] = self.user_uuid
 
     async def get_execution_files(
         self, workflow_ids: list[str] = [], operation_uuids: list[str] = []
