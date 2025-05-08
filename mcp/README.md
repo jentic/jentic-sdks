@@ -30,7 +30,9 @@ The location of the configuration file depends on the client you are using and y
 
 - **Windsurf**: `~/.codeium/windsurf/mcp_config.json`
 - **Claude Desktop**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Claude Code**: `~/.cursor/mcp.json`
+- **Claude Code**: `~/.claude.json`
+- **Cursor**: `~/cursor/.mcp.json`
+
 
 For other clients, check your client's documentation for how to add MCP servers.
 
