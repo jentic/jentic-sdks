@@ -1,6 +1,6 @@
 [project]
 name = "jentic"
-version = "0.7.4"
+version = "0.7.5"
 description = "Jentic SDK for the discovery and execution of APIs and workflows"
 authors = [
     {name = "Jentic Labs", email = "info@jenticlabs.com"},
@@ -15,6 +15,9 @@ dependencies = [
 requires-python = ">=3.10"
 readme = "README.md"
 license = {text = "MIT"}
+
+[project.scripts]
+jentic = "jentic.__main__:main"
 
 [build-system]
 requires = ["pdm-backend"]

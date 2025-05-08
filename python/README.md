@@ -1,4 +1,4 @@
-# Jentic SDK
+# Jentic SDK [Beta]
 
 Jentic SDK is a comprehensive library for discovery and execution of APIs and workflows.
 
@@ -88,6 +88,29 @@ dependencies = [
 
 ```bash
 pip install jentic
+```
+
+### Get Your Jentic UUID
+
+To use the Jentic SDK, you must first obtain a Jentic UUID. The easiest way is using the Jentic CLI. You can _optionally_ include an email address for higher rate limits and for early access to new features.
+
+```sh
+pip install jentic
+jentic register --email '<your_email>'
+```
+
+This will print your UUID and an export command to set it in your environment:
+
+```sh
+export JENTIC_UUID=<your-jentic-uuid>
+```
+
+Alternatively, you can use curl to register and obtain your UUID:
+
+```sh
+curl -X POST https://api.jentic.com/api/v1/auth/register \
+     -H "Content-Type: application/json" \
+     -d '{"email": "<your_email>"}'
 ```
 
 ### Testing
