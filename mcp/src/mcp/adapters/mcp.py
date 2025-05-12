@@ -1,6 +1,7 @@
 """MCP adapter for the Jentic MCP Plugin."""
 
 import logging
+from dataclasses import asdict
 from typing import Any
 
 from jentic import Jentic
@@ -136,9 +137,10 @@ class MCPAdapter:
                 return {"result": {"success": True, "output": result}}
             elif execution_type == "workflow":
                 result = await self.jentic.execute_workflow(workflow_uuid=uuid, inputs=inputs)
-                # WorkflowResult has its own structure (e.g., .output, .status)
-                # We can return its dict representation for consistency
-                return {"result": {"success": True, "output": result.model_dump()}}
+                # Check the success value in the WorkflowResult
+                if hasattr(result, 'success') and not result.success:
+                    return {"result": {"success": False, "message": result.error or "Workflow execution failed.", "output": asdict(result)}}
+                return {"result": {"success": True, "output": asdict(result)}}
 
         except Exception as e:
             logger.error(f"Error executing {execution_type} {uuid}: {str(e)}", exc_info=True)
