@@ -5,7 +5,7 @@ import os
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
-from oak_runner import OAKRunner
+from oak_runner import OAKRunner, WorkflowExecutionResult, WorkflowExecutionStatus
 
 from jentic import api
 from jentic.api import JenticAPIClient
@@ -22,6 +22,7 @@ class WorkflowResult:
     output: dict[str, Any] | None = None
     error: str | None = None
     step_results: dict[str, Any] | None = None
+    inputs: dict[str, Any] | None = None
 
 
 # Setup logging
@@ -96,22 +97,22 @@ class TaskExecutor:
                 f"Running workflow {friendly_workflow_id} via OAKRunner with UUID {workflow_uuid}."
             )
             # Removed await as runner.execute_workflow seems synchronous based on TypeError
-            execution_output = runner.execute_workflow(
+            execution_output: WorkflowExecutionResult = runner.execute_workflow(
                 workflow_id=friendly_workflow_id, inputs=inputs
             )
 
             # 6. Process result and return WorkflowResult
-            if execution_output.get("status") == "completed":
+            if execution_output.status == WorkflowExecutionStatus.WORKFLOW_COMPLETE:
                 return WorkflowResult(
                     success=True,
-                    output=execution_output.get("outputs"),
-                    step_results=execution_output.get("steps"),
+                    output=execution_output.outputs
                 )
             else:
                 return WorkflowResult(
                     success=False,
-                    error=execution_output.get("error", "Workflow execution failed."),
-                    step_results=execution_output.get("steps"),
+                    error=execution_output.error or "Workflow execution failed.",
+                    step_results=execution_output.step_outputs,
+                    inputs=execution_output.inputs
                 )
 
         except Exception as e:
