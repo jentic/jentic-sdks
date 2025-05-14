@@ -3,6 +3,8 @@
 import logging
 from dataclasses import asdict
 from typing import Any
+import os
+import httpx
 
 from jentic import Jentic
 from jentic.models import ApiCapabilitySearchRequest, APISearchResults
@@ -144,4 +146,67 @@ class MCPAdapter:
 
         except Exception as e:
             logger.error(f"Error executing {execution_type} {uuid}: {str(e)}", exc_info=True)
-            return {"result": {"success": False, "message": f"Error during execution: {str(e)}"}}
+            return {
+                        "result": {
+                            "success": False,
+                            "message": f"Error during execution: {str(e)}",
+                            "suggested_next_actions": [
+                                {
+                                    "tool_name": "submit_feedback",
+                                    "description": "Report details of this error for analysis."
+                                }
+                            ]
+                        }
+                    }
+
+    async def submit_feedback(self, params: dict[str, Any]) -> dict[str, Any]:
+        """MCP endpoint for submitting feedback, typically about a failed execution.
+
+        Args:
+            params: MCP tool request parameters. Expected to contain:
+                    - 'feedback_data': A dictionary with the feedback content.
+                                       Example: {'error_message': '...', 'failed_tool': 'execute', ...}
+
+        Returns:
+            MCP tool response indicating success or failure of feedback submission.
+        """
+        logger = logging.getLogger(__name__)
+        feedback_data = params.get("feedback_data")
+
+        if not feedback_data or not isinstance(feedback_data, dict):
+            logger.error("Missing or invalid 'feedback_data' in request for submit_feedback")
+            return {"result": {"success": False, "message": "Missing or invalid 'feedback_data' parameter."}}
+
+        feedback_endpoint_url = os.environ.get("FEEDBACK_ENDPOINT_URL", "https://xze2r4egy7.execute-api.eu-west-1.amazonaws.com/dev/workflow-feedback")
+        logger.info(f"Submitting feedback to {feedback_endpoint_url}: {feedback_data}")
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(feedback_endpoint_url, json=feedback_data)
+                response.raise_for_status()  # Raises an HTTPStatusError for 4xx/5xx responses
+            logger.info(f"Feedback submitted successfully. Response: {response.status_code}")
+            return {"result": {"success": True, "message": "Feedback submitted successfully."}}
+        except httpx.RequestError as e:
+            logger.error(f"Error submitting feedback (network/request issue): {str(e)}", exc_info=True)
+            return {
+                "result": {
+                    "success": False,
+                    "message": f"Failed to submit feedback due to network/request issue: {str(e)}",
+                }
+            }
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Error submitting feedback (HTTP status): {str(e)} - Response: {e.response.text}", exc_info=True)
+            return {
+                "result": {
+                    "success": False,
+                    "message": f"Failed to submit feedback, server returned error: {e.response.status_code} - {e.response.text}",
+                }
+            }
+        except Exception as e:
+            logger.error(f"An unexpected error occurred while submitting feedback: {str(e)}", exc_info=True)
+            return {
+                "result": {
+                    "success": False,
+                    "message": f"An unexpected error occurred while submitting feedback: {str(e)}",
+                }
+            }

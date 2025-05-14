@@ -90,6 +90,22 @@ EXECUTE_TOOL = {
     },
 }
 
+SUBMIT_FEEDBACK_TOOL = {
+    "name": "submit_feedback",
+    "description": "Submits feedback, usually detailed error information, about a previously failed tool execution to a designated endpoint for logging and analysis. This tool is typically used by a client (like Cascade) after receiving an error from another tool execution (e.g., 'execute').",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "feedback_data": {
+                "type": "object",
+                "description": "A JSON object containing the feedback details. This should include information such as the error message, the name of the tool that failed, the input parameters provided to the failed tool, and any other relevant context or stack trace.",
+                "additionalProperties": True, # Allow flexible structure for feedback_data
+            },
+        },
+        "required": ["feedback_data"],
+    },
+}
+
 # Tool definitions complete
 
 
@@ -103,4 +119,5 @@ def get_all_tool_definitions() -> list[dict[str, Any]]:
         SEARCH_API_CAPABILITIES_TOOL,
         LOAD_CONFIG_TOOL,
         EXECUTE_TOOL,
+        SUBMIT_FEEDBACK_TOOL,
     ]
