@@ -86,14 +86,13 @@ class JenticAPIClient:
     ) -> dict[str, dict[str, Any]]:
         """Build the source_descriptions dict mapping Arazzo name to OpenAPI content.
 
-        Assumes a primary OpenAPI source in Arazzo and maps it to the first
-        available OpenAPI file content from the API response for the workflow.
+        Maps all source descriptions from Arazzo to their corresponding OpenAPI file contents
+        from the API response for the workflow.
         """
         source_descriptions = {}
-        arazzo_openapi_source_name = None
-        openapi_content = None
 
-        # 1. Find the name of the first Arazzo sourceDescription with type 'openapi'
+        # 1. Find all OpenAPI source descriptions in the Arazzo document
+        arazzo_source_names = []
         try:
             arazzo_sources = arazzo_doc.get("sourceDescriptions", [])
             if not isinstance(arazzo_sources, list):
@@ -104,38 +103,40 @@ class JenticAPIClient:
                 if isinstance(source, dict) and source.get("type") == "openapi":
                     name = source.get("name")
                     if name:
-                        arazzo_openapi_source_name = name
-                        logger.debug(
-                            f"Found Arazzo OpenAPI source name: {arazzo_openapi_source_name}"
-                        )
-                        break  # Use the first one found
+                        arazzo_source_names.append(name)
+                        logger.debug(f"Found Arazzo OpenAPI source name: {name}")
                     else:
                         logger.warning(
                             f"Skipping Arazzo OpenAPI sourceDescription missing name: {source}"
                         )
 
-            if not arazzo_openapi_source_name:
+            if not arazzo_source_names:
                 logger.warning(
-                    f"No Arazzo sourceDescription with type 'openapi' and a 'name' found for workflow {workflow_entry.workflow_id}"
+                    f"No Arazzo sourceDescriptions with type 'openapi' and a 'name' found for workflow {workflow_entry.workflow_id}"
                 )
 
         except Exception as e:
             logger.error(f"Error parsing Arazzo sourceDescriptions: {e}")
 
-        # 2. Find the content of the first available OpenAPI file associated with the workflow
+        # 2. Get all available OpenAPI file contents associated with the workflow
+        openapi_files = {}
         if workflow_entry.files.open_api and all_openapi_files:
             for openapi_file_id_obj in workflow_entry.files.open_api:
                 openapi_file_id = openapi_file_id_obj.id
                 if openapi_file_id in all_openapi_files:
-                    openapi_content = all_openapi_files[openapi_file_id].content
-                    logger.debug(f"Found OpenAPI content for file ID: {openapi_file_id}")
-                    break  # Use the first one found
+                    file_entry = all_openapi_files[openapi_file_id]
+                    # Store both the content and filename for URL matching
+                    openapi_files[openapi_file_id] = {
+                        "content": file_entry.content,
+                        "filename": file_entry.filename
+                    }
+                    logger.debug(f"Found OpenAPI file: {file_entry.filename} with ID: {openapi_file_id}")
                 else:
                     logger.warning(
                         f"OpenAPI file content not found for ID {openapi_file_id} in workflow {workflow_entry.workflow_id} (referenced but not in main files dict)."
                     )
 
-            if not openapi_content:
+            if not openapi_files:
                 logger.warning(
                     f"No available OpenAPI file content found for workflow {workflow_entry.workflow_id} despite references."
                 )
@@ -148,17 +149,53 @@ class JenticAPIClient:
                 f"Workflow {workflow_entry.workflow_id} does not reference any OpenAPI files."
             )
 
-        # 3. If both name and content were found, create the mapping
-        if arazzo_openapi_source_name and openapi_content:
-            source_descriptions[arazzo_openapi_source_name] = openapi_content
-            logger.info(
-                f"Successfully mapped Arazzo source '{arazzo_openapi_source_name}' to OpenAPI content."
-            )
-        else:
-            logger.warning(
-                f"Could not create source description mapping for workflow {workflow_entry.workflow_id}. "
-                f"Arazzo source name found: {bool(arazzo_openapi_source_name)}, OpenAPI content found: {bool(openapi_content)}"
-            )
+        # 3. Map each Arazzo source description to matching OpenAPI content by URL
+        if arazzo_source_names and openapi_files:
+            # Extract source descriptions with their URLs
+            arazzo_sources_with_urls = []
+            try:
+                for source in arazzo_doc.get("sourceDescriptions", []):
+                    if isinstance(source, dict) and source.get("type") == "openapi" and source.get("name") and source.get("url"):
+                        arazzo_sources_with_urls.append({
+                            "name": source.get("name"),
+                            "url": source.get("url")
+                        })
+                        logger.debug(f"Found Arazzo source with URL: {source.get('name')} -> {source.get('url')}")
+            except Exception as e:
+                logger.error(f"Error extracting URLs from sourceDescriptions: {e}")
+            
+            # Default content to use if no matches are found
+            default_content = None 
+            if openapi_files:
+                default_content = list(openapi_files.values())[0]["content"]
+            
+            # Match sources to files by URL
+            for source in arazzo_sources_with_urls:
+                source_name = source["name"]
+                source_url = source["url"]
+                
+                # Try to find a matching OpenAPI file by URL
+                matched = False
+                for file_info in openapi_files.values():
+                    filename = file_info["filename"]
+                    # Check if the source URL ends with the filename or vice versa
+                    # This handles relative vs. absolute paths
+                    if source_url.endswith(filename) or filename.endswith(source_url):
+                        source_descriptions[source_name] = file_info["content"]
+                        matched = True
+                        logger.info(f"URL-matched Arazzo source '{source_name}' ({source_url}) to OpenAPI file '{filename}'")
+                        break
+                
+                # If no match found, use the default content
+                if not matched and default_content:
+                    source_descriptions[source_name] = default_content
+                    logger.warning(f"No URL match found for source '{source_name}' ({source_url}), using default OpenAPI content")
+            
+            logger.info(f"Successfully mapped {len(source_descriptions)} Arazzo source(s) to OpenAPI content.")
+        elif not arazzo_source_names:
+            logger.warning(f"No Arazzo source names found for workflow {workflow_entry.workflow_id}.")
+        elif not openapi_files:
+            logger.warning(f"No OpenAPI files found for workflow {workflow_entry.workflow_id}.")
 
         return source_descriptions
 
