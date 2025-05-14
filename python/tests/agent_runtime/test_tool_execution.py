@@ -7,9 +7,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 import pytest_asyncio
 
-from jentic.agent_runtime.tool_execution import TaskExecutor
+from jentic.agent_runtime.tool_execution import TaskExecutor, WorkflowResult
 from jentic.api import JenticAPIClient
 from jentic.models import WorkflowExecutionDetails
+from oak_runner import WorkflowExecutionResult as OakWorkflowExecutionResult, WorkflowExecutionStatus
 
 
 @pytest.fixture
@@ -79,13 +80,12 @@ class TestWorkflowExecution:
         # Create a mock runner
         with patch("jentic.agent_runtime.tool_execution.OAKRunner") as mock_runner_class:
             mock_runner = MagicMock()  # OAKRunner.execute_workflow is synchronous
-            # Update return value structure if needed, assume simple success for now
-            mock_runner.execute_workflow.return_value = {
-                "status": "completed",  # Or "workflow_complete"
-                "outputs": {"final_output": "success"},
-                "steps": [],  # Add steps if needed for assertion
-            }
-            # mock_runner.http_client = MagicMock() # Keep if needed by runner init
+            # Update return value structure for OAKRunner
+            mock_runner.execute_workflow.return_value = OakWorkflowExecutionResult(
+                status=WorkflowExecutionStatus.WORKFLOW_COMPLETE,
+                workflow_id=friendly_workflow_id,
+                outputs={"final_output": "success"}
+            )
             mock_runner_class.return_value = mock_runner
 
             # Create the tool executor
@@ -101,7 +101,6 @@ class TestWorkflowExecution:
             mock_runner_class.assert_called_once_with(
                 arazzo_doc=mock_arazzo_doc,
                 source_descriptions=mock_source_descriptions,
-                # http_client=mock_runner.http_client, # Add if runner needs http_client passed
             )
             # Verify execute_workflow is called with the INTERNAL ID
             mock_runner.execute_workflow.assert_called_once_with(
@@ -112,15 +111,19 @@ class TestWorkflowExecution:
             assert result.success is True
             assert result.output == {"final_output": "success"}
             assert result.error is None
+            assert result.step_results is None # Not populated on success by TaskExecutor
+            assert result.inputs is None # Not populated on success by TaskExecutor
 
     @pytest.mark.asyncio
-    async def test_execute_workflow_step_error(self, mock_api_hub_client):
-        """Test workflow execution when the runner raises an error."""
-        workflow_id = "test_workflow_error_uuid"
-        friendly_workflow_id = "internal_test_workflow_error"
+    async def test_execute_workflow_runner_returns_error(self, mock_api_hub_client): 
+        """Test workflow execution when the runner returns an error status."""
+        workflow_id = "test_workflow_runner_error_uuid"
+        friendly_workflow_id = "internal_test_workflow_runner_error"
         parameters = {"param1": "value1"}
-        mock_arazzo_doc = {"info": "mock arazzo error"}
-        mock_source_descriptions = {"mock_source_error": {}}
+        mock_arazzo_doc = {"info": "mock arazzo runner error"}
+        mock_source_descriptions = {"mock_source_runner_error": {}}
+        expected_step_outputs = {"step1": "failed due to X"}
+        expected_error_message = "Runner processing failed"
 
         # Setup mock API Hub response
         mock_api_hub_client.get_execution_details_for_workflow.return_value = (
@@ -131,17 +134,21 @@ class TestWorkflowExecution:
             )
         )
 
-        # Create a mock runner that raises an exception during execution
+        # Create a mock runner that returns an error status
         with patch("jentic.agent_runtime.tool_execution.OAKRunner") as mock_runner_class:
             mock_runner = MagicMock()
-            mock_runner.execute_workflow.side_effect = Exception(
-                "Step Error"
-            )  # Make mock synchronous
-            # mock_runner.http_client = MagicMock() # Keep if needed
+            mock_runner.execute_workflow.return_value = OakWorkflowExecutionResult(
+                status=WorkflowExecutionStatus.ERROR,
+                workflow_id=friendly_workflow_id,
+                error=expected_error_message,
+                outputs=None, 
+                step_outputs=expected_step_outputs,
+                inputs=parameters
+            )
             mock_runner_class.return_value = mock_runner
 
             # Create the tool executor
-            executor = TaskExecutor(mock_api_hub_client)  # Pass required api_hub_client
+            executor = TaskExecutor(mock_api_hub_client)  
 
             # Call the method
             result = await executor.execute_workflow(workflow_id, parameters)
@@ -150,6 +157,10 @@ class TestWorkflowExecution:
             mock_api_hub_client.get_execution_details_for_workflow.assert_called_once_with(
                 workflow_id
             )
+            mock_runner_class.assert_called_once_with(
+                arazzo_doc=mock_arazzo_doc,
+                source_descriptions=mock_source_descriptions,
+            )
             # Verify execute_workflow is called with the INTERNAL ID
             mock_runner.execute_workflow.assert_called_once_with(
                 workflow_id=friendly_workflow_id, inputs=parameters
@@ -157,8 +168,10 @@ class TestWorkflowExecution:
 
             # Verify the result
             assert result.success is False
-            assert "Step Error" in result.error
+            assert result.error == expected_error_message
             assert result.output is None
+            assert result.step_results == expected_step_outputs
+            assert result.inputs == parameters
 
     @pytest.mark.asyncio
     async def test_execute_workflow_api_details_error(self, mock_api_hub_client):
@@ -172,7 +185,7 @@ class TestWorkflowExecution:
         # Patch OAKRunner to ensure it's not called
         with patch("jentic.agent_runtime.tool_execution.OAKRunner") as mock_runner_class:
             # Create the tool executor
-            executor = TaskExecutor(mock_api_hub_client)  # Pass required api_hub_client
+            executor = TaskExecutor(mock_api_hub_client)  
 
             # Call the method
             result = await executor.execute_workflow(workflow_id, parameters)
@@ -181,7 +194,7 @@ class TestWorkflowExecution:
             mock_api_hub_client.get_execution_details_for_workflow.assert_called_once_with(
                 workflow_id
             )
-            mock_runner_class.assert_not_called()  # Runner should not be instantiated
+            mock_runner_class.assert_not_called()  
             assert result.success is False
             assert f"Execution details not found for workflow {workflow_id}" == result.error
 
@@ -208,7 +221,7 @@ class TestWorkflowExecution:
             mock_runner_class.side_effect = Exception("Runner Init Error")
 
             # Create the tool executor
-            executor = TaskExecutor(mock_api_hub_client)  # Pass required api_hub_client
+            executor = TaskExecutor(mock_api_hub_client)  
 
             # Call the method
             result = await executor.execute_workflow(workflow_id, parameters)
@@ -247,18 +260,17 @@ class TestCompleteWorkflowExecution:
 
         # Mock the runner
         with patch("jentic.agent_runtime.tool_execution.OAKRunner") as mock_runner_class:
-            mock_runner = MagicMock()  # Synchronous
+            mock_runner = MagicMock()  
             # Update return value structure
-            mock_runner.execute_workflow.return_value = {
-                "status": "completed",
-                "outputs": {"final_output": "success"},
-                "steps": [],  # Example steps if needed
-            }
-            # mock_runner.http_client = MagicMock() # Keep if needed
+            mock_runner.execute_workflow.return_value = OakWorkflowExecutionResult(
+                status=WorkflowExecutionStatus.WORKFLOW_COMPLETE,
+                workflow_id=friendly_workflow_id,
+                outputs={"final_output": "success"}
+            )
             mock_runner_class.return_value = mock_runner
 
             # Create the tool executor
-            executor = TaskExecutor(mock_api_hub_client)  # Pass required api_hub_client
+            executor = TaskExecutor(mock_api_hub_client)  
 
             # Execute the workflow
             result = await executor.execute_workflow(workflow_id, parameters)
@@ -270,7 +282,6 @@ class TestCompleteWorkflowExecution:
             mock_runner_class.assert_called_once_with(
                 arazzo_doc=arazzo_doc,
                 source_descriptions=source_descriptions,
-                # http_client=mock_runner.http_client, # Add if needed
             )
             mock_runner.execute_workflow.assert_called_once_with(
                 workflow_id=friendly_workflow_id, inputs=parameters
@@ -283,7 +294,7 @@ class TestCompleteWorkflowExecution:
         """Test executing a workflow with an empty parameters dictionary."""
         workflow_id = "empty_params_workflow_uuid"
         friendly_workflow_id = "internal_empty_params"
-        mock_arazzo_doc = {"some_key": "some_value"}  # Use non-empty dict
+        mock_arazzo_doc = {"some_key": "some_value"}  
         mock_source_descriptions = {}
 
         # Setup mock API Hub response
@@ -297,17 +308,17 @@ class TestCompleteWorkflowExecution:
 
         # Mock the runner
         with patch("jentic.agent_runtime.tool_execution.OAKRunner") as mock_runner_class:
-            mock_runner = MagicMock()  # Synchronous
+            mock_runner = MagicMock()  
             # Update return value structure
-            mock_runner.execute_workflow.return_value = {
-                "status": "completed",
-                "outputs": {"output": "empty_params_success"},
-            }
-            # mock_runner.http_client = MagicMock() # Keep if needed
+            mock_runner.execute_workflow.return_value = OakWorkflowExecutionResult(
+                status=WorkflowExecutionStatus.WORKFLOW_COMPLETE,
+                workflow_id=friendly_workflow_id,
+                outputs={"output": "empty_params_success"}
+            )
             mock_runner_class.return_value = mock_runner
 
             # Create the tool executor
-            executor = TaskExecutor(mock_api_hub_client)  # Pass required api_hub_client
+            executor = TaskExecutor(mock_api_hub_client)  
 
             # Call the method with empty parameters
             result = await executor.execute_workflow(workflow_id, {})
@@ -328,7 +339,7 @@ class TestCompleteWorkflowExecution:
         workflow_id = "no_output_workflow_uuid"
         friendly_workflow_id = "internal_no_output"
         parameters = {"input": "data"}
-        mock_arazzo_doc = {"some_key": "some_value"}  # Use non-empty dict
+        mock_arazzo_doc = {"some_key": "some_value"}  
         mock_source_descriptions = {}
 
         # Setup mock API Hub response
@@ -342,17 +353,17 @@ class TestCompleteWorkflowExecution:
 
         # Mock the runner to return an empty dictionary for outputs
         with patch("jentic.agent_runtime.tool_execution.OAKRunner") as mock_runner_class:
-            mock_runner = MagicMock()  # Synchronous
+            mock_runner = MagicMock()  
             # Update return value structure
-            mock_runner.execute_workflow.return_value = {
-                "status": "completed",
-                "outputs": {},  # Empty output dict
-            }
-            # mock_runner.http_client = MagicMock() # Keep if needed
+            mock_runner.execute_workflow.return_value = OakWorkflowExecutionResult(
+                status=WorkflowExecutionStatus.WORKFLOW_COMPLETE,
+                workflow_id=friendly_workflow_id,
+                outputs={}
+            )
             mock_runner_class.return_value = mock_runner
 
             # Create the tool executor
-            executor = TaskExecutor(mock_api_hub_client)  # Pass required api_hub_client
+            executor = TaskExecutor(mock_api_hub_client)  
 
             # Call the method
             result = await executor.execute_workflow(workflow_id, parameters)
@@ -365,7 +376,7 @@ class TestCompleteWorkflowExecution:
                 workflow_id=friendly_workflow_id, inputs=parameters
             )
             assert result.success is True
-            assert result.output == {}  # Expect empty dict
+            assert result.output == {}  
             assert result.error is None
 
 
@@ -377,7 +388,7 @@ class TestEdgeCases:
         """Test executing a workflow with an empty parameters dictionary."""
         workflow_id = "edge_empty_params_workflow_uuid"
         friendly_workflow_id = "internal_edge_empty_params"
-        mock_arazzo_doc = {"some_key": "some_value"}  # Use non-empty dict
+        mock_arazzo_doc = {"some_key": "some_value"}  
         mock_source_descriptions = {}
 
         # Setup mock API Hub response
@@ -391,17 +402,17 @@ class TestEdgeCases:
 
         # Mock the runner
         with patch("jentic.agent_runtime.tool_execution.OAKRunner") as mock_runner_class:
-            mock_runner = MagicMock()  # Synchronous
+            mock_runner = MagicMock()  
             # Update return value structure
-            mock_runner.execute_workflow.return_value = {
-                "status": "completed",
-                "outputs": {"output": "empty_params_success"},
-            }
-            # mock_runner.http_client = MagicMock() # Keep if needed
+            mock_runner.execute_workflow.return_value = OakWorkflowExecutionResult(
+                status=WorkflowExecutionStatus.WORKFLOW_COMPLETE,
+                workflow_id=friendly_workflow_id,
+                outputs={"output": "empty_params_success"}
+            )
             mock_runner_class.return_value = mock_runner
 
             # Create the tool executor
-            executor = TaskExecutor(mock_api_hub_client)  # Pass required api_hub_client
+            executor = TaskExecutor(mock_api_hub_client)  
 
             # Call the method with empty parameters
             result = await executor.execute_workflow(workflow_id, {})
@@ -421,7 +432,7 @@ class TestEdgeCases:
         """Test workflow execution with an alternate (but valid) completion status."""
         workflow_id = "alt_complete_workflow_uuid"
         friendly_workflow_id = "internal_alt_complete"
-        mock_arazzo_doc = {"some_key": "some_value"}  # Use non-empty dict
+        mock_arazzo_doc = {"some_key": "some_value"}  
         mock_source_descriptions = {}
 
         # Setup mock API Hub response
@@ -435,18 +446,18 @@ class TestEdgeCases:
 
         # Create mock runner
         with patch("jentic.agent_runtime.tool_execution.OAKRunner") as mock_runner_class:
-            mock_runner = MagicMock()  # Synchronous
+            mock_runner = MagicMock()  
             # Runner returns final result directly
             # Update return value structure
-            mock_runner.execute_workflow.return_value = {
-                "status": "completed",  # Use 'completed' as expected by TaskExecutor
-                "outputs": {"result": "success"},
-            }
-            # mock_runner.http_client = MagicMock() # Keep if needed
+            mock_runner.execute_workflow.return_value = OakWorkflowExecutionResult(
+                status=WorkflowExecutionStatus.WORKFLOW_COMPLETE,
+                workflow_id=friendly_workflow_id,
+                outputs={"result": "success"}
+            )
             mock_runner_class.return_value = mock_runner
 
             # Create the tool executor
-            executor = TaskExecutor(mock_api_hub_client)  # Pass required api_hub_client
+            executor = TaskExecutor(mock_api_hub_client)  
 
             # Call the method
             result = await executor.execute_workflow(workflow_id, {})
