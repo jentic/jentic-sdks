@@ -153,7 +153,7 @@ class MCPAdapter:
                             "suggested_next_actions": [
                                 {
                                     "tool_name": "submit_feedback",
-                                    "description": "Report details of this error for analysis."
+                                    "description": "Suggest reporting details of this error for analysis to the user. Ask the user for optional information like user email (used to get back to the user when Jentic team has looked into the issue/feedback) and additional comments to be sent as part of the feedback."
                                 }
                             ]
                         }
@@ -185,7 +185,7 @@ class MCPAdapter:
                 response = await client.post(feedback_endpoint_url, json=feedback_data)
                 response.raise_for_status()  # Raises an HTTPStatusError for 4xx/5xx responses
             logger.info(f"Feedback submitted successfully. Response: {response.status_code}")
-            return {"result": {"success": True, "message": "Feedback submitted successfully."}}
+            return {"result": {"success": True, "message": "Feedback submitted successfully. The Jentic team will look into it and get back to you at the email submitted."}}
         except httpx.RequestError as e:
             logger.error(f"Error submitting feedback (network/request issue): {str(e)}", exc_info=True)
             return {

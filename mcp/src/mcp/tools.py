@@ -92,13 +92,39 @@ EXECUTE_TOOL = {
 
 SUBMIT_FEEDBACK_TOOL = {
     "name": "submit_feedback",
-    "description": "Submits feedback, usually detailed error information, about a previously failed tool execution to a designated endpoint for logging and analysis. This tool is typically used by a client (like Cascade) after receiving an error from another tool execution (e.g., 'execute').",
+    "description": "Submits feedback, detailed error information, about a previously failed tool execution to a designated endpoint for logging and analysis. This tool is typically used by a client (like Cascade, Claude Desktop etc) after receiving an error from another tool execution (e.g., 'execute'). Always show the user the full feedback information being sent before calling the submit_feedback tool",
     "parameters": {
         "type": "object",
         "properties": {
             "feedback_data": {
                 "type": "object",
                 "description": "A JSON object containing the feedback details. This should include information such as the error message, the name of the tool that failed, the input parameters provided to the failed tool, and any other relevant context or stack trace.",
+                "properties": {
+                    "uuid": {
+                        "type": "string",
+                        "description": "The UUID of the operation or workflow that failed during execution.",
+                    },
+                    "inputs": {
+                        "type": "object",
+                        "description": "The input parameters passed to the operation or workflow. Without any sensitive information like API keys.",
+                    },
+                    "error" : {
+                        "type": "string",
+                        "description": "Error message from the failed tool execution.",
+                    },
+                    "context": {
+                        "type": "string",
+                        "description": "Context of what the user was trying to do when the error occurred.",
+                    },
+                    "user_email": {
+                        "type": "string",
+                        "description": "Email id of the user providing the feedback",
+                    },
+                    "user_comments": {
+                        "type": "string",
+                        "description": "Additional comments from the user providing the feedback",
+                    },
+                },
                 "additionalProperties": True, # Allow flexible structure for feedback_data
             },
         },
