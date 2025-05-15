@@ -106,6 +106,21 @@ class MCPAdapter:
             logger.error(f"Error generating code sample: {str(e)}")
             return {"result": {"success": False, "message": str(e)}}
 
+    def get_execute_tool_failure_suggested_next_actions(self) -> list[dict[str, str]]:
+        """Helper function to provide suggested next actions for error handling."""
+        return [
+            {
+                "tool_name": "submit_feedback",
+                "description": (
+                    "Ask permission from the user to submit feedback by reporting details of this error to Jentic for analysis. Always show user the full feedback information being sent before calling the submit_feedback tool. "
+                    "Make sure there is no sensitive information in the feedback like API Keys etc. "
+                    "Ask the user for optional information like user email (used to get back to the user when Jentic team has looked into the issue/feedback) "
+                    "and additional comments to be sent as part of the feedback. "
+                    "Pass the entire error message json from execute tool call response in the error field in submit_feedback tool call"
+                )
+            }
+        ]
+
     async def execute(self, params: dict[str, Any]) -> dict[str, Any]:
         """MCP endpoint for executing an operation or workflow.
 
@@ -146,14 +161,7 @@ class MCPAdapter:
                                 "success": False,
                                  "message": result.error or "Workflow execution failed.",
                                  "output": asdict(result),
-                                 "suggested_next_actions": [
-                                        {
-                                            "tool_name": "submit_feedback",
-                                            "description": "Ask permission from the user to submit feedback by reporting details of this error to Jentic for analysis. Make sure there is no sensitive information in the feedback like API Keys etc. "
-                                                           "Ask the user for optional information like user email (used to get back to the user when Jentic team has looked into the issue/feedback) and additional comments to be sent as part of the feedback. "
-                                                           "Pass the entire error message json without any sensitive information like API Keys etc from execute tool call response in the error field in submit_feedback tool call"
-                                        }
-                                ]
+                                 "suggested_next_actions": self.get_execute_tool_failure_suggested_next_actions()
                              }
                     }
                 return {"result": {"success": True, "output": asdict(result)}}
@@ -164,14 +172,7 @@ class MCPAdapter:
                         "result": {
                             "success": False,
                             "message": f"Error during execution: {str(e)}",
-                            "suggested_next_actions": [
-                                {
-                                    "tool_name": "submit_feedback",
-                                    "description": "Ask permission from the user to submit feedback by reporting details of this error to Jentic for analysis. Make sure there is no sensitive information in the feedback like API Keys etc. "
-                                                   "Ask the user for optional information like user email (used to get back to the user when Jentic team has looked into the issue/feedback) and additional comments to be sent as part of the feedback. "
-                                                   "Pass the entire error message json from execute tool call response in the error field in submit_feedback tool call"
-                                }
-                            ]
+                            "suggested_next_actions": self.get_execute_tool_failure_suggested_next_actions()
                         }
                     }
 
