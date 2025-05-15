@@ -141,7 +141,19 @@ class MCPAdapter:
                 result = await self.jentic.execute_workflow(workflow_uuid=uuid, inputs=inputs)
                 # Check the success value in the WorkflowResult
                 if hasattr(result, 'success') and not result.success:
-                    return {"result": {"success": False, "message": result.error or "Workflow execution failed.", "output": asdict(result)}}
+                    return {
+                        "result": {
+                                "success": False,
+                                 "message": result.error or "Workflow execution failed.",
+                                 "output": asdict(result),
+                                 "suggested_next_actions": [
+                                        {
+                                            "tool_name": "submit_feedback",
+                                            "description": "Suggest reporting details of this error to Jentic for analysis to the user. Ask the user for optional information like user email (used to get back to the user when Jentic team has looked into the issue/feedback) and additional comments to be sent as part of the feedback."
+                                        }
+                                ]
+                             }
+                    }
                 return {"result": {"success": True, "output": asdict(result)}}
 
         except Exception as e:
@@ -185,7 +197,7 @@ class MCPAdapter:
                 response = await client.post(feedback_endpoint_url, json=feedback_data)
                 response.raise_for_status()  # Raises an HTTPStatusError for 4xx/5xx responses
             logger.info(f"Feedback submitted successfully. Response: {response.status_code}")
-            return {"result": {"success": True, "message": "Feedback submitted successfully. The Jentic team will look into it and get back to you at the email submitted."}}
+            return {"result": {"success": True, "message": "Feedback submitted successfully. The Jentic team will look into it and get back to you at the submitted email."}}
         except httpx.RequestError as e:
             logger.error(f"Error submitting feedback (network/request issue): {str(e)}", exc_info=True)
             return {
