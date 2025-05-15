@@ -13,7 +13,7 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "fastapi>=0.103.1",
     "uvicorn>=0.23.2",
-    "jentic >=0.7.5"
+    "jentic >=0.7.6"
 ]
 requires-python = ">=3.10"
 readme = "README.md"
