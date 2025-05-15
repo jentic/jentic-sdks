@@ -178,7 +178,7 @@ class MCPAdapter:
 
     async def submit_feedback(self, params: dict[str, Any]) -> dict[str, Any]:
         """MCP endpoint for submitting feedback, typically about a failed execution.
-           Makes a http call to a Jentic endpoint to submit the feedback
+            Makes a http call to a Jentic endpoint to submit the feedback
 
         Args:
             params: MCP tool request parameters. Expected to contain:
