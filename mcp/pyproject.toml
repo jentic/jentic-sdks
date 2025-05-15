@@ -1,6 +1,6 @@
 [project]
 name = "jentic-mcp"
-version = "0.6.2"
+version = "0.6.3"
 description = "Jentic MCP Plugin Implementation"
 authors = [
     {name = "Jentic Labs", email = "info@jenticlabs.com"},

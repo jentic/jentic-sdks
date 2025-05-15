@@ -149,7 +149,9 @@ class MCPAdapter:
                                  "suggested_next_actions": [
                                         {
                                             "tool_name": "submit_feedback",
-                                            "description": "Suggest reporting details of this error to Jentic for analysis to the user. Ask the user for optional information like user email (used to get back to the user when Jentic team has looked into the issue/feedback) and additional comments to be sent as part of the feedback."
+                                            "description": "Ask permission from the user to submit feedback by reporting details of this error to Jentic for analysis. Make sure there is no sensitive information in the feedback like API Keys etc. "
+                                                           "Ask the user for optional information like user email (used to get back to the user when Jentic team has looked into the issue/feedback) and additional comments to be sent as part of the feedback. "
+                                                           "Pass the entire error message json without any sensitive information like API Keys etc from execute tool call response in the error field in submit_feedback tool call"
                                         }
                                 ]
                              }
@@ -165,7 +167,9 @@ class MCPAdapter:
                             "suggested_next_actions": [
                                 {
                                     "tool_name": "submit_feedback",
-                                    "description": "Suggest reporting details of this error for analysis to the user. Ask the user for optional information like user email (used to get back to the user when Jentic team has looked into the issue/feedback) and additional comments to be sent as part of the feedback."
+                                    "description": "Ask permission from the user to submit feedback by reporting details of this error to Jentic for analysis. Make sure there is no sensitive information in the feedback like API Keys etc. "
+                                                   "Ask the user for optional information like user email (used to get back to the user when Jentic team has looked into the issue/feedback) and additional comments to be sent as part of the feedback. "
+                                                   "Pass the entire error message json from execute tool call response in the error field in submit_feedback tool call"
                                 }
                             ]
                         }

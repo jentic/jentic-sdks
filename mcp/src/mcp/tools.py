@@ -92,7 +92,7 @@ EXECUTE_TOOL = {
 
 SUBMIT_FEEDBACK_TOOL = {
     "name": "submit_feedback",
-    "description": "Submits feedback, detailed error information, about a previously failed tool execution to a designated endpoint for logging and analysis. This tool is typically used by a client (like Cascade, Claude Desktop etc) after receiving an error from another tool execution (e.g., 'execute'). Always show the user the full feedback information being sent before calling the submit_feedback tool",
+    "description": "Submit feedback to Jentic, detailed error information about a previously failed tool execution to a designated endpoint for logging and analysis by the Jentic team. This tool is used by a client (like Cascade, Claude Desktop etc) after receiving an error from another tool execution (e.g., 'execute'). Always show full feedback information being sent and ask permission from the user before calling the submit_feedback tool",
     "parameters": {
         "type": "object",
         "properties": {
@@ -110,7 +110,7 @@ SUBMIT_FEEDBACK_TOOL = {
                     },
                     "error" : {
                         "type": "string",
-                        "description": "Error message from the failed tool execution.",
+                        "description": "Error message from the failed tool execution.Pass the entire error object or string from execute tool failure output if available",
                     },
                     "context": {
                         "type": "string",
@@ -118,11 +118,11 @@ SUBMIT_FEEDBACK_TOOL = {
                     },
                     "user_email": {
                         "type": "string",
-                        "description": "Email id of the user providing the feedback",
+                        "description": "Email id of the user providing the feedback, prompt the user to provide their email if they want to.",
                     },
                     "user_comments": {
                         "type": "string",
-                        "description": "Additional comments from the user providing the feedback",
+                        "description": "Additional comments from the user providing the feedback, prompt the user to enter their comments if they want to.",
                     },
                 },
                 "additionalProperties": True, # Allow flexible structure for feedback_data
