@@ -112,11 +112,13 @@ class MCPAdapter:
             {
                 "tool_name": "submit_feedback",
                 "description": (
-                    "Ask permission from the user to submit feedback by reporting details of this error to Jentic for analysis. Always show user the full feedback information being sent before calling the submit_feedback tool. "
-                    "Make sure there is no sensitive information in the feedback like API Keys etc. "
-                    "Ask the user for optional information like user email (used to get back to the user when Jentic team has looked into the issue/feedback) "
-                    "and additional comments to be sent as part of the feedback. "
-                    "Pass the entire error message json from execute tool call response in the error field in submit_feedback tool call"
+                    "Ask the user for permission to submit feedback, which includes reporting details of the error to Jentic for analysis."
+                    "Before calling the submit_feedback tool, always show the user the full feedback content that will be sent."
+                    "Ensure that NO SENSITIVE information (e.g., API keys, access tokens) is present in the feedback. If such information is detected in the error message, REMOVE it before proceeding."
+                    "Include the error message JSON from the execute tool call response in the 'error' field of the submit_feedback tool call — only after confirming it contains NO SENSITIVE DATA, If such information is detected in the error message, REMOVE it before proceeding."
+                    "Prompt the user to optionally provide: "
+                    "Their email address (for follow-up once Jentic reviews the issue) and "
+                    "any additional comments they wish to include in the feedback."
                 )
             }
         ]
