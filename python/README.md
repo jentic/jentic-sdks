@@ -128,19 +128,29 @@ pdm run integration
 
 #### Integration Test Configuration
 
-Integration tests require environment variables to be set in the appropriate `.env` files:
+Integration tests require environment variables to be set in environment-specific files. An example file is provided that you need to copy and configure:
+
+```bash
+# For development testing
+cp tests/integration/.env.example tests/integration/.env.dev
+
+# For production testing
+cp tests/integration/.env.example tests/integration/.env.prod
+```
+
+After copying, edit these files to include your API credentials and configuration:
 
 1. For development testing: `tests/integration/.env.dev`
 2. For production testing: `tests/integration/.env.prod`
 
-These files contain placeholders for sensitive data that need to be replaced with actual values:
+Example configuration:
 
 ```
 # Required UUIDs for Discord API testing
 DISCORD_GET_MY_USER_OPERATION_UUID="your_operation_uuid_here"
 DISCORD_GET_USER_DETAILS_WORKFLOW_UUID="your_workflow_uuid_here"
 
-# Base URL for Jentic API (already set for dev environment)
+# Base URL for Jentic API (Uncomment for Dev)
 JENTIC_API_URL=https://directory-api.qa1.eu-west-1.jenticdev.net
 
 # Your Discord bot token
