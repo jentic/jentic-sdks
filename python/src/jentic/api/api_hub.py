@@ -125,12 +125,18 @@ class JenticAPIClient:
                 openapi_file_id = openapi_file_id_obj.id
                 if openapi_file_id in all_openapi_files:
                     file_entry = all_openapi_files[openapi_file_id]
-                    # Store both the content and filename for URL matching
-                    openapi_files[openapi_file_id] = {
-                        "content": file_entry.content,
-                        "filename": file_entry.filename
-                    }
-                    logger.debug(f"Found OpenAPI file: {file_entry.filename} with ID: {openapi_file_id}")
+                    # Store content and oak_path for direct matching
+                    # Assumes file_entry has an 'oak_path' attribute from the API response
+                    if hasattr(file_entry, 'oak_path') and file_entry.oak_path is not None:
+                        openapi_files[openapi_file_id] = {
+                            "content": file_entry.content,
+                            "oak_path": file_entry.oak_path
+                        }
+                        logger.debug(f"Found OpenAPI file with oak_path: {file_entry.oak_path} (ID: {openapi_file_id})")
+                    else:
+                        logger.warning(
+                            f"OpenAPI file entry with ID {openapi_file_id} (filename: {file_entry.filename}) is missing 'oak_path'. Cannot use for matching."
+                        )
                 else:
                     logger.warning(
                         f"OpenAPI file content not found for ID {openapi_file_id} in workflow {workflow_entry.workflow_id} (referenced but not in main files dict)."
@@ -138,7 +144,7 @@ class JenticAPIClient:
 
             if not openapi_files:
                 logger.warning(
-                    f"No available OpenAPI file content found for workflow {workflow_entry.workflow_id} despite references."
+                    f"No usable OpenAPI file content (with oak_path) found for workflow {workflow_entry.workflow_id} despite references."
                 )
         elif not all_openapi_files:
             logger.warning(
@@ -149,7 +155,7 @@ class JenticAPIClient:
                 f"Workflow {workflow_entry.workflow_id} does not reference any OpenAPI files."
             )
 
-        # 3. Map each Arazzo source description to matching OpenAPI content by URL
+        # 3. Map each Arazzo source description to matching OpenAPI content by oak_path
         if arazzo_source_names and openapi_files:
             # Extract source descriptions with their URLs
             arazzo_sources_with_urls = []
@@ -164,38 +170,39 @@ class JenticAPIClient:
             except Exception as e:
                 logger.error(f"Error extracting URLs from sourceDescriptions: {e}")
             
-            # Default content to use if no matches are found
-            default_content = None 
-            if openapi_files:
-                default_content = list(openapi_files.values())[0]["content"]
-            
-            # Match sources to files by URL
+            # Match Arazzo sourceDescriptions to OpenAPI files by comparing source.url with file.oak_path
             for source in arazzo_sources_with_urls:
                 source_name = source["name"]
                 source_url = source["url"]
                 
-                # Try to find a matching OpenAPI file by URL
                 matched = False
-                for file_info in openapi_files.values():
-                    filename = file_info["filename"]
-                    # Check if the source URL ends with the filename or vice versa
-                    # This handles relative vs. absolute paths
-                    if source_url.endswith(filename) or filename.endswith(source_url):
+                for file_id, file_info in openapi_files.items():
+                    openapi_oak_path = file_info["oak_path"]
+                    
+                    if source_url == openapi_oak_path:
                         source_descriptions[source_name] = file_info["content"]
                         matched = True
-                        logger.info(f"URL-matched Arazzo source '{source_name}' ({source_url}) to OpenAPI file '{filename}'")
-                        break
+                        logger.info(
+                            f"Matched Arazzo source '{source_name}' (URL: {source_url}) "
+                            f"to OpenAPI file with oak_path '{openapi_oak_path}' (ID: {file_id})"
+                        )
+                        break # Found the match for this Arazzo source
                 
-                # If no match found, use the default content
-                if not matched and default_content:
-                    source_descriptions[source_name] = default_content
-                    logger.warning(f"No URL match found for source '{source_name}' ({source_url}), using default OpenAPI content")
-            
-            logger.info(f"Successfully mapped {len(source_descriptions)} Arazzo source(s) to OpenAPI content.")
-        elif not arazzo_source_names:
-            logger.warning(f"No Arazzo source names found for workflow {workflow_entry.workflow_id}.")
-        elif not openapi_files:
-            logger.warning(f"No OpenAPI files found for workflow {workflow_entry.workflow_id}.")
+                if not matched:
+                    logger.warning(
+                        f"Could not find an OpenAPI file with oak_path matching Arazzo sourceDescription URL '{source_url}' "
+                        f"for source name '{source_name}' in workflow {workflow_entry.workflow_id}. This source will not be available."
+                    )
+
+        elif not openapi_files and arazzo_source_names:
+            logger.warning(
+                f"No OpenAPI files with oak_path were available to match against Arazzo source descriptions for workflow {workflow_entry.workflow_id}."
+            )
+
+        if not source_descriptions and arazzo_source_names:
+            logger.warning(
+                f"No Arazzo source descriptions were matched to OpenAPI files for workflow {workflow_entry.workflow_id}."
+            )
 
         return source_descriptions
 
