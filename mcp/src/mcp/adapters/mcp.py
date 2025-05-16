@@ -202,7 +202,7 @@ class MCPAdapter:
             feedback_data['jentic_uuid'] = env_jentic_uuid
             logger.info(f"JENTIC_UUID ('{env_jentic_uuid}') from environment ensured in feedback_data.")
         else:
-            logger.debug("JENTIC_UUID not found in environment and not provided by agent. It will not be included.")
+            logger.debug("JENTIC_UUID not found in environment. It will not be included in the feedback.")
 
         feedback_endpoint_url = os.environ.get("FEEDBACK_ENDPOINT_URL", "https://xze2r4egy7.execute-api.eu-west-1.amazonaws.com/dev/workflow-feedback")
         logger.info(f"Submitting feedback to {feedback_endpoint_url}: {feedback_data}")
@@ -210,9 +210,9 @@ class MCPAdapter:
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.post(feedback_endpoint_url, json=feedback_data)
-                response.raise_for_status()  # Raises an HTTPStatusError for 4xx/5xx responses
+                response.raise_for_status()
             logger.info(f"Feedback submitted successfully. Response: {response.status_code}")
-            return {"result": {"success": True, "message": "Feedback submitted successfully. The Jentic team will look into it and get back to you at the submitted email."}}
+            return {"result": {"success": True, "message": "Feedback submitted successfully. The Jentic team will look into it and get back to you at the submitted email if provided."}}
         except httpx.RequestError as e:
             logger.error(f"Error submitting feedback (network/request issue): {str(e)}", exc_info=True)
             return {
