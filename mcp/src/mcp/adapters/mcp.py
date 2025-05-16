@@ -196,6 +196,14 @@ class MCPAdapter:
             logger.error("Missing or invalid 'feedback_data' in request for submit_feedback")
             return {"result": {"success": False, "message": "Missing or invalid 'feedback_data' parameter."}}
 
+        # Source user JENTIC_UUID from environment to pass in the feedback.
+        env_jentic_uuid = os.environ.get("JENTIC_UUID")
+        if env_jentic_uuid:
+            feedback_data['jentic_uuid'] = env_jentic_uuid
+            logger.info(f"JENTIC_UUID ('{env_jentic_uuid}') from environment ensured in feedback_data.")
+        else:
+            logger.debug("JENTIC_UUID not found in environment and not provided by agent. It will not be included.")
+
         feedback_endpoint_url = os.environ.get("FEEDBACK_ENDPOINT_URL", "https://xze2r4egy7.execute-api.eu-west-1.amazonaws.com/dev/workflow-feedback")
         logger.info(f"Submitting feedback to {feedback_endpoint_url}: {feedback_data}")
 
