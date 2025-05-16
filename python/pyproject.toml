@@ -29,6 +29,7 @@ lint = {composite = ["black .", "isort .", "ruff check .", "mypy ."]}
 test = "pytest --ignore=tests/integration"
 test-real = "python -m tests.arazzo_runner.run_real_tests"
 integration = "pytest tests/integration"
+integration-dev = "pytest tests/integration --test-env=dev"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
