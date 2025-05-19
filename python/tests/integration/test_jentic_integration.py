@@ -97,6 +97,9 @@ async def test_execute_discord_get_my_user_operation(target_env: str, env_file_p
             operation_uuid=operation_uuid, inputs={}
         )
         assert isinstance(result, Dict), f"Expected result to be a Dict, got {type(result)}"
+        assert 'username' in result, "Expected 'username' key in the result"
+        assert isinstance(result['username'], str), f"Expected username to be a string, got {type(result['username'])}"
+        assert len(result['username']) > 0, "Expected username to not be empty"
     except Exception as e:
         pytest.fail(f"execute_operation raised an exception: {e}")
 
@@ -111,14 +114,21 @@ async def test_execute_discord_get_user_details_workflow(target_env: str, env_fi
         result = await jentic_client.execute_workflow(
             workflow_uuid=workflow_uuid, inputs={}
         )
+        print(f"Workflow result: {result}")
         assert isinstance(result, WorkflowResult), f"Expected result to be a WorkflowResult, got {type(result)}"
+        assert result.success, f"Expected workflow to succeed, but got error: {result.error}"
+        
+        # Check the output structure
+        assert result.output is not None, "Expected non-null output"
+        assert isinstance(result.output, dict), f"Expected output to be a dict, got {type(result.output)}"
+        
     except Exception as e:
         pytest.fail(f"execute_workflow raised an exception: {e}")
 
 
 @pytest.mark.asyncio
 async def test_search_api_capabilities():
-    """Test searching for API capabilities."""
+    """Test searching for API capabilities. """
     jentic_client = Jentic()
     request = ApiCapabilitySearchRequest(capability_description="discord user details", max_results=1)
     try:
@@ -129,13 +139,6 @@ async def test_search_api_capabilities():
         
         # Check that we have at least one result in either operations or workflows
         assert len(result.operations) > 0 or len(result.workflows) > 0, "Expected at least one search result in operations or workflows"
-
-        # Optional: further checks if the content is predictable enough
-        # For example, if expecting an operation:
-        # if result.operations:
-        #     assert "discord" in result.operations[0].name.lower(), "Expected a discord related item in operations"
-        # elif result.workflows:
-        #     assert "discord" in result.workflows[0].name.lower(), "Expected a discord related item in workflows"
 
     except Exception as e:
         pytest.fail(f"search_api_capabilities raised an exception: {e}")
