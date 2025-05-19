@@ -290,15 +290,19 @@ class JenticAPIClient:
         )
         search_results = await self._search_all(request)
 
+        api_map = {api.get("id"): api.get("api_name") for api in search_results.get("apis", [])}
         # Parse API, workflow, and operation results from search_results
         workflow_summaries: list[WorkflowSearchResult] = []
         for wf in search_results.get("workflows", []):
             try:
+                # Determine api_name: explicit, mapped by api_id, or vendor fallback
+                api_name_val = wf.get("api_name")
                 workflow_summaries.append(
                     WorkflowSearchResult(
                         workflow_id=wf.get("id", ""),
                         summary=wf.get("name", wf.get("workflow_id", "")),
                         description=wf.get("description", ""),
+                        api_name=api_name_val,
                         match_score=wf.get("distance", 0.0),
                     )
                 )
@@ -311,6 +315,7 @@ class JenticAPIClient:
         operation_summaries: list[OperationSearchResult] = []
         for op in search_results.get("operations", []):
             try:
+                api_name_val = op.get("api_name")
                 operation_summaries.append(
                     OperationSearchResult(
                         operation_uuid=op.get("id", ""),
@@ -319,6 +324,7 @@ class JenticAPIClient:
                         path=op.get("path", ""),
                         method=op.get("method", ""),
                         match_score=op.get("distance", 0.0),
+                        api_name=api_name_val,
                     )
                 )
             except Exception as e:
