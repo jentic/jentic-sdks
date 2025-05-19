@@ -1,6 +1,6 @@
 [project]
 name = "jentic"
-version = "0.7.6"
+version = "0.7.8"
 description = "Jentic SDK for the discovery and execution of APIs and workflows"
 authors = [
     {name = "Jentic Labs", email = "info@jenticlabs.com"},

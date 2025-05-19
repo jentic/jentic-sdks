@@ -79,12 +79,14 @@ class BaseSearchResult(BaseModel):
 
 class WorkflowSearchResult(BaseSearchResult):
     workflow_id: str
+    api_name: str
 
 
 class OperationSearchResult(BaseSearchResult):
     operation_uuid: str
     path: str
     method: str
+    api_name: str
 
 
 class APISearchResults(BaseModel):
