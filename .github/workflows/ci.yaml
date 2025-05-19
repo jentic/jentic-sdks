@@ -4,19 +4,19 @@ name: CI
 on:
   push:
     paths:
-      - 'python/src/**'
-      - 'mcp/src/**'
+      - 'python/**'
+      - 'mcp/**'
   pull_request:
     paths:
-      - 'python/src/**'
-      - 'mcp/src/**'
+      - 'python/**'
+      - 'mcp/**'
 
 jobs:
   test-python:
     if: >-
-      contains(github.event.head_commit.message, 'python/src') ||
+      contains(github.event.head_commit.message, 'python/') ||
       github.event_name == 'pull_request' && github.event.pull_request.changed_files > 0 &&
-      contains(join(github.event.pull_request.changed_files, ','), 'python/src')
+      contains(join(github.event.pull_request.changed_files, ','), 'python/')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -39,9 +39,9 @@ jobs:
 
   test-mcp:
     if: >-
-      contains(github.event.head_commit.message, 'mcp/src') ||
+      contains(github.event.head_commit.message, 'mcp/') ||
       github.event_name == 'pull_request' && github.event.pull_request.changed_files > 0 &&
-      contains(join(github.event.pull_request.changed_files, ','), 'mcp/src')
+      contains(join(github.event.pull_request.changed_files, ','), 'mcp/')
     runs-on: ubuntu-latest
     defaults:
       run:
