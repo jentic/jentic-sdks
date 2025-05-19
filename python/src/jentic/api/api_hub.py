@@ -246,7 +246,6 @@ class JenticAPIClient:
         )
         search_results = await self._search_all(request)
 
-        api_map = {api.get("id"): api.get("api_name") for api in search_results.get("apis", [])}
         # Parse API, workflow, and operation results from search_results
         workflow_summaries: list[WorkflowSearchResult] = []
         for wf in search_results.get("workflows", []):

@@ -34,9 +34,18 @@ class MCPAdapter:
 
         results: APISearchResults = await self.jentic.search_api_capabilities(request=request)
 
+        # Dump results including api_name
+        data = results.model_dump(exclude_none=False)
+        # Prefix workflow summaries with their api_name
+        for wf in data.get("workflows", []):
+            api = wf.get("api_name")
+            if api:
+                # Prefix with full api_name (keep the dot)
+                wf_summary = wf.get("summary", "")
+                wf["summary"] = f"{api}-{wf_summary}"
         return {
             "result": {
-                "matches": results.model_dump(),
+                "matches": data,
                 "query": request.capability_description,
                 "total_matches": len(results.workflows) + len(results.operations),
             }
@@ -65,6 +74,10 @@ class MCPAdapter:
             result = await self.jentic.load_execution_info(
                 workflow_uuids=workflow_uuids, operation_uuids=operation_uuids
             )
+            # Inject api_name into each workflow entry
+            api_name_val = request.get("api_name")
+            for wf_conf in result.get("workflows", {}).values():
+                wf_conf["api_name"] = api_name_val
 
             return {"result": result}
 

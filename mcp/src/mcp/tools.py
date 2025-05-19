@@ -60,6 +60,10 @@ LOAD_CONFIG_TOOL = {
                 "items": {"type": "string"},
                 "description": "The UUIDs of the operations to include in the configuration files.",
             },
+            "api_name": {
+                "type": "string",
+                "description": "The API name of the workflows to include in the configuration files."
+            },
         },
         "required": ["workflow_uuids", "operation_uuids"],
     },
