@@ -128,7 +128,7 @@ async def test_execute_discord_get_user_details_workflow(target_env: str, env_fi
 
 @pytest.mark.asyncio
 async def test_search_api_capabilities():
-    """Test searching for API capabilities."""
+    """Test searching for API capabilities. """
     jentic_client = Jentic()
     request = ApiCapabilitySearchRequest(capability_description="discord user details", max_results=1)
     try:
