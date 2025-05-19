@@ -13,10 +13,6 @@ on:
 
 jobs:
   test-python:
-    if: >-
-      contains(github.event.head_commit.message, 'python/') ||
-      github.event_name == 'pull_request' && github.event.pull_request.changed_files > 0 &&
-      contains(join(github.event.pull_request.changed_files, ','), 'python/')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -38,10 +34,6 @@ jobs:
           DISCORD_GET_USER_DETAILS_WORKFLOW_UUID: 50b8c2a8d60ba2c66530e8dc55bbbe98
 
   test-mcp:
-    if: >-
-      contains(github.event.head_commit.message, 'mcp/') ||
-      github.event_name == 'pull_request' && github.event.pull_request.changed_files > 0 &&
-      contains(join(github.event.pull_request.changed_files, ','), 'mcp/')
     runs-on: ubuntu-latest
     defaults:
       run:
