@@ -27,7 +27,7 @@ jobs:
       - name: Run tests
         run: pdm run test
       - name: Run integration tests
-        run: pdm run test:integration
+        run: pdm run integration
         env:
           DISCORD_BOTTOKEN: ${{ secrets.DISCORD_BOTTOKEN }}
           DISCORD_GET_MY_USER_OPERATION_UUID: e7ef41c27ac9dbd950a5079ff7a824a2
