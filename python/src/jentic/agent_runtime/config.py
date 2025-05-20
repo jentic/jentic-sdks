@@ -231,6 +231,9 @@ class JenticConfig:
         all_arazzo_specs: list[dict] = []
         extracted_workflow_details: dict[str, dict] = {}
 
+        if not workflow_uuids:
+            return [], {}
+
         for workflow_id in workflow_uuids:
             if workflow_id not in exec_files_response.workflows:
                 logger.error(f"Workflow ID {workflow_id} not found in execution files response.")
@@ -334,6 +337,9 @@ class JenticConfig:
                 "inputs": io_details["inputs"] if io_details and "inputs" in io_details else None,
                 "outputs": (
                     io_details["outputs"] if io_details and "outputs" in io_details else None
+                ),
+                "security_requirements": (
+                    io_details["security_requirements"] if io_details and "security_requirements" in io_details else None
                 ),
             }
         return extracted_operation_details
