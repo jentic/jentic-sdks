@@ -1,4 +1,6 @@
 # Jentic MCP Plugin
+[![smithery badge](https://smithery.ai/badge/@jentic/jentic-tools)](https://smithery.ai/server/@jentic/jentic-tools)
+
 
 ## Why Use Jentic MCP?
 
@@ -150,6 +152,15 @@ tail /path/to/mcp/jentic_ark2_mcp.log
 
 ## Installation
 
+### Installing via Smithery
+
+To install Jentic Plugin for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@jentic/jentic-tools):
+
+```bash
+npx -y @smithery/cli install @jentic/jentic-tools --client claude
+```
+
+### Manual Installation
 Ensure you have `pdm` installed (`pipx install pdm`).
 
 To install the package and its dependencies for development:
