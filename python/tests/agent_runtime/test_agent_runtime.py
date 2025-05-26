@@ -19,6 +19,7 @@ class TestLLMToolSpecManager:
         return {
             "workflowId": "testWorkflow",
             "description": "A test workflow",
+            "api_name": "Discord",  # Vendor name for the workflow
             "inputs": {
                 "properties": {
                     "query": {
@@ -61,7 +62,7 @@ class TestLLMToolSpecManager:
         # Verify workflows are loaded (implementation-specific, testing through get_tool_specs)
         specs = manager.get_tool_specs("openai")
         assert len(specs["tools"]) == 1
-        assert specs["tools"][0]["function"]["name"] == "testWorkflow"
+        assert specs["tools"][0]["function"]["name"] == "Discord-testWorkflow"
 
     def test_extract_parameters(self, sample_workflow):
         """Test parameter extraction from workflows."""
@@ -102,7 +103,7 @@ class TestLLMToolSpecManager:
 
         tool = specs["tools"][0]
         assert tool["type"] == "function"
-        assert tool["function"]["name"] == "testWorkflow"
+        assert tool["function"]["name"] == "Discord-testWorkflow"
         assert tool["function"]["description"] == "A test workflow"
         assert tool["function"]["parameters"]["type"] == "object"
         assert "query" in tool["function"]["parameters"]["properties"]
@@ -119,7 +120,7 @@ class TestLLMToolSpecManager:
         assert len(specs["tools"]) == 1
 
         tool = specs["tools"][0]
-        assert tool["name"] == "testWorkflow"
+        assert tool["name"] == "Discord-testWorkflow"
         assert tool["description"] == "A test workflow"
         assert tool["input_schema"]["type"] == "object"
         assert "query" in tool["input_schema"]["properties"]
@@ -151,3 +152,17 @@ class TestLLMToolSpecManager:
             openai_specs["tools"][0]["function"]["description"]
             == claude_specs["tools"][0]["description"]
         )
+
+    def test_vendor_prefix_feature(self, sample_workflow):
+        """Test that vendor prefixes are correctly added to tool names when enabled."""
+        manager = create_llm_tool_manager()
+        # Ensure vendor prefixes are enabled (default is True)
+        manager.load_workflows({"testWorkflow": sample_workflow})
+        
+        # Test OpenAI format
+        openai_specs = manager.get_tool_specs("openai")
+        assert openai_specs["tools"][0]["function"]["name"] == "Discord-testWorkflow"
+        
+        # Test Anthropic format
+        anthropic_specs = manager.get_tool_specs("anthropic")
+        assert anthropic_specs["tools"][0]["name"] == "Discord-testWorkflow"

@@ -48,6 +48,7 @@ class LLMToolSpecManager:
             "openai": None,
             "anthropic": None,
         }
+        # Vendor prefixes are added when api_name is present
 
     def load_workflows(self, workflows: dict[str, Any]) -> None:
         """Load workflow specifications into the manager.
@@ -184,9 +185,15 @@ class LLMToolSpecManager:
         """
         parameters = self._extract_parameters(workflow)
         required = self._extract_required_parameters(workflow)
-
+        
+        name = workflow_id
+        if "api_name" in workflow:
+            # Only add prefix if api_name is explicitly provided
+            vendor = workflow["api_name"]
+            name = f"{vendor}-{workflow_id}"
+        
         return {
-            "name": workflow_id,
+            "name": name,
             "description": workflow.get("description", f"Execute the {workflow_id} workflow"),
             "parameters": {
                 "type": "object",
@@ -214,9 +221,15 @@ class LLMToolSpecManager:
             or operation.get("description")
             or f"Execute {operation.get('method', 'HTTP')} request to {operation.get('path', 'endpoint')}"
         )
+        
+        name = tool_name
+        if "api_name" in operation:
+            # Only add prefix if api_name is explicitly provided
+            vendor = operation["api_name"]
+            name = f"{vendor}-{tool_name}"
 
         return {
-            "name": tool_name,
+            "name": name,
             "description": description,
             "parameters": {
                 "type": "object",
@@ -260,9 +273,15 @@ class LLMToolSpecManager:
         """
         parameters = self._extract_parameters(workflow)
         required = self._extract_required_parameters(workflow)
+        
+        name = workflow_id
+        if "api_name" in workflow:
+            # Only add prefix if api_name is explicitly provided
+            vendor = workflow["api_name"]
+            name = f"{vendor}-{workflow_id}"
 
         return {
-            "name": workflow_id,
+            "name": name,
             "description": workflow.get("description", f"Execute the {workflow_id} workflow"),
             "input_schema": {
                 "$schema": "http://json-schema.org/draft-07/schema#",
@@ -286,8 +305,14 @@ class LLMToolSpecManager:
             Anthropic tool schema.
         """
         tool_name_base = self._generate_operation_tool_name(operation)
+        
         # Convert to Anthropic's preferred kebab-case
         tool_name = tool_name_base.replace("_", "-").lower()
+        
+        # Only add prefix if api_name is explicitly provided
+        if "api_name" in operation:
+            vendor = operation["api_name"]
+            tool_name = f"{vendor}-{tool_name}"
 
         parameters, required = self._extract_operation_parameters(operation)
         description = (
