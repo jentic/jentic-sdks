@@ -48,6 +48,11 @@ class LLMToolSpecManager:
             "openai": None,
             "anthropic": None,
         }
+        # Mapping of tool_name -> {sanitized_name: original_name}
+        self._parameter_mappings: dict[str, dict[str, str]] = {}
+
+        # Pre-compiled regex for validating Anthropic parameter names
+        self._anthropic_key_pattern = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
         # Vendor prefixes are added when api_name is present
 
     def load_workflows(self, workflows: dict[str, Any]) -> None:
@@ -280,14 +285,19 @@ class LLMToolSpecManager:
             vendor = workflow["api_name"]
             name = f"{vendor}-{workflow_id}"
 
+        # Sanitize parameter keys to adhere to Anthropic requirements
+        sanitized_parameters, sanitized_required = self._sanitize_parameters_for_anthropic(
+            workflow_id, parameters, required
+        )
+
         return {
             "name": name,
             "description": workflow.get("description", f"Execute the {workflow_id} workflow"),
             "input_schema": {
                 "$schema": "http://json-schema.org/draft-07/schema#",
                 "type": "object",
-                "properties": parameters,
-                "required": required,
+                "properties": sanitized_parameters,
+                "required": sanitized_required,
                 "additionalProperties": False,
             },
         }
@@ -333,14 +343,19 @@ class LLMToolSpecManager:
             clean_details.pop("required", None)
             formatted_parameters[param_name] = clean_details
 
+        # Sanitize parameter keys to adhere to Anthropic requirements
+        sanitized_parameters, sanitized_required = self._sanitize_parameters_for_anthropic(
+            tool_name, formatted_parameters, required_list
+        )
+
         return {
             "name": tool_name,
             "description": description,
             "input_schema": {
                 "$schema": "http://json-schema.org/draft-07/schema#",
                 "type": "object",
-                "properties": formatted_parameters,  # Use cleaned parameters
-                "required": required_list,  # Use the list of required names
+                "properties": sanitized_parameters,
+                "required": sanitized_required,
                 "additionalProperties": False,
             },
         }
@@ -512,6 +527,90 @@ class LLMToolSpecManager:
 
         required = sorted(list(all_required))
         return parameters, required
+
+    def _sanitize_parameter_name(self, name: str) -> str:
+        """Return a sanitized parameter name that matches Anthropic's pattern.
+
+        The sanitization strategy is:
+        1. Replace any disallowed character with an underscore.
+        2. Collapse multiple consecutive underscores.
+        3. Trim leading/trailing underscores.
+        4. Truncate to 64 characters as required by Anthropic.
+        """
+        # Replace invalid chars with underscore
+        sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", name)
+        # Collapse consecutive underscores
+        sanitized = re.sub(r"_+", "_", sanitized)
+        # Trim underscores
+        sanitized = sanitized.strip("_")
+        # Fallback when sanitization results in empty string
+        if not sanitized:
+            sanitized = "param"
+        # Truncate to 64 chars (Anthropic limit)
+        if len(sanitized) > 64:
+            sanitized = sanitized[:64]
+        return sanitized
+
+    def _sanitize_parameters_for_anthropic(
+        self,
+        tool_name: str,
+        parameters: dict[str, dict[str, Any]],
+        required: list[str],
+    ) -> tuple[dict[str, dict[str, Any]], list[str]]:
+        """Sanitize parameter keys and store mapping for later restoration."""
+        sanitized_parameters: dict[str, dict[str, Any]] = {}
+        mapping: dict[str, str] = {}
+        for original_name, schema in parameters.items():
+            sanitized_name = (
+                original_name
+                if self._anthropic_key_pattern.match(original_name)
+                else self._sanitize_parameter_name(original_name)
+            )
+            # In the (unlikely) event of collision, prefer first occurrence and log.
+            if sanitized_name in sanitized_parameters and sanitized_parameters[sanitized_name] != schema:
+                logger.warning(
+                    "Parameter name collision after sanitization for tool '%s': '%s' and '%s' both map to '%s'.",
+                    tool_name,
+                    mapping.get(sanitized_name, original_name),
+                    original_name,
+                    sanitized_name,
+                )
+            sanitized_parameters[sanitized_name] = schema
+            if sanitized_name != original_name:
+                mapping[sanitized_name] = original_name
+        # Update required list using the same mapping logic
+        sanitized_required = []
+        for req_name in required:
+            sanitized_required.append(
+                req_name if self._anthropic_key_pattern.match(req_name) else self._sanitize_parameter_name(req_name)
+            )
+        # Persist mapping if any substitutions occurred
+        if mapping:
+            self._parameter_mappings[tool_name] = mapping
+        return sanitized_parameters, sanitized_required
+
+    def restore_input_parameter_names(self, tool_name: str, inputs: dict[str, Any]) -> dict[str, Any]:
+        """Restore original parameter names for execution using stored mappings.
+
+        Args:
+            tool_name: Name of the tool whose inputs are being restored.
+            inputs: Dictionary of inputs received from the LLM (potentially sanitized).
+
+        Returns:
+            Dictionary with keys converted back to their original names expected by the
+            workflow/operation runtime.
+        """
+        if not inputs:
+            return inputs
+        mapping = self._parameter_mappings.get(tool_name, {})
+        if not mapping:
+            return inputs  # No sanitization performed for this tool
+
+        restored: dict[str, Any] = {}
+        for key, value in inputs.items():
+            original_key = mapping.get(key, key)
+            restored[original_key] = value
+        return restored
 
     def get_tool_type(self, tool_name: str) -> Literal["workflow", "operation", "unknown"]:
         """Determine if a tool name corresponds to a workflow or an operation."""
