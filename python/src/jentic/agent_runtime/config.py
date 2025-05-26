@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from oak_runner.auth.auth_processor import AuthProcessor
 from oak_runner.auth.models import SecurityOption
 from oak_runner.extractor.openapi_extractor import extract_operation_io
+from oak_runner import OAKRunner
 
 from jentic.api.api_hub import JenticAPIClient
 from jentic.models import GetFilesResponse
@@ -184,7 +185,7 @@ class JenticConfig:
             )
 
         # Step 5: Process authentication requirements
-        env_mappings = JenticConfig._process_auth(all_openapi_specs, all_arazzo_specs)
+        env_mappings = OAKRunner.generate_env_mappings(arazzo_docs=all_arazzo_specs, source_descriptions=all_openapi_specs)
 
         # Step 6: Compose final config
         final_config = {
