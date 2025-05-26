@@ -13,16 +13,16 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "fastapi>=0.103.1",
     "uvicorn>=0.23.2",
-    "jentic >=0.7.10"
+    "jentic >=0.7.10",
 ]
 requires-python = ">=3.10"
 readme = "README.md"
 license = {text = "MIT"}
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "pytest>=7.0.0",
-    "pytest-asyncio",
+    "pytest-asyncio>=0.25.3",
     "pytest-mock>=3.12.0",
     "ruff>=0.1.0",
     "black>=23.0.0",
@@ -40,6 +40,7 @@ packages = ["src/mcp"]
 [tool.hatch.metadata]
 allow-direct-references = true
 
+[tool.pdm]
 [tool.pdm.scripts]
 linter = "ruff check . --fix && ruff format ." # Basic ruff commands
 lint = "pdm run linter && black . && isort . && mypy src/mcp tests" # Composite lint
