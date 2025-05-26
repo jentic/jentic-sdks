@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:c7713fc954cfb61cc3830a159a5e6444e5ccb5f6accd2c57639d6ea252ebf577"
+content_hash = "sha256:092a1022a5b650d78d88ca8e035268adb3146fac0db39d9cb2b9cbf6b90e36fc"
 
 [[metadata.targets]]
 requires_python = ">=3.10"
@@ -343,7 +343,7 @@ files = [
 
 [[package]]
 name = "oak-runner"
-version = "0.8.6"
+version = "0.8.7"
 requires_python = ">=3.10"
 summary = "Execution libraries and test tools for Arazzo workflows and Open API operations"
 groups = ["default"]
@@ -353,10 +353,6 @@ dependencies = [
     "pydantic>=2.0.0",
     "pyyaml>=6.0",
     "requests>=2.28.0",
-]
-files = [
-    {file = "oak_runner-0.8.6-py3-none-any.whl", hash = "sha256:13d582ff77071afad6a0e1b365400807c38cdde2cbbc85df0cc0c87975128c3f"},
-    {file = "oak_runner-0.8.6.tar.gz", hash = "sha256:403ef2a9bf6208c5846eb276172e8366ecaa0f573de3dcffad8019d4013b5f2f"},
 ]
 
 [[package]]
