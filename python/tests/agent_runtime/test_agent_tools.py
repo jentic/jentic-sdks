@@ -112,6 +112,54 @@ class TestAgentToolManager:
         assert tools[0]["type"] == "function"
         assert tools[0]["function"]["name"] == "testWorkflow"
 
+    def test_vendor_prefix_in_tool_definitions(self):
+        """Test that vendor prefixes are correctly added to tool names when api_name is provided."""
+        # Create a temporary directory with a custom config file
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            project_dir = Path(tmp_dir)
+            
+            # Create a config with a workflow that has an api_name
+            config = {
+                "workflows": {
+                    "sendMessage": {
+                        "workflow_uuid": "send-message-uuid",
+                        "name": "Send Message",
+                        "description": "Send a message to a channel",
+                        "api_name": "Discord",  # This is the key addition
+                        "inputs": {
+                            "properties": {"content": {"type": "string"}},
+                            "required": ["content"],
+                        },
+                        "steps": [
+                            {
+                                "id": "step1",
+                                "operation": {"path": "/message", "method": "POST"},
+                                "parameters": {"text": "$inputs.content"},
+                            }
+                        ],
+                        "output": "$steps.step1",
+                    }
+                }
+            }
+            
+            # Write the config to the temp dir
+            config_file = project_dir / "jentic.json"
+            with open(config_file, "w") as f:
+                json.dump(config, f)
+            
+            # Test OpenAI format with the vendor name
+            manager = AgentToolManager(config_file, format="openai")
+            tools = manager.generate_tool_definitions()
+            assert len(tools) > 0
+            assert "function" in tools[0]
+            assert tools[0]["function"]["name"] == "Discord-sendMessage"
+            
+            # Test Anthropic format with the vendor name
+            manager = AgentToolManager(config_file, format="anthropic")
+            tools = manager.generate_tool_definitions()
+            assert len(tools) > 0
+            assert tools[0]["name"] == "Discord-sendMessage"
+
     @pytest.mark.asyncio
     async def test_execute_tool(self, agent_tool_manager):
         """Test executing a tool."""
