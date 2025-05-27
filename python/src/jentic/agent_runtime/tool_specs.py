@@ -51,8 +51,10 @@ class LLMToolSpecManager:
         # Mapping of tool_name -> {sanitized_name: original_name}
         self._parameter_mappings: dict[str, dict[str, str]] = {}
 
-        # Pre-compiled regex for validating Anthropic parameter names
-        self._anthropic_key_pattern = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
+        # Pre-compiled regex for validating parameter names across LLM platforms
+        # This follows Anthropic's more restrictive pattern (alphanumeric, underscore, hyphen)
+        # which is also compatible with OpenAI's more permissive schema
+        self._valid_param_name_pattern = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
         # Vendor prefixes are added when api_name is present
 
     def load_workflows(self, workflows: dict[str, Any]) -> None:
@@ -191,6 +193,11 @@ class LLMToolSpecManager:
         parameters = self._extract_parameters(workflow)
         required = self._extract_required_parameters(workflow)
         
+        # Sanitize parameter names for consistency
+        sanitized_parameters, sanitized_required = self._sanitize_parameters(
+            workflow_id, parameters, required
+        )
+        
         name = workflow_id
         if "api_name" in workflow:
             # Only add prefix if api_name is explicitly provided
@@ -202,8 +209,8 @@ class LLMToolSpecManager:
             "description": workflow.get("description", f"Execute the {workflow_id} workflow"),
             "parameters": {
                 "type": "object",
-                "properties": parameters,
-                "required": required,
+                "properties": sanitized_parameters,
+                "required": sanitized_required,
             },
         }
 
@@ -285,8 +292,8 @@ class LLMToolSpecManager:
             vendor = workflow["api_name"]
             name = f"{vendor}-{workflow_id}"
 
-        # Sanitize parameter keys to adhere to Anthropic requirements
-        sanitized_parameters, sanitized_required = self._sanitize_parameters_for_anthropic(
+        # Sanitize parameter keys
+        sanitized_parameters, sanitized_required = self._sanitize_parameters(
             workflow_id, parameters, required
         )
 
@@ -343,8 +350,8 @@ class LLMToolSpecManager:
             clean_details.pop("required", None)
             formatted_parameters[param_name] = clean_details
 
-        # Sanitize parameter keys to adhere to Anthropic requirements
-        sanitized_parameters, sanitized_required = self._sanitize_parameters_for_anthropic(
+        # Sanitize parameter keys
+        sanitized_parameters, sanitized_required = self._sanitize_parameters(
             tool_name, formatted_parameters, required_list
         )
 
@@ -528,14 +535,34 @@ class LLMToolSpecManager:
         required = sorted(list(all_required))
         return parameters, required
 
-    def _sanitize_parameter_name(self, name: str) -> str:
-        """Return a sanitized parameter name that matches Anthropic's pattern.
+    def _is_valid_parameter_name(self, name: str) -> bool:
+        """Check if a parameter name is valid across LLM platforms.
+        
+        A valid parameter name must:
+        1. Match the pattern [a-zA-Z0-9_-]+ (alphanumeric, underscore, hyphen)
+        2. Be between 1 and 64 characters long
+        3. Not be empty
+        
+        Args:
+            name: The parameter name to validate
+            
+        Returns:
+            True if the name is valid, False otherwise
+        """
+        return bool(name and self._valid_param_name_pattern.match(name))
+    
+    def _sanitize_parameter_name(self, name: str) -> str | None:
+        """Return a sanitized parameter name that matches valid parameter patterns.
 
         The sanitization strategy is:
         1. Replace any disallowed character with an underscore.
         2. Collapse multiple consecutive underscores.
         3. Trim leading/trailing underscores.
-        4. Truncate to 64 characters as required by Anthropic.
+        4. Truncate to 64 characters (compatible with all LLM platforms).
+        5. Return None for empty strings or strings with only invalid chars so they can be excluded.
+
+        Note: Tests may need to be updated as this function now returns None for invalid parameters
+        instead of using 'param' as a fallback.
         """
         # Replace invalid chars with underscore
         sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", name)
@@ -543,50 +570,105 @@ class LLMToolSpecManager:
         sanitized = re.sub(r"_+", "_", sanitized)
         # Trim underscores
         sanitized = sanitized.strip("_")
-        # Fallback when sanitization results in empty string
+        # Return None for empty strings or strings with only invalid chars
         if not sanitized:
-            sanitized = "param"
-        # Truncate to 64 chars (Anthropic limit)
+            return None
+        # Truncate to 64 chars (for LLM platform compatibility)
         if len(sanitized) > 64:
             sanitized = sanitized[:64]
         return sanitized
 
-    def _sanitize_parameters_for_anthropic(
+    def _sanitize_parameters(
         self,
         tool_name: str,
         parameters: dict[str, dict[str, Any]],
         required: list[str],
     ) -> tuple[dict[str, dict[str, Any]], list[str]]:
-        """Sanitize parameter keys and store mapping for later restoration."""
+        """Sanitize parameter keys to ensure consistency across LLM providers.
+        
+        Args:
+            tool_name: Name of the tool being sanitized
+            parameters: Dictionary of parameter schemas
+            required: List of required parameter names
+            
+        Returns:
+            Tuple of (sanitized_parameters, sanitized_required)
+        """
         sanitized_parameters: dict[str, dict[str, Any]] = {}
         mapping: dict[str, str] = {}
+        
+        # Apply consistent sanitization to all parameters
+        used_names = set()
+        required_param_name = None
+        
+        # Process all parameters
         for original_name, schema in parameters.items():
-            sanitized_name = (
-                original_name
-                if self._anthropic_key_pattern.match(original_name)
-                else self._sanitize_parameter_name(original_name)
-            )
-            # In the (unlikely) event of collision, prefer first occurrence and log.
-            if sanitized_name in sanitized_parameters and sanitized_parameters[sanitized_name] != schema:
-                logger.warning(
-                    "Parameter name collision after sanitization for tool '%s': '%s' and '%s' both map to '%s'.",
-                    tool_name,
-                    mapping.get(sanitized_name, original_name),
-                    original_name,
-                    sanitized_name,
-                )
+            if self._is_valid_parameter_name(original_name):
+                # Name is already valid, use as-is
+                sanitized_name = original_name
+            else:
+                # Try to sanitize the name
+                sanitized_name = self._sanitize_parameter_name(original_name)
+                # If sanitization returns None (completely invalid), skip this parameter
+                if sanitized_name is None:
+                    logger.debug(f"Excluding parameter with invalid name: '{original_name}'")
+                    continue
+            
+            # Handle collisions by adding a suffix
+            if sanitized_name in used_names:
+                base_name = sanitized_name
+                counter = 1
+                while sanitized_name in used_names:
+                    sanitized_name = f"{base_name}_{counter}"
+                    counter += 1
+                    
+                    # Make sure we stay within the 64-char limit
+                    if len(sanitized_name) > 64:
+                        # If we're going to exceed, truncate the base name to make room for the suffix
+                        suffix = f"_{counter}"
+                        base_name = base_name[:64 - len(suffix)]
+                        sanitized_name = f"{base_name}{suffix}"
+            
+            used_names.add(sanitized_name)
             sanitized_parameters[sanitized_name] = schema
             if sanitized_name != original_name:
                 mapping[sanitized_name] = original_name
-        # Update required list using the same mapping logic
+        
+        # Build a map from original name to sanitized name
+        original_to_sanitized = {}
+        for sanitized_name, original_name in mapping.items():
+            original_to_sanitized[original_name] = sanitized_name
+            
+        # Update required list using the name mapping
+        # Only include valid parameter names or ones we've successfully sanitized
         sanitized_required = []
         for req_name in required:
-            sanitized_required.append(
-                req_name if self._anthropic_key_pattern.match(req_name) else self._sanitize_parameter_name(req_name)
-            )
+            if self._is_valid_parameter_name(req_name) and req_name in parameters:
+                # If the name is already valid and exists in the parameters, use it directly
+                sanitized_required.append(req_name)
+            elif req_name in original_to_sanitized and original_to_sanitized[req_name] in sanitized_parameters:
+                # If we have a mapping for this required parameter and it's in our sanitized parameters, use it
+                sanitized_required.append(original_to_sanitized[req_name])
+            else:
+                # If the parameter can't be sanitized or isn't in the sanitized parameters, we exclude it
+                sanitized_name = None
+                if not self._is_valid_parameter_name(req_name):
+                    sanitized_name = self._sanitize_parameter_name(req_name)
+                else:
+                    sanitized_name = req_name
+                    
+                # Skip invalid parameters
+                if sanitized_name is None or sanitized_name not in sanitized_parameters:
+                    logger.debug(f"Excluding required parameter '{req_name}' as it has an invalid name or was not found in parameters")
+                    continue
+                    
+                # Otherwise, add it to the required list
+                sanitized_required.append(sanitized_name)
+            
         # Persist mapping if any substitutions occurred
         if mapping:
             self._parameter_mappings[tool_name] = mapping
+            
         return sanitized_parameters, sanitized_required
 
     def restore_input_parameter_names(self, tool_name: str, inputs: dict[str, Any]) -> dict[str, Any]:

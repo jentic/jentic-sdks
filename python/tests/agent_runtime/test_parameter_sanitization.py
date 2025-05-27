@@ -80,27 +80,33 @@ def test_edge_case_parameter_sanitization():
     required = tool["input_schema"]["required"]
     
     # Verify edge cases were handled correctly
-    assert "param" in properties  # Empty string or special chars should get fallback name
+    assert "param" not in properties  # Empty string or special chars should be excluded
+    assert "" not in properties  # Empty string should be excluded
+    assert "!@#$%^&*()" not in properties  # Special chars should be excluded
     assert len(list(filter(lambda k: k.startswith("a" * 60), properties.keys()))) == 1  # Truncated
     assert "leading-trailing" in properties  # Spaces removed
     assert "multiple_dots" in properties  # Multiple dots/underscores consolidated
     
-    # Check mappings
+    # Check that empty and special char keys were excluded, not added to mappings
     mapping = manager._parameter_mappings[tool["name"]]
-    assert "" in mapping.values() or "!@#$%^&*()" in mapping.values()  # Either empty or special chars map to param
+    assert "" not in mapping.values()  # Empty string should be excluded
+    assert "!@#$%^&*()" not in mapping.values()  # Special chars should be excluded
     
-    # Verify required list was properly sanitized
-    assert "param" in required  # Special chars in required list mapped to param
+    # Verify required list excludes invalid parameters
+    assert len(required) == 0  # Special chars in required list should be excluded
     
-    # Test restoration with edge cases
+    # Test restoration with valid sanitized parameter names only
     edge_inputs = {
-        "param": "empty_or_special",
-        list(filter(lambda k: k.startswith("a" * 60), properties.keys()))[0]: "truncated"
+        list(filter(lambda k: k.startswith("a" * 60), properties.keys()))[0]: "truncated",
+        "leading-trailing": "spaces_removed",
+        "multiple_dots": "dots_consolidated"
     }
     
     restored = manager.restore_input_parameter_names(tool["name"], edge_inputs)
-    # Check that either empty string or special chars are restored from "param"
-    assert "" in restored or "!@#$%^&*()" in restored  
+    # Verify proper restoration of valid sanitized names
+    assert any(key.startswith("a" * 60) for key in restored)
+    assert " leading-trailing " in restored
+    assert "..multiple...dots.." in restored  
     long_key = list(filter(lambda k: len(k) >= 100, mapping.values()))
     assert len(long_key) == 1  # Should have one long key in mappings
     assert long_key[0] in restored  # Long key restored
