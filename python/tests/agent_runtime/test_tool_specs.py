@@ -97,9 +97,45 @@ def test_openai_operation_schema_simple():
 
 
 def test_openai_operation_schema_default_description():
-    mgr = LLMToolSpecManager()
+    """Test that operation schemas use method and path if no description is provided."""
+    mgr = create_llm_tool_manager()
     operation_uuid = "op2"
     operation = {"method": "GET", "path": "/info", "inputs": {"properties": {}}}
     schema = mgr._create_openai_operation_schema(operation_uuid, operation)
     assert schema["name"] == "get-info"
     assert schema["description"].startswith("Execute GET request to /info")
+
+
+def test_vendor_name_sanitization():
+    """Test that vendor names from api_name are properly sanitized."""
+    mgr = create_llm_tool_manager()
+    
+    # Test with a domain in api_name
+    operation_with_domain = {
+        "method": "GET",
+        "path": "/test",
+        "api_name": "discord.com",
+        "inputs": {"properties": {}},
+    }
+    openai_schema = mgr._create_openai_operation_schema("test-id", operation_with_domain)
+    assert openai_schema["name"] == "discord-com-get-test"
+    
+    # Test with special characters
+    operation_with_special_chars = {
+        "method": "GET",
+        "path": "/test",
+        "api_name": "company@example!com",
+        "inputs": {"properties": {}},
+    }
+    openai_schema = mgr._create_openai_operation_schema("test-id", operation_with_special_chars)
+    assert openai_schema["name"] == "company-example-com-get-test"
+    
+    # Test with empty api_name after sanitization - should have no vendor prefix
+    operation_with_invalid_api_name = {
+        "method": "GET",
+        "path": "/test",
+        "api_name": "!@#$%",
+        "inputs": {"properties": {}},
+    }
+    openai_schema = mgr._create_openai_operation_schema("test-id", operation_with_invalid_api_name)
+    assert openai_schema["name"] == "get-test"  # No vendor prefix when sanitized vendor is empty

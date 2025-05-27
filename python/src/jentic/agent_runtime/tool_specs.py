@@ -201,7 +201,7 @@ class LLMToolSpecManager:
         name = workflow_id
         if "api_name" in workflow:
             # Only add prefix if api_name is explicitly provided
-            vendor = workflow["api_name"]
+            vendor = self._sanitize_vendor_name(workflow["api_name"])
             name = f"{vendor}-{workflow_id}"
         
         return {
@@ -236,9 +236,10 @@ class LLMToolSpecManager:
         
         name = tool_name
         if "api_name" in operation:
-            # Only add prefix if api_name is explicitly provided
-            vendor = operation["api_name"]
-            name = f"{vendor}-{tool_name}"
+            # Only add prefix if api_name is explicitly provided and valid
+            vendor = self._sanitize_vendor_name(operation["api_name"])
+            if vendor:
+                name = f"{vendor}-{tool_name}"
 
         return {
             "name": name,
@@ -289,7 +290,7 @@ class LLMToolSpecManager:
         name = workflow_id
         if "api_name" in workflow:
             # Only add prefix if api_name is explicitly provided
-            vendor = workflow["api_name"]
+            vendor = self._sanitize_vendor_name(workflow["api_name"])
             name = f"{vendor}-{workflow_id}"
 
         # Sanitize parameter keys
@@ -326,10 +327,11 @@ class LLMToolSpecManager:
         # Convert to Anthropic's preferred kebab-case
         tool_name = tool_name_base.replace("_", "-").lower()
         
-        # Only add prefix if api_name is explicitly provided
+        # Only add prefix if api_name is explicitly provided and valid
         if "api_name" in operation:
-            vendor = operation["api_name"]
-            tool_name = f"{vendor}-{tool_name}"
+            vendor = self._sanitize_vendor_name(operation["api_name"])
+            if vendor:
+                tool_name = f"{vendor}-{tool_name}"
 
         parameters, required = self._extract_operation_parameters(operation)
         description = (
@@ -550,6 +552,27 @@ class LLMToolSpecManager:
             True if the name is valid, False otherwise
         """
         return bool(name and self._valid_param_name_pattern.match(name))
+        
+    def _sanitize_vendor_name(self, vendor: str) -> str:
+        """Sanitize a vendor name (from api_name) to be used in tool names.
+        
+        This ensures that vendor names from domains like 'discord.com' are properly
+        sanitized to work in tool/function names for LLM platforms.
+        
+        Args:
+            vendor: The vendor name to sanitize (typically from api_name)
+            
+        Returns:
+            A sanitized vendor name safe to use in tool names, or empty string if invalid
+        """
+        # Replace invalid chars with hyphens (more readable than underscores for vendor names)
+        sanitized = re.sub(r"[^a-zA-Z0-9_-]", "-", vendor)
+        # Collapse consecutive hyphens
+        sanitized = re.sub(r"-+", "-", sanitized)
+        # Trim hyphens
+        sanitized = sanitized.strip("-")
+        # Return empty string for invalid vendor names
+        return sanitized
     
     def _sanitize_parameter_name(self, name: str) -> str | None:
         """Return a sanitized parameter name that matches valid parameter patterns.
