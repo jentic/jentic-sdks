@@ -7,7 +7,7 @@ The typical flow for a user interaction:
 
 1. SEARCH: Use search_apis to find actions based on the user's request (e.g., 'send a Discord message'). Keep track of 'operation_uuid' and 'workflow_uuid'.
 2. CONFIRM: Show the user the best matching action(s) and confirm they want to proceed.
-3. (Optional) LOAD: Use load_execution_info to get details about the action (like required inputs) if needed for clarification or complex actions.
+3. LOAD: Use load_execution_info to get details about the action (like required inputs) if needed for clarification or complex actions.
 4. EXECUTE: Use execute to perform the confirmed action for the user.
 
 Always clearly communicate the steps to the user.
@@ -71,7 +71,7 @@ LOAD_CONFIG_TOOL = {
 
 EXECUTE_TOOL = {
     "name": "execute",
-    "description": "Perform the chosen action for the user using the provided details (if any are needed).",
+    "description": "Perform the chosen action for the user using the provided details. Always include `inputs` even if there are none.",
     "parameters": {
         "type": "object",
         "properties": {
@@ -87,7 +87,7 @@ EXECUTE_TOOL = {
             "inputs": {
                 "type": "object",
                 "description": "The input parameters required by the operation or workflow.",
-                "additionalProperties": True, # Allow any structure for inputs
+                "additionalProperties": True, 
             },
         },
         "required": ["execution_type", "uuid", "inputs"],
