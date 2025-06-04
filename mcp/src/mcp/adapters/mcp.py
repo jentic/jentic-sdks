@@ -114,41 +114,28 @@ class MCPAdapter:
         Returns:
             MCP tool response.
         """
-        workflow_uuids = request.get("workflow_uuids")
-        operation_uuids = request.get("operation_uuids")
-        api_name_override = request.get("api_name")  # Keep as fallback
+        # Get the workflow and operation UUIDs from the request
+        workflow_uuids = request.get("workflow_uuids", [])
+        if isinstance(workflow_uuids, str):
+            workflow_uuids = [workflow_uuids]
+        operation_uuids = request.get("operation_uuids", [])
+        if isinstance(operation_uuids, str):
+            operation_uuids = [operation_uuids]
+        
+        # Get the API name or use empty string as default
+        api_name = request.get("api_name", "")
 
-        # Log the project directory for debugging
         logger = logging.getLogger(__name__)
-        logger.info(
-            f"Generating config with workflow_uuids: {workflow_uuids}, operation_uuids: {operation_uuids}"
+        logger.debug(
+            f"Generating config with workflow_uuids: {workflow_uuids}, operation_uuids: {operation_uuids}, api_name: {api_name}"
         )
 
         try:
             # Generate configuration from the selection set
             result = await self.jentic.load_execution_info(
-                workflow_uuids=workflow_uuids, operation_uuids=operation_uuids
+                workflow_uuids=workflow_uuids, operation_uuids=operation_uuids, api_name=api_name
             )
-
-            # If operation_uuids are present and api_name_override is provided, use it for operations
-            # This ensures we don't hardcode any specific APIs or patterns
-            operations = result.get("operations", {})
-            if api_name_override and operation_uuids:
-                for op_uuid, op_conf in operations.items():
-                    if "api_name" not in op_conf:
-                        op_conf["api_name"] = api_name_override
-
-            # Extract API names from workflow API references
-            result = self._ensure_api_names_in_response(result)
-            
-            # Use api_name from request as fallback if specified
-            if api_name_override:
-                for wf_conf in result.get("workflows", {}).values():
-                    if not wf_conf.get("api_name"):
-                        wf_conf["api_name"] = api_name_override
-
             return {"result": result}
-
         except ValueError as e:
             logger.error(f"Error generating config: {str(e)}")
             return {
@@ -156,6 +143,7 @@ class MCPAdapter:
                     "success": False,
                     "operation_uuids": operation_uuids,
                     "workflow_uuids": workflow_uuids,
+                    "api_name": api_name,
                     "message": str(e),
                     "config": {},
                 }
