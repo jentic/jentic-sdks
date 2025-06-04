@@ -38,6 +38,10 @@ class MCPAdapter:
 
         # Dump results including api_name
         data = results.model_dump(exclude_none=False)
+        
+        # Extract API names from workflow API references
+        data = self._ensure_api_names_in_response(data)
+        
         # Prefix workflow summaries with their api_name
         for wf in data.get("workflows", []):
             api = wf.get("api_name")
@@ -53,6 +57,54 @@ class MCPAdapter:
             }
         }
 
+    def _extract_api_name_from_refs(self, workflow: dict[str, Any]) -> str | None:
+        """Extract API name from workflow references.
+        
+        Args:
+            workflow: A workflow dictionary.
+            
+        Returns:
+            The extracted API name if available, None otherwise.
+        """
+        api_refs = workflow.get("api_references", [])
+        if not api_refs or not isinstance(api_refs, list) or not api_refs:
+            return None
+            
+        first_ref = api_refs[0]
+        if isinstance(first_ref, dict) and "api_name" in first_ref:
+            return first_ref["api_name"]
+        return None
+
+    def _ensure_api_names_in_response(self, response_data: dict[str, Any]) -> dict[str, Any]:
+        """Extract API names from workflow API references and add them to the workflow configuration.
+        
+        Args:
+            response_data: The response data from the Jentic API.
+            
+        Returns:
+            The response data with API names added to workflows.
+        """
+        # Handle different formats of workflows (list in search results, dict in config)
+        workflows = response_data.get("workflows", {})
+        
+        # For list format (search_api_capabilities response)
+        if isinstance(workflows, list):
+            for wf in workflows:
+                if isinstance(wf, dict) and "api_name" not in wf:
+                    api_name = self._extract_api_name_from_refs(wf)
+                    if api_name:
+                        wf["api_name"] = api_name
+        
+        # For dict format (generate_runtime_config response)
+        elif isinstance(workflows, dict):
+            for wf_uuid, wf_conf in workflows.items():
+                if "api_name" not in wf_conf:
+                    api_name = self._extract_api_name_from_refs(wf_conf)
+                    if api_name:
+                        wf_conf["api_name"] = api_name
+                    
+        return response_data
+
     async def generate_runtime_config(self, request: dict[str, Any]) -> dict[str, Any]:
         """MCP endpoint for generating a configuration file from a selection set.
 
@@ -64,6 +116,7 @@ class MCPAdapter:
         """
         workflow_uuids = request.get("workflow_uuids")
         operation_uuids = request.get("operation_uuids")
+        api_name_override = request.get("api_name")  # Keep as fallback
 
         # Log the project directory for debugging
         logger = logging.getLogger(__name__)
@@ -76,10 +129,23 @@ class MCPAdapter:
             result = await self.jentic.load_execution_info(
                 workflow_uuids=workflow_uuids, operation_uuids=operation_uuids
             )
-            # Inject api_name into each workflow entry
-            api_name_val = request.get("api_name")
-            for wf_conf in result.get("workflows", {}).values():
-                wf_conf["api_name"] = api_name_val
+
+            # If operation_uuids are present and api_name_override is provided, use it for operations
+            # This ensures we don't hardcode any specific APIs or patterns
+            operations = result.get("operations", {})
+            if api_name_override and operation_uuids:
+                for op_uuid, op_conf in operations.items():
+                    if "api_name" not in op_conf:
+                        op_conf["api_name"] = api_name_override
+
+            # Extract API names from workflow API references
+            result = self._ensure_api_names_in_response(result)
+            
+            # Use api_name from request as fallback if specified
+            if api_name_override:
+                for wf_conf in result.get("workflows", {}).values():
+                    if not wf_conf.get("api_name"):
+                        wf_conf["api_name"] = api_name_override
 
             return {"result": result}
 
