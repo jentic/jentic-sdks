@@ -37,18 +37,21 @@ class WorkflowEntry(BaseModel):
     name: str
     api_references: List[APIReference]
     files: AssociatedFiles
+    api_name: str = ""  # Default to empty string instead of None for better type safety
+    api_names: Optional[List[str]] = None
 
 
 # Represents a single operation entry in the 'operations' dictionary
 class OperationEntry(BaseModel):
     id: str
-    api_name: str
+    api_name: str = ""  # Default to empty string instead of None for better type safety
     api_version_id: str
     operation_id: Optional[str] = None
     path: str
     method: str
     summary: Optional[str] = None
     files: AssociatedFiles
+    api_references: Optional[List[APIReference]] = None
 
 
 # The main response model

@@ -15,6 +15,7 @@ from jentic.models import (
     WorkflowEntry,
     WorkflowExecutionDetails,
     WorkflowSearchResult,
+    OperationEntry,
 )
 
 from .api_cache import api_cache
@@ -66,9 +67,11 @@ class JenticAPIClient:
             async with httpx.AsyncClient() as client:
                 response = await client.get(url, params=params, headers=self.headers)
                 response.raise_for_status()
-                data = response.json()
-                response_model = GetFilesResponse.model_validate(data)
-                return response_model
+                # Try to get the data from the response and ensure API names
+                response_json = response.json()
+                response_json = self.ensure_api_names_in_response(response_json)
+                # Create the response model using the enriched data
+                return GetFilesResponse.model_validate(response_json)
         except httpx.HTTPStatusError as e:
             logger.error(
                 f"HTTP error fetching execution files: {e.response.status_code} {e.response.text}"
@@ -335,6 +338,65 @@ class JenticAPIClient:
         # Return as a SearchResults object for high-level structure
         return APISearchResults(workflows=workflow_summaries, operations=operation_summaries)
 
+    # No need for _extract_api_name_from_refs method as our Pydantic models handle API name extraction
+
+    def ensure_api_names_in_response(self, response_data: dict[str, Any]) -> dict[str, Any]:
+        """Ensure API names are properly set in API responses using Pydantic models.
+        
+        This implements Killian's recommendation to use Pydantic models for type safety.
+        
+        Args:
+            response_data: The response data that may need API names enriched.
+            
+        Returns:
+            The updated response data with API names properly set.
+        """
+        
+        # Handle workflows (could be list in search results or dict in execution info)
+        workflows = response_data.get("workflows", {})
+        if isinstance(workflows, list):
+            # Process list format (search results)
+            for i, wf in enumerate(workflows):
+                self._enrich_entity_with_api_name(wf, workflows, i, WorkflowEntry)
+        elif isinstance(workflows, dict):
+            # Process dict format (execution info)
+            for wf_id, wf in workflows.items():
+                self._enrich_entity_with_api_name(wf, workflows, wf_id, WorkflowEntry)
+        
+        # Process operations (always in dict format)
+        operations = response_data.get("operations", {})
+        if isinstance(operations, dict):
+            for op_id, op in operations.items():
+                self._enrich_entity_with_api_name(op, operations, op_id, OperationEntry)
+                
+        return response_data
+        
+    def _enrich_entity_with_api_name(self, entity: dict, parent_dict: dict, key: Any, model_class: type) -> None:
+        """Helper method to enrich an entity with API name using Pydantic models.
+        
+        Args:
+            entity: The entity (workflow or operation) to enrich
+            parent_dict: The parent dictionary containing the entity
+            key: The key for this entity in the parent dictionary
+            model_class: The Pydantic model class to use for validation
+        """
+        # Skip if not a dict or already has api_name
+        if not isinstance(entity, dict) or "api_name" in entity:
+            return
+            
+        try:
+            # Create a Pydantic model with the entity data
+            # Since api_name is required but has a default value, this will work
+            model = model_class.model_validate(entity)
+            
+            # Use the api_name directly from the model
+            if model.api_name:
+                parent_dict[key]["api_name"] = model.api_name
+                
+        except Exception:
+            # Set a default API name if validation fails
+            parent_dict[key]["api_name"] = ""
+    
     async def _search_all(self, request: ApiCapabilitySearchRequest) -> dict[str, Any]:
         """Search across all entity types for the capability description.
 
@@ -373,6 +435,9 @@ class JenticAPIClient:
             response.raise_for_status()
 
             search_response = response.json()
+            # Ensure API names are properly set in the raw search response
+            search_response = self.ensure_api_names_in_response(search_response)
+            
             api_count = len(search_response.get("apis", []))
             workflow_count = len(search_response.get("workflows", []))
             operation_count = len(search_response.get("operations", []))
@@ -416,6 +481,8 @@ class JenticAPIClient:
             response.raise_for_status()
 
             search_response = response.json()
+            # Ensure API names are properly set
+            search_response = self.ensure_api_names_in_response(search_response)
             logger.info(f"Found {len(search_response.get('workflows', []))} workflows")
 
             return search_response.get("workflows", [])

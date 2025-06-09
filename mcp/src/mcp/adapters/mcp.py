@@ -39,9 +39,6 @@ class MCPAdapter:
         # Dump results including api_name
         data = results.model_dump(exclude_none=False)
         
-        # Extract API names from workflow API references
-        data = self._ensure_api_names_in_response(data)
-        
         # Prefix workflow summaries with their api_name
         for wf in data.get("workflows", []):
             api = wf.get("api_name")
@@ -57,53 +54,7 @@ class MCPAdapter:
             }
         }
 
-    def _extract_api_name_from_refs(self, workflow: dict[str, Any]) -> str | None:
-        """Extract API name from workflow references.
-        
-        Args:
-            workflow: A workflow dictionary.
-            
-        Returns:
-            The extracted API name if available, None otherwise.
-        """
-        api_refs = workflow.get("api_references", [])
-        if not api_refs or not isinstance(api_refs, list) or not api_refs:
-            return None
-            
-        first_ref = api_refs[0]
-        if isinstance(first_ref, dict) and "api_name" in first_ref:
-            return first_ref["api_name"]
-        return None
 
-    def _ensure_api_names_in_response(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Extract API names from workflow API references and add them to the workflow configuration.
-        
-        Args:
-            response_data: The response data from the Jentic API.
-            
-        Returns:
-            The response data with API names added to workflows.
-        """
-        # Handle different formats of workflows (list in search results, dict in config)
-        workflows = response_data.get("workflows", {})
-        
-        # For list format (search_api_capabilities response)
-        if isinstance(workflows, list):
-            for wf in workflows:
-                if isinstance(wf, dict) and "api_name" not in wf:
-                    api_name = self._extract_api_name_from_refs(wf)
-                    if api_name:
-                        wf["api_name"] = api_name
-        
-        # For dict format (generate_runtime_config response)
-        elif isinstance(workflows, dict):
-            for wf_uuid, wf_conf in workflows.items():
-                if "api_name" not in wf_conf:
-                    api_name = self._extract_api_name_from_refs(wf_conf)
-                    if api_name:
-                        wf_conf["api_name"] = api_name
-                    
-        return response_data
 
     async def generate_runtime_config(self, request: dict[str, Any]) -> dict[str, Any]:
         """MCP endpoint for generating a configuration file from a selection set.
