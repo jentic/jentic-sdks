@@ -204,16 +204,16 @@ async def test_run_llm_tool(
     for tool_def in definitions:
         if "function" in tool_def:
             name = tool_def["function"].get("name")
-            if name in ["get-authenticated-user-details", "get-users-me"]:
-                tool_names.append(name)
+            if name in ["get-authenticated-user-details", "discord-com-get-users-me"]:
+                    tool_names.append(name)
     
     # We need both tools for comprehensive testing
-    assert "get-users-me" in tool_names, "Operation 'get-users-me' not found in available tools"
+    assert "discord-com-get-users-me" in tool_names, "Operation 'discord-com-get-users-me' not found in available tools"
     assert "get-authenticated-user-details" in tool_names, "Workflow 'get-authenticated-user-details' not found in available tools"
     
     # Test 1: Run the operation (direct API call)
-    print("\nTesting operation: get-users-me")
-    operation_result = await jentic_client.run_llm_tool(tool_name="get-users-me", inputs={})
+    print("\nTesting operation: discord-com-get-users-me")
+    operation_result = await jentic_client.run_llm_tool(tool_name="discord-com-get-users-me", inputs={})
     
     # Operation should return a direct dict response
     assert isinstance(operation_result, dict), f"Operation expected to return dict, got {type(operation_result)}"
