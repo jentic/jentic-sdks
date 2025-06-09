@@ -194,7 +194,6 @@ class JenticConfig:
             "workflows": extracted_workflow_details,
             "operations": extracted_operation_details,
             "environment_variable_mappings": env_mappings,
-            "api_name": api_name,
         }
         logger.info("Successfully generated runtime configuration.")
         return final_config
