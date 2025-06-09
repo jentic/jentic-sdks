@@ -173,17 +173,12 @@ async def test_generate_llm_tool_definitions(
         jentic_client.generate_llm_tool_definitions(format="", config_path=str(config_file))
 
 
-
-
-
 @pytest.mark.asyncio
 async def test_run_llm_tool(
     tmp_path: Path,
     loaded_jentic_execution_info: Dict[str, Any],
 ):
     """Test running an LLM tool, using loaded execution info for definition generation."""
-    # API name extraction now handled by the SDK layer
-    
     jentic_client = Jentic()
 
     # Test 1: Attempt to run tool before definitions are generated

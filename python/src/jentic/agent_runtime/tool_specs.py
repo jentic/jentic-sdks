@@ -402,7 +402,7 @@ class LLMToolSpecManager:
         method = operation_def.get("method", "").lower()
         path = operation_def.get("path", "")
         cleaned_path = self._clean_path_for_tool_name(path)
-        
+
         if method and cleaned_path:
             base = f"{method}-{cleaned_path}"
         elif cleaned_path:

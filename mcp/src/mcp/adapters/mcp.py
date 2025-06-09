@@ -38,7 +38,6 @@ class MCPAdapter:
 
         # Dump results including api_name
         data = results.model_dump(exclude_none=False)
-        
         # Prefix workflow summaries with their api_name
         for wf in data.get("workflows", []):
             api = wf.get("api_name")
@@ -53,8 +52,6 @@ class MCPAdapter:
                 "total_matches": len(results.workflows) + len(results.operations),
             }
         }
-
-
 
     async def generate_runtime_config(self, request: dict[str, Any]) -> dict[str, Any]:
         """MCP endpoint for generating a configuration file from a selection set.
@@ -87,6 +84,7 @@ class MCPAdapter:
                 workflow_uuids=workflow_uuids, operation_uuids=operation_uuids, api_name=api_name
             )
             return {"result": result}
+
         except ValueError as e:
             logger.error(f"Error generating config: {str(e)}")
             return {

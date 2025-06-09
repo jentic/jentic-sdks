@@ -437,7 +437,6 @@ class JenticAPIClient:
             search_response = response.json()
             # Ensure API names are properly set in the raw search response
             search_response = self.ensure_api_names_in_response(search_response)
-            
             api_count = len(search_response.get("apis", []))
             workflow_count = len(search_response.get("workflows", []))
             operation_count = len(search_response.get("operations", []))
