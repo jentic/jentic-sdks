@@ -62,27 +62,25 @@ class MCPAdapter:
         Returns:
             MCP tool response.
         """
-        # Get the workflow and operation UUIDs from the request
-        workflow_uuids = request.get("workflow_uuids", [])
-        if isinstance(workflow_uuids, str):
-            workflow_uuids = [workflow_uuids]
-        operation_uuids = request.get("operation_uuids", [])
-        if isinstance(operation_uuids, str):
-            operation_uuids = [operation_uuids]
-        
-        # Get the API name or use empty string as default
-        api_name = request.get("api_name", "")
+        workflow_uuids = request.get("workflow_uuids")
+        operation_uuids = request.get("operation_uuids")
 
+        # Log the project directory for debugging
         logger = logging.getLogger(__name__)
-        logger.debug(
-            f"Generating config with workflow_uuids: {workflow_uuids}, operation_uuids: {operation_uuids}, api_name: {api_name}"
+        logger.info(
+            f"Generating config with workflow_uuids: {workflow_uuids}, operation_uuids: {operation_uuids}"
         )
 
         try:
             # Generate configuration from the selection set
             result = await self.jentic.load_execution_info(
-                workflow_uuids=workflow_uuids, operation_uuids=operation_uuids, api_name=api_name
+                workflow_uuids=workflow_uuids, operation_uuids=operation_uuids
             )
+            # Inject api_name into each workflow entry
+            api_name_val = request.get("api_name")
+            for wf_conf in result.get("workflows", {}).values():
+                wf_conf["api_name"] = api_name_val
+
             return {"result": result}
 
         except ValueError as e:
@@ -92,7 +90,6 @@ class MCPAdapter:
                     "success": False,
                     "operation_uuids": operation_uuids,
                     "workflow_uuids": workflow_uuids,
-                    "api_name": api_name,
                     "message": str(e),
                     "config": {},
                 }
