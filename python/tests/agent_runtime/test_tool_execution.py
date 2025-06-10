@@ -7,9 +7,19 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 import pytest_asyncio
 
-from jentic.agent_runtime.tool_execution import TaskExecutor, WorkflowResult
+from jentic.agent_runtime.tool_execution import (
+    TaskExecutor,
+)
 from jentic.api import JenticAPIClient
-from jentic.models import WorkflowExecutionDetails
+from jentic.models import (
+    AssociatedFiles,
+    FileId,
+    GetFilesResponse,
+    FileEntry,
+    OperationEntry,
+    WorkflowEntry,
+    WorkflowExecutionDetails,
+)
 from oak_runner import WorkflowExecutionResult as OakWorkflowExecutionResult, WorkflowExecutionStatus
 
 
@@ -471,6 +481,363 @@ class TestEdgeCases:
             )
             assert result.success is True
             assert result.output == {"result": "success"}
+
+
+class TestOperationExecution:
+    """Test suite for operation execution."""
+
+    @pytest.mark.asyncio
+    async def test_execute_operation_success(self, mock_api_hub_client):
+        """Test successful operation execution with a 200 status and body."""
+        operation_uuid = "op_success_uuid"
+        inputs = {"param": "value"}
+        mock_openapi_content = {"openapi": "3.0.0", "info": {"title": "Test API"}}
+        mock_operation_entry = OperationEntry(
+            api_version_id="v1",
+            id=operation_uuid,
+            method="GET",
+            path="/test",
+            files=AssociatedFiles(open_api=[FileId(id="openapi_file_id")]),
+        )
+        mock_exec_files_response = GetFilesResponse(workflows={}, 
+            operations={operation_uuid: mock_operation_entry},
+            files={"open_api": {"openapi_file_id": FileEntry(id="openapi_file_id", filename="spec.json", type="open_api", content=mock_openapi_content)}},
+        )
+        mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
+
+        oak_response_body = {"data": "success_data"}
+        oak_full_response = {"status_code": 200, "body": oak_response_body, "headers": {}}
+
+        with patch("jentic.agent_runtime.tool_execution.OAKRunner") as mock_runner_class:
+            mock_runner = MagicMock()
+            mock_runner.execute_operation.return_value = oak_full_response
+            mock_runner_class.return_value = mock_runner
+
+            executor = TaskExecutor(api_hub_client=mock_api_hub_client)
+            result = await executor.execute_operation(operation_uuid, inputs)
+
+            mock_api_hub_client.get_execution_files.assert_called_once_with(operation_uuids=[operation_uuid])
+            mock_runner_class.assert_called_once_with(source_descriptions={"default": mock_openapi_content})
+            mock_runner.execute_operation.assert_called_once_with(
+                inputs=inputs, operation_path=f"{mock_operation_entry.method} {mock_operation_entry.path}"
+            )
+
+            assert result.success is True
+            assert result.status_code == 200
+            assert result.output == oak_response_body
+            assert result.error is None
+            assert result.inputs == inputs
+
+    @pytest.mark.asyncio
+    async def test_execute_operation_success_no_body(self, mock_api_hub_client):
+        """Test successful operation execution with 200 status but no 'body' key in OAK result."""
+        operation_uuid = "op_success_no_body_uuid"
+        inputs = {}
+        mock_openapi_content = {"openapi": "3.0.0"}
+        mock_operation_entry = OperationEntry(api_version_id="v1", id=operation_uuid, method="POST", path="/submit", files=AssociatedFiles(open_api=[FileId(id="f1")]))
+        mock_exec_files_response = GetFilesResponse(workflows={}, 
+            operations={operation_uuid: mock_operation_entry},
+            files={"open_api": {"f1": FileEntry(id="f1", filename="spec.json", type="open_api", content=mock_openapi_content)}},
+        )
+        mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
+
+        oak_full_response = {"status_code": 204, "headers": {"X-Custom": "value"}} # No body for 204
+
+        with patch("jentic.agent_runtime.tool_execution.OAKRunner") as mock_runner_class:
+            mock_runner = MagicMock()
+            mock_runner.execute_operation.return_value = oak_full_response
+            mock_runner_class.return_value = mock_runner
+
+            executor = TaskExecutor(api_hub_client=mock_api_hub_client)
+            result = await executor.execute_operation(operation_uuid, inputs)
+
+            assert result.success is True
+            assert result.status_code == 204
+            assert result.output == oak_full_response # Should return the full OAK result
+            assert result.error is None
+            assert result.inputs == inputs
+
+    @pytest.mark.asyncio
+    async def test_execute_operation_api_error_4xx(self, mock_api_hub_client):
+        """Test operation execution with a 400 client error."""
+        operation_uuid = "op_client_error_uuid"
+        inputs = {"bad_param": "invalid"}
+        mock_openapi_content = {"openapi": "3.0.0"}
+        mock_operation_entry = OperationEntry(api_version_id="v1", id=operation_uuid, method="GET", path="/test", files=AssociatedFiles(open_api=[FileId(id="f1")]))
+        mock_exec_files_response = GetFilesResponse(workflows={}, 
+            operations={operation_uuid: mock_operation_entry},
+            files={"open_api": {"f1": FileEntry(id="f1", filename="spec.json", type="open_api", content=mock_openapi_content)}},
+        )
+        mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
+
+        error_detail = {"error": "Bad Request", "message": "Invalid parameter provided"}
+        oak_full_response = {"status_code": 400, "body": error_detail, "headers": {}}
+
+        with patch("jentic.agent_runtime.tool_execution.OAKRunner") as mock_runner_class:
+            mock_runner = MagicMock()
+            mock_runner.execute_operation.return_value = oak_full_response
+            mock_runner_class.return_value = mock_runner
+
+            executor = TaskExecutor(api_hub_client=mock_api_hub_client)
+            result = await executor.execute_operation(operation_uuid, inputs)
+
+            assert result.success is False
+            assert result.status_code == 400
+            # The error message is now just the detail from the body
+            assert result.error == error_detail["error"]
+            assert result.output == oak_full_response # Full OAK response in output for context
+            assert result.inputs == inputs
+
+    @pytest.mark.asyncio
+    async def test_execute_operation_api_error_5xx(self, mock_api_hub_client):
+        """Test operation execution with a 500 server error."""
+        operation_uuid = "op_server_error_uuid"
+        inputs = {}
+        mock_openapi_content = {"openapi": "3.0.0"}
+        mock_operation_entry = OperationEntry(api_version_id="v1", id=operation_uuid, method="GET", path="/status", files=AssociatedFiles(open_api=[FileId(id="f1")]))
+        mock_exec_files_response = GetFilesResponse(workflows={}, 
+            operations={operation_uuid: mock_operation_entry},
+            files={"open_api": {"f1": FileEntry(id="f1", filename="spec.json", type="open_api", content=mock_openapi_content)}},
+        )
+        mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
+
+        oak_full_response = {"status_code": 503, "body": "Service Unavailable", "headers": {}}
+
+        with patch("jentic.agent_runtime.tool_execution.OAKRunner") as mock_runner_class:
+            mock_runner = MagicMock()
+            mock_runner.execute_operation.return_value = oak_full_response
+            mock_runner_class.return_value = mock_runner
+
+            executor = TaskExecutor(api_hub_client=mock_api_hub_client)
+            result = await executor.execute_operation(operation_uuid, inputs)
+
+            assert result.success is False
+            assert result.status_code == 503
+            assert result.error == "Service Unavailable"
+            assert result.output == oak_full_response
+            assert result.inputs == inputs
+
+    @pytest.mark.asyncio
+    async def test_execute_operation_status_code_as_string(self, mock_api_hub_client):
+        """Test successful operation when status_code is a convertible string."""
+        operation_uuid = "op_status_string_uuid"
+        inputs = {}
+        mock_openapi_content = {"openapi": "3.0.0"}
+        mock_operation_entry = OperationEntry(api_version_id="v1", id=operation_uuid, method="GET", path="/test", files=AssociatedFiles(open_api=[FileId(id="f1")]))
+        mock_exec_files_response = GetFilesResponse(workflows={}, 
+            operations={operation_uuid: mock_operation_entry},
+            files={"open_api": {"f1": FileEntry(id="f1", filename="spec.json", type="open_api", content=mock_openapi_content)}},
+        )
+        mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
+
+        oak_response_body = {"message": "OK"}
+        oak_full_response = {"status_code": "201", "body": oak_response_body, "headers": {}}
+
+        with patch("jentic.agent_runtime.tool_execution.OAKRunner") as mock_runner_class:
+            mock_runner = MagicMock()
+            mock_runner.execute_operation.return_value = oak_full_response
+            mock_runner_class.return_value = mock_runner
+
+            executor = TaskExecutor(api_hub_client=mock_api_hub_client)
+            result = await executor.execute_operation(operation_uuid, inputs)
+
+            assert result.success is True
+            assert result.status_code == 201 # Should be cast to int
+            assert result.output == oak_response_body
+            assert result.error is None
+            assert result.inputs == inputs
+
+    @pytest.mark.asyncio
+    async def test_execute_operation_status_code_invalid_string(self, mock_api_hub_client):
+        """Test failure when status_code is a non-convertible string."""
+        operation_uuid = "op_status_invalid_string_uuid"
+        inputs = {}
+        mock_openapi_content = {"openapi": "3.0.0"}
+        mock_operation_entry = OperationEntry(api_version_id="v1", id=operation_uuid, method="GET", path="/test", files=AssociatedFiles(open_api=[FileId(id="f1")]))
+        mock_exec_files_response = GetFilesResponse(workflows={}, 
+            operations={operation_uuid: mock_operation_entry},
+            files={"open_api": {"f1": FileEntry(id="f1", filename="spec.json", type="open_api", content=mock_openapi_content)}},
+        )
+        mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
+
+        oak_full_response = {"status_code": "OK_NOT_A_NUMBER", "body": "Error", "headers": {}}
+
+        with patch("jentic.agent_runtime.tool_execution.OAKRunner") as mock_runner_class:
+            mock_runner = MagicMock()
+            mock_runner.execute_operation.return_value = oak_full_response
+            mock_runner_class.return_value = mock_runner
+
+            executor = TaskExecutor(api_hub_client=mock_api_hub_client)
+            result = await executor.execute_operation(operation_uuid, inputs)
+
+            assert result.success is False
+            assert result.status_code is None # Status code is not set on casting failure
+            assert "Invalid status_code format: 'OK_NOT_A_NUMBER'" in result.error
+            assert result.output == oak_full_response # Full OAK response in output
+            assert result.inputs == inputs
+
+    @pytest.mark.asyncio
+    async def test_execute_operation_missing_status_code(self, mock_api_hub_client):
+        """Test behavior when OAKRunner result is missing 'status_code'."""
+        operation_uuid = "op_missing_status_uuid"
+        inputs = {}
+        mock_openapi_content = {"openapi": "3.0.0"}
+        mock_operation_entry = OperationEntry(api_version_id="v1", id=operation_uuid, method="GET", path="/test", files=AssociatedFiles(open_api=[FileId(id="f1")]))
+        mock_exec_files_response = GetFilesResponse(workflows={}, 
+            operations={operation_uuid: mock_operation_entry},
+            files={"open_api": {"f1": FileEntry(id="f1", filename="spec.json", type="open_api", content=mock_openapi_content)}},
+        )
+        mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
+
+        oak_response_body = {"data": "some_data"}
+        # OAK result missing status_code
+        oak_full_response = {"body": oak_response_body, "headers": {}}
+
+        with patch("jentic.agent_runtime.tool_execution.OAKRunner") as mock_runner_class:
+            mock_runner = MagicMock()
+            mock_runner.execute_operation.return_value = oak_full_response
+            mock_runner_class.return_value = mock_runner
+
+            executor = TaskExecutor(api_hub_client=mock_api_hub_client)
+            result = await executor.execute_operation(operation_uuid, inputs)
+
+            # Current logic defaults to success if status_code is missing
+            assert result.success is True
+            assert result.status_code is None
+            assert result.output == oak_response_body
+            assert result.error is None
+            assert result.inputs == inputs
+
+    @pytest.mark.asyncio
+    async def test_execute_operation_runner_returns_not_dict(self, mock_api_hub_client):
+        """Test behavior when OAKRunner returns a non-dictionary result."""
+        operation_uuid = "op_runner_not_dict_uuid"
+        inputs = {}
+        mock_openapi_content = {"openapi": "3.0.0"}
+        mock_operation_entry = OperationEntry(api_version_id="v1", id=operation_uuid, method="GET", path="/test", files=AssociatedFiles(open_api=[FileId(id="f1")]))
+        mock_exec_files_response = GetFilesResponse(workflows={}, 
+            operations={operation_uuid: mock_operation_entry},
+            files={"open_api": {"f1": FileEntry(id="f1", filename="spec.json", type="open_api", content=mock_openapi_content)}},
+        )
+        mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
+
+        # OAKRunner returns a string instead of a dict
+        oak_non_dict_response = "This is not a dictionary"
+
+        with patch("jentic.agent_runtime.tool_execution.OAKRunner") as mock_runner_class:
+            mock_runner = MagicMock()
+            mock_runner.execute_operation.return_value = oak_non_dict_response
+            mock_runner_class.return_value = mock_runner
+
+            executor = TaskExecutor(api_hub_client=mock_api_hub_client)
+            result = await executor.execute_operation(operation_uuid, inputs)
+
+            assert result.success is False
+            assert "object has no attribute 'get'" in result.error
+            assert result.status_code is None
+            assert result.output is None
+            assert result.inputs == inputs
+
+
+    @pytest.mark.asyncio
+    async def test_execute_operation_no_operation_entry(self, mock_api_hub_client):
+        """Test failure when operation_uuid is not found in API Hub response."""
+        operation_uuid = "op_not_found_uuid"
+        inputs = {}
+        # API Hub returns a response where the operation_uuid is not a key
+        mock_exec_files_response = GetFilesResponse(workflows={}, operations={}, files={})
+        mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
+
+        with patch("jentic.agent_runtime.tool_execution.OAKRunner") as mock_runner_class:
+            executor = TaskExecutor(api_hub_client=mock_api_hub_client)
+            result = await executor.execute_operation(operation_uuid, inputs)
+
+            mock_runner_class.assert_not_called() # OAKRunner should not be initialized or called
+            assert result.success is False
+            assert result.error == f"Operation ID {operation_uuid} not found in execution files response."
+            assert result.status_code is None
+            assert result.output is None
+            assert result.inputs == inputs
+
+    @pytest.mark.asyncio
+    async def test_execute_operation_no_openapi_spec(self, mock_api_hub_client):
+        """Test failure when OpenAPI spec content is missing."""
+        operation_uuid = "op_no_openapi_uuid"
+        inputs = {}
+        # OperationEntry exists, but its files list is empty or points to a non-existent/empty file
+        mock_operation_entry = OperationEntry(
+            api_version_id="v1",
+            id=operation_uuid,
+            method="GET",
+            path="/test",
+            files=AssociatedFiles(open_api=[FileId(id="openapi_file_id")]), # Points to a file
+        )
+        mock_exec_files_response = GetFilesResponse(workflows={}, 
+            operations={operation_uuid: mock_operation_entry},
+            files={"open_api": {"openapi_file_id": FileEntry(id="openapi_file_id", filename="spec.json", type="open_api", content={})}}, # File content is empty
+        )
+        mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
+
+        with patch("jentic.agent_runtime.tool_execution.OAKRunner") as mock_runner_class:
+            executor = TaskExecutor(api_hub_client=mock_api_hub_client)
+            result = await executor.execute_operation(operation_uuid, inputs)
+
+            mock_runner_class.assert_not_called()
+            assert result.success is False
+            assert result.error == f"OpenAPI spec not found for operation {operation_uuid}"
+            assert result.status_code is None
+            assert result.output is None
+            assert result.inputs == inputs
+            
+    @pytest.mark.asyncio
+    async def test_execute_operation_no_openapi_file_entry_in_files(self, mock_api_hub_client):
+        """Test failure when OpenAPI spec file ID from operation_entry.files.open_api is not in exec_files_response.files."""
+        operation_uuid = "op_no_openapi_file_entry_uuid"
+        inputs = {}
+        mock_operation_entry = OperationEntry(
+            api_version_id="v1",
+            id=operation_uuid,
+            method="GET",
+            path="/test",
+            files=AssociatedFiles(open_api=[FileId(id="actual_openapi_file_id")]), 
+        )
+        # The 'files' dict does not contain 'actual_openapi_file_id' under 'open_api'
+        mock_exec_files_response = GetFilesResponse(workflows={}, 
+            operations={operation_uuid: mock_operation_entry},
+            files={"open_api": {"some_other_file_id": FileEntry(id="some_other_file_id", filename="spec.json", type="open_api", content={"openapi":"3.0"})}},
+        )
+        mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
+
+        with patch("jentic.agent_runtime.tool_execution.OAKRunner") as mock_runner_class:
+            executor = TaskExecutor(api_hub_client=mock_api_hub_client)
+            result = await executor.execute_operation(operation_uuid, inputs)
+
+            mock_runner_class.assert_not_called()
+            assert result.success is False
+            assert result.error == f"OpenAPI spec not found for operation {operation_uuid}"
+            assert result.status_code is None
+            assert result.output is None
+            assert result.inputs == inputs
+
+
+    @pytest.mark.asyncio
+    async def test_execute_operation_general_exception_api_call(self, mock_api_hub_client):
+        """Test failure when get_execution_files raises an unexpected exception."""
+        operation_uuid = "op_general_exception_uuid"
+        inputs = {}
+        expected_exception = RuntimeError("Network Error")
+        mock_api_hub_client.get_execution_files.side_effect = expected_exception
+
+        with patch("jentic.agent_runtime.tool_execution.OAKRunner") as mock_runner_class:
+            executor = TaskExecutor(api_hub_client=mock_api_hub_client)
+            result = await executor.execute_operation(operation_uuid, inputs)
+
+            mock_runner_class.assert_not_called()
+            assert result.success is False
+            assert str(expected_exception) in result.error
+            assert result.status_code is None
+            assert result.output is None
+            assert result.inputs == inputs
 
 
 if __name__ == "__main__":

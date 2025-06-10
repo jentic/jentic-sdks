@@ -25,6 +25,17 @@ class WorkflowResult:
     inputs: dict[str, Any] | None = None
 
 
+@dataclass
+class OperationResult:
+    """Result of an operation execution."""
+
+    success: bool
+    status_code: Optional[int] = None
+    output: Optional[Any] = None
+    error: Optional[str] = None
+    inputs: Optional[Dict[str, Any]] = None
+
+
 # Setup logging
 logger = logging.getLogger(__name__)
 
@@ -123,7 +134,7 @@ class TaskExecutor:
         self,
         operation_uuid: str,
         inputs: Dict[str, Any],
-    ) -> dict:
+    ) -> OperationResult:
         """
         Executes a specified API operation using OAKRunner after fetching required files from the API.
 
@@ -131,7 +142,10 @@ class TaskExecutor:
             operation_uuid: The UUID of the operation to execute.
             inputs: Input parameters for the operation.
         Returns:
-            A dictionary containing the response status_code, headers, and body.
+            An OperationResult object. If successful, `result.output` contains the
+            operation's response body (or the full response if 'body' is not present).
+            If unsuccessful, `result.error` contains an error message and `result.output`
+            may contain the full response for context.
         """
         logger.info(f"Fetching execution files for operation UUID: {operation_uuid}")
         try:
@@ -146,10 +160,11 @@ class TaskExecutor:
                 logger.error(
                     f"Operation ID {operation_uuid} not found in execution files response."
                 )
-                return {
-                    "success": False,
-                    "error": f"Operation ID {operation_uuid} not found in execution files response.",
-                }
+                return OperationResult(
+                    success=False,
+                    error=f"Operation ID {operation_uuid} not found in execution files response.",
+                    inputs=inputs,
+                )
             operation_entry = exec_files_response.operations[operation_uuid]
 
             # Prepare OpenAPI spec for OAKRunner
@@ -161,27 +176,119 @@ class TaskExecutor:
                     openapi_content = openapi_files[openapi_file_id].content
             if not openapi_content:
                 logger.error(f"OpenAPI spec not found for operation {operation_uuid}")
-                return {
-                    "success": False,
-                    "error": f"OpenAPI spec not found for operation {operation_uuid}",
-                }
+                return OperationResult(
+                    success=False,
+                    error=f"OpenAPI spec not found for operation {operation_uuid}",
+                    inputs=inputs,
+                )
             source_descriptions = {"default": openapi_content}
 
             # Prepare OAKRunner and execute the operation
             runner = OAKRunner(source_descriptions=source_descriptions)
             # Pass operation_uuid, path, and method from the operation_entry
-            result = runner.execute_operation(
+            oak_result: Any = runner.execute_operation(
                 inputs=inputs, operation_path=f"{operation_entry.method} {operation_entry.path}"
             )
-            logger.debug(f"Operation execution result: {result}")
-            # Return body if present, else return the full result
-            return result.get("body") if isinstance(result, dict) and "body" in result else result
+            logger.debug(f"Operation execution result: {oak_result}")
+
+            return self._process_operation_result(oak_result, operation_uuid, inputs)
         except Exception as e:
             logger.exception(f"Error executing operation {operation_uuid}: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-            }
+            return OperationResult(
+                success=False,
+                error=str(e),
+                inputs=inputs,
+            )
+
+    def _process_operation_result(
+        self, oak_result: Dict[str, Any], operation_uuid: str, inputs: Dict[str, Any]
+    ) -> "OperationResult":
+        """Process the OAKRunner operation result, check status codes, and handle casting.
+
+        Args:
+            oak_result: The result dictionary from OAKRunner.execute_operation.
+            operation_uuid: The UUID of the operation being executed, for logging.
+
+        Returns:
+            An OperationResult object.
+        """
+        status_code_any = oak_result.get("status_code")
+
+        if status_code_any is None:
+            logger.debug(
+                f"Operation {operation_uuid} result dictionary does not contain 'status_code'. "
+                f"Proceeding as if successful, returning body if present or full result."
+            )
+            return OperationResult(
+                success=True,
+                output=oak_result.get("body") if "body" in oak_result else oak_result,
+                inputs=inputs,
+            )
+
+        status_code: int
+        if not isinstance(status_code_any, int):
+            try:
+                status_code = int(status_code_any)
+                logger.info(
+                    f"Operation {operation_uuid} 'status_code' was {type(status_code_any).__name__} '{status_code_any}', "
+                    f"successfully cast to int: {status_code}."
+                )
+            except (ValueError, TypeError):
+                logger.error(
+                    f"Operation {operation_uuid} 'status_code' ('{status_code_any}') is not a valid integer and could not be cast. "
+                    f"Marking as failure."
+                )
+                return OperationResult(
+                    success=False,
+                    error=f"Invalid status_code format: '{status_code_any}'. Expected an integer or integer-convertible value.",
+                    output=oak_result,  # Include full OAK result for context on casting errors
+                    inputs=inputs,
+                )
+        else:
+            status_code = status_code_any  # It's already an int
+
+        # status_code is now confirmed or cast to an integer
+        if 200 <= status_code < 300:
+            # Successful 2xx status code
+            return OperationResult(
+                success=True,
+                status_code=status_code,
+                output=oak_result.get("body") if "body" in oak_result else oak_result,
+                inputs=inputs,
+            )
+        else:
+            # Non-2xx status code, indicates an error
+            body_content = oak_result.get("body")
+            error_detail = ""
+
+            if isinstance(body_content, dict):
+                detail = body_content.get(
+                    "error", body_content.get("message", body_content.get("detail"))
+                )
+                if detail is not None:
+                    error_detail = str(detail)
+                else:
+                    error_detail = str(body_content)
+            elif isinstance(body_content, (str, bytes)):
+                try:
+                    error_detail = (
+                        body_content.decode()
+                        if isinstance(body_content, bytes)
+                        else body_content
+                    )
+                except UnicodeDecodeError:
+                    error_detail = "Non-decodable binary content in body"
+            elif body_content is not None:
+                error_detail = str(body_content)
+
+            return OperationResult(
+                success=False,
+                status_code=status_code,
+                error=error_detail,
+                output=oak_result,  # Return the full OAK result as output for context on errors
+                inputs=inputs,
+            )
+
 
     def _format_workflow_result(self, result: WorkflowResult) -> dict[str, Any]:
         """Format a workflow result for tool output.
