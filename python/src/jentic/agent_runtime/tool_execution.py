@@ -212,9 +212,9 @@ class TaskExecutor:
         Returns:
             An OperationResult object.
         """
-        status_code_any = oak_result.get("status_code")
+        status_code_uncast = oak_result.get("status_code")
 
-        if status_code_any is None:
+        if status_code_uncast is None:
             logger.debug(
                 f"Operation {operation_uuid} result dictionary does not contain 'status_code'. "
                 f"Proceeding as if successful, returning body if present or full result."
@@ -225,27 +225,26 @@ class TaskExecutor:
                 inputs=inputs,
             )
 
-        status_code: int
-        if not isinstance(status_code_any, int):
+        if not isinstance(status_code_uncast, int):
             try:
-                status_code = int(status_code_any)
+                status_code = int(status_code_uncast)
                 logger.debug(
-                    f"Operation {operation_uuid} 'status_code' was {type(status_code_any).__name__} '{status_code_any}', "
+                    f"Operation {operation_uuid} 'status_code' was {type(status_code_uncast).__name__} '{status_code_uncast}', "
                     f"successfully cast to int: {status_code}."
                 )
             except (ValueError, TypeError):
                 logger.debug(
-                    f"Operation {operation_uuid} 'status_code' ('{status_code_any}') is not a valid integer and could not be cast. "
+                    f"Operation {operation_uuid} 'status_code' ('{status_code_uncast}') is not a valid integer and could not be cast. "
                     f"Marking as failure."
                 )
                 return OperationResult(
                     success=False,
-                    error=f"Invalid status_code format: '{status_code_any}'. Expected an integer or integer-convertible value.",
+                    error=f"Invalid status_code format: '{status_code_uncast}'. Expected an integer or integer-convertible value.",
                     output=oak_result,  # Include full OAK result for context on casting errors
                     inputs=inputs,
                 )
         else:
-            status_code = status_code_any  # It's already an int
+            status_code = status_code_uncast  # It's already an int
 
         # status_code is now confirmed or cast to an integer
         if 200 <= status_code < 300:
