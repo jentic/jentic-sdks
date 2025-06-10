@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional
 
 from jentic.agent_runtime.agent_tools import AgentToolManager
 from jentic.agent_runtime.config import JenticConfig
-from jentic.agent_runtime.tool_execution import TaskExecutor, WorkflowResult
+from jentic.agent_runtime.tool_execution import TaskExecutor, WorkflowResult, OperationResult
 from jentic.api.api_hub import JenticAPIClient
 from jentic.models import ApiCapabilitySearchRequest, APISearchResults
 
@@ -96,7 +96,7 @@ class Jentic:
             api_name=api_name,
         )
 
-    async def execute_operation(self, operation_uuid: str, inputs: dict) -> Dict[str, Any]:
+    async def execute_operation(self, operation_uuid: str, inputs: dict) -> OperationResult:
         """
         Execute a specific operation by UUID with the provided inputs.
 

@@ -6,7 +6,7 @@ from typing import Dict, Any
 from pathlib import Path
 
 from jentic.jentic import Jentic
-from jentic.agent_runtime.tool_execution import WorkflowResult
+from jentic.agent_runtime.tool_execution import WorkflowResult, OperationResult
 from jentic.models import ApiCapabilitySearchRequest, APISearchResults
 
 
@@ -96,10 +96,13 @@ async def test_execute_discord_get_my_user_operation(target_env: str, env_file_p
         result = await jentic_client.execute_operation(
             operation_uuid=operation_uuid, inputs={}
         )
-        assert isinstance(result, Dict), f"Expected result to be a Dict, got {type(result)}"
-        assert 'username' in result, "Expected 'username' key in the result"
-        assert isinstance(result['username'], str), f"Expected username to be a string, got {type(result['username'])}"
-        assert len(result['username']) > 0, "Expected username to not be empty"
+        assert isinstance(result, OperationResult), f"Expected OperationResult, got {type(result)}"
+        assert result.success, f"Expected operation to succeed, got error: {result.error}"
+        assert result.output is not None, "Expected non-null output"
+        assert isinstance(result.output, dict), f"Expected output to be a dict, got {type(result.output)}"
+        assert 'username' in result.output, "Expected 'username' key in the output"
+        assert isinstance(result.output['username'], str), f"Expected username to be a string, got {type(result.output['username'])}"
+        assert len(result.output['username']) > 0, "Expected username to not be empty"
     except Exception as e:
         pytest.fail(f"execute_operation raised an exception: {e}")
 
@@ -215,10 +218,14 @@ async def test_run_llm_tool(
     print("\nTesting operation: discord-com-get-users-me")
     operation_result = await jentic_client.run_llm_tool(tool_name="discord-com-get-users-me", inputs={})
     
-    # Operation should return a direct dict response
-    assert isinstance(operation_result, dict), f"Operation expected to return dict, got {type(operation_result)}"
-    # The Discord API returns user ID directly
-    assert "id" in operation_result, "Discord user ID not found in operation result"
+    # Operation may return OperationResult or dict
+    if isinstance(operation_result, OperationResult):
+        assert operation_result.success, f"Expected operation to succeed, got error: {operation_result.error}"
+        assert isinstance(operation_result.output, dict), f"Expected output to be a dict, got {type(operation_result.output)}"
+        assert "id" in operation_result.output, "Discord user ID not found in operation result output"
+    else:
+        assert isinstance(operation_result, dict), f"Operation expected to return dict, got {type(operation_result)}"
+        assert "id" in operation_result, "Discord user ID not found in operation result"
     
     # Test 2: Run the workflow
     print("\nTesting workflow: get-authenticated-user-details")
