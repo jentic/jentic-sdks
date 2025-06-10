@@ -229,12 +229,12 @@ class TaskExecutor:
         if not isinstance(status_code_any, int):
             try:
                 status_code = int(status_code_any)
-                logger.info(
+                logger.debug(
                     f"Operation {operation_uuid} 'status_code' was {type(status_code_any).__name__} '{status_code_any}', "
                     f"successfully cast to int: {status_code}."
                 )
             except (ValueError, TypeError):
-                logger.error(
+                logger.debug(
                     f"Operation {operation_uuid} 'status_code' ('{status_code_any}') is not a valid integer and could not be cast. "
                     f"Marking as failure."
                 )
