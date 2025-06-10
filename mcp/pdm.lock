@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:c837078fc15916cd2898196ab3a626253dbdad29a91a3352621e08b2d818c317"
+content_hash = "sha256:3d5b45c59ec8d51b5e08c3e469a6387eeee42cca8f918659d2fe6bcf8bd69b03"
 
 [[metadata.targets]]
 requires_python = ">=3.10"
@@ -287,7 +287,7 @@ files = [
 
 [[package]]
 name = "jentic"
-version = "0.7.14"
+version = "0.8.0"
 requires_python = ">=3.10"
 summary = "Jentic SDK for the discovery and execution of APIs and workflows"
 groups = ["default"]
@@ -299,8 +299,8 @@ dependencies = [
     "pyyaml>=6.0",
 ]
 files = [
-    {file = "jentic-0.7.14-py3-none-any.whl", hash = "sha256:dbddeebe965045eab4cb1186be0c281cf4b82b08a9fa3b0883e77bd5f0803b1c"},
-    {file = "jentic-0.7.14.tar.gz", hash = "sha256:260a47961ffe9032667e6429b64deed0971703ccc49f663ee628386b3537e247"},
+    {file = "jentic-0.8.0-py3-none-any.whl", hash = "sha256:9efbbffefdf5166f7d725dc4411ce69d6dd9ca1e1351c5a938fba901f12cb67e"},
+    {file = "jentic-0.8.0.tar.gz", hash = "sha256:fc3315a57786c7de6a96404ac9a31214f282c0470f4514b8814eef749938bd7e"},
 ]
 
 [[package]]

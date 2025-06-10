@@ -168,8 +168,17 @@ class MCPAdapter:
         try:
             if execution_type == "operation":
                 result = await self.jentic.execute_operation(operation_uuid=uuid, inputs=inputs)
-                # Operations typically return a dict
-                return {"result": {"success": True, "output": result}}
+                if hasattr(result, 'success') and not result.success:
+                    return {
+                        "result": {
+                                "success": False,
+                                 "message": result.error or "Operation execution failed.",
+                                 "output": asdict(result),
+                                 "suggested_next_actions": self.get_execute_tool_failure_suggested_next_actions()
+                             }
+                    }
+
+                return {"result": {"success": True, "output": asdict(result)}}
             elif execution_type == "workflow":
                 result = await self.jentic.execute_workflow(workflow_uuid=uuid, inputs=inputs)
                 # Check the success value in the WorkflowResult
