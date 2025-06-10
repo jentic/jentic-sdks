@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:516a99593810a09568b9558b6e8505d0f37d5185b596b9e3ea41ea93108e13b6"
+content_hash = "sha256:c837078fc15916cd2898196ab3a626253dbdad29a91a3352621e08b2d818c317"
 
 [[metadata.targets]]
 requires_python = ">=3.10"
@@ -287,20 +287,20 @@ files = [
 
 [[package]]
 name = "jentic"
-version = "0.7.10"
+version = "0.7.14"
 requires_python = ">=3.10"
 summary = "Jentic SDK for the discovery and execution of APIs and workflows"
 groups = ["default"]
 dependencies = [
     "httpx>=0.28.1",
     "jsonpath-ng>=1.5.0",
-    "oak-runner>=0.8.7",
+    "oak-runner>=0.8.9",
     "pydantic>=2.0.0",
     "pyyaml>=6.0",
 ]
 files = [
-    {file = "jentic-0.7.10-py3-none-any.whl", hash = "sha256:00ec58c6cc4417367bbe8fa2a21f453a3f320fb57f095d6ca5970873d6bb9da2"},
-    {file = "jentic-0.7.10.tar.gz", hash = "sha256:d0cbb489fc2a113443dd90c4caefac132264350aa220c51260e90d58b28987bb"},
+    {file = "jentic-0.7.14-py3-none-any.whl", hash = "sha256:dbddeebe965045eab4cb1186be0c281cf4b82b08a9fa3b0883e77bd5f0803b1c"},
+    {file = "jentic-0.7.14.tar.gz", hash = "sha256:260a47961ffe9032667e6429b64deed0971703ccc49f663ee628386b3537e247"},
 ]
 
 [[package]]
@@ -405,7 +405,7 @@ files = [
 
 [[package]]
 name = "oak-runner"
-version = "0.8.7"
+version = "0.8.9"
 requires_python = ">=3.10"
 summary = "Execution libraries and test tools for Arazzo workflows and Open API operations"
 groups = ["default"]
@@ -417,8 +417,8 @@ dependencies = [
     "requests>=2.28.0",
 ]
 files = [
-    {file = "oak_runner-0.8.7-py3-none-any.whl", hash = "sha256:5cce4d5f5d4281f6126afbcfb2454c4995361f0c505643f8ed29752a9a91798d"},
-    {file = "oak_runner-0.8.7.tar.gz", hash = "sha256:3d781ff28e4ba0743feacad54a4c02a2a8789444ce67d6e88ea0be927246c24e"},
+    {file = "oak_runner-0.8.9-py3-none-any.whl", hash = "sha256:08da6f8abf7699fbb89bbdf4e8d6a87df041eca76e2a9a0b79e661d7c7e2febe"},
+    {file = "oak_runner-0.8.9.tar.gz", hash = "sha256:a2257d8c9e4104751f88e8ae3dcab42e1a56a674418766f94fd98927a38c0b26"},
 ]
 
 [[package]]
