@@ -32,6 +32,7 @@ class MCPAdapter:
             capability_description=request["capability_description"],
             keywords=request.get("keywords"),
             max_results=request.get("max_results", 5),
+            api_names=request.get("api_names"),
         )
 
         results: APISearchResults = await self.jentic.search_api_capabilities(request=request)
