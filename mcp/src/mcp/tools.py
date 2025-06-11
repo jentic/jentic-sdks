@@ -37,7 +37,7 @@ SEARCH_API_CAPABILITIES_TOOL = {
             },
             "api_names": {
                 "type": "array",
-                "description": "Optional list of API names to restrict results to APIs you have credentials for. Use vendor format (e.g., 'google.com') or sub-API format (e.g., 'atlassian.com/jira'). Only results from these APIs will be shown, regardless of search query.",
+                "description": "Optional list of API names to restrict results to specific APIs. Use vendor format (e.g., 'google.com') or sub-API format (e.g., 'atlassian.com/jira'). Only results from these APIs will be shown, regardless of search query.",
                 "items": {"type": "string"},
             },
         },
