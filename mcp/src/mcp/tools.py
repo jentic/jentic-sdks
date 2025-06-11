@@ -35,6 +35,11 @@ SEARCH_API_CAPABILITIES_TOOL = {
                 "description": "Maximum number of actions to return",
                 "default": 5,
             },
+            "api_names": {
+                "type": "array",
+                "description": "Optional list of API names to restrict results to specific APIs. Use vendor format (e.g., 'google.com') or sub-API format (e.g., 'atlassian.com/jira'). Only results from these APIs will be shown, regardless of search query.",
+                "items": {"type": "string"},
+            },
         },
         "required": ["capability_description"],
     },
