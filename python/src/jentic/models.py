@@ -74,6 +74,7 @@ class ApiCapabilitySearchRequest(BaseModel):
     capability_description: str
     keywords: list[str] | None = None
     max_results: int = 5
+    api_names: list[str] | None = None
 
 
 class BaseSearchResult(BaseModel):

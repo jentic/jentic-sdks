@@ -419,6 +419,9 @@ class JenticAPIClient:
             keyword_str = " ".join(request.keywords)
             search_request["query"] = f"{search_request['query']} {keyword_str}"
 
+        if request.api_names:
+            search_request["api_names"] = request.api_names
+
         logger.info(f"Searching all entities with query: {search_request['query']}")
 
         # Log the URL we're connecting to for debugging
