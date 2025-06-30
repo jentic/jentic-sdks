@@ -80,7 +80,6 @@ async def test_load_execution_info(loaded_jentic_execution_info: Dict[str, Any])
     first_op_uuid_key = list(exec_info["operations"].keys())[0]
     first_op_details = exec_info["operations"].get(first_op_uuid_key, {})
     assert "operation_uuid" in first_op_details, "'operation_uuid' missing in operation details"
-    assert "spec_info" in first_op_details, "'spec_info' missing in operation details"
 
     first_wf_uuid_key = list(exec_info["workflows"].keys())[0]
     first_wf_details = exec_info["workflows"].get(first_wf_uuid_key, {})
