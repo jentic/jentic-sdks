@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/jentic-jentic-tools-badge.png)](https://mseep.ai/app/jentic-jentic-tools)
+
 # Jentic SDK & MCP Plugin [Beta]
 
 Jentic MCP empowers AI agent builders to discover and integrate external APIs and workflows rapidly—without writing or maintaining API-specific code.
