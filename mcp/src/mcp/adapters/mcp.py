@@ -10,14 +10,14 @@ from jentic import Jentic
 from jentic.models import ApiCapabilitySearchRequest, APISearchResults
 
 from mcp.core.generators.code_generator import generate_code_sample
-
+from mcp import version
 
 class MCPAdapter:
     """Model Configuration Protocol adapter for the Jentic MCP Plugin."""
 
     def __init__(self):
         """Initialize the MCP adapter."""
-        self.jentic = Jentic()
+        self.jentic = Jentic(user_agent=f"Jentic/1.0 MCP Plugin/{version.__version__} (Python)")
 
     async def search_api_capabilities(self, request: dict[str, Any]) -> dict[str, Any]:
         """MCP endpoint for searching API capabilities.
