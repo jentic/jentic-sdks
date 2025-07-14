@@ -16,16 +16,17 @@ class Jentic:
 
     """
 
-    def __init__(self, base_url: str | None = None, api_key: str | None = None):
+    def __init__(self, base_url: str | None = None, api_key: str | None = None, user_agent: str | None = None):
         """
         Initialize the Jentic agent runtime.
 
         Args:
             base_url (str | None): Optional base URL for the API hub.
             api_key (str | None): Optional API key for authentication.
+            user_agent (str | None): Optional user agent string for the client.
         """
         self._agent_tool_manager: AgentToolManager | None = None
-        self._api_hub_client = JenticAPIClient(base_url=base_url, api_key=api_key)
+        self._api_hub_client = JenticAPIClient(base_url=base_url, api_key=api_key, user_agent=user_agent)
         self._task_executor = TaskExecutor(self._api_hub_client)
 
     async def search_api_capabilities(

@@ -26,12 +26,13 @@ logger = logging.getLogger(__name__)
 class JenticAPIClient:
     """Client for interacting with the Jentic API Knowledge Hub."""
 
-    def __init__(self, base_url: str | None = None, api_key: str | None = None):
+    def __init__(self, base_url: str | None = None, api_key: str | None = None, user_agent: str | None = None):
         """Initialize the API Hub client.
 
         Args:
             base_url: Base URL for the Jentic API Knowledge Hub.
             api_key: This should contain the Jentic UUID (required for authentication).
+            user_agent: User agent string for the API client.
         """
         # Set the base URL with default fallback
         self.base_url = base_url or os.environ.get(
@@ -47,6 +48,10 @@ class JenticAPIClient:
 
         # Set up headers
         self.headers = {}
+        if user_agent:
+            self.headers["X-Jentic-User-Agent"] = user_agent
+        else:
+            self.headers["X-Jentic-User-Agent"] = "Jentic/1.0 SDK (Python)"
         if self.user_uuid:
             self.headers["X-Jentic-User-UUID"] = self.user_uuid
 
