@@ -1,7 +1,7 @@
 [project]
 name = "jentic"
 
-version = "0.8.1"
+version = "0.8.2"
 
 description = "Jentic SDK for the discovery and execution of APIs and workflows"
 authors = [
@@ -12,9 +12,9 @@ dependencies = [
     "pyyaml>=6.0",
     "jsonpath-ng>=1.5.0",
     "httpx>=0.28.1",
-    "oak-runner>=0.8.9"
+    "arazzo_runner>=0.8.14"
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 readme = "README.md"
 license = {text = "MIT"}
 
@@ -40,14 +40,14 @@ python_functions = "test_*"
 
 [tool.black]
 line-length = 100
-target-version = ["py310"]
+target-version = ["py311"]
 
 [tool.isort]
 profile = "black"
 line_length = 100
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 check_untyped_defs = true
@@ -60,7 +60,7 @@ warn_unused_ignores = true
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py311"
 select = ["E", "F", "B", "W", "I", "N", "UP", "YTT", "S"]
 ignore = []
 [dependency-groups]

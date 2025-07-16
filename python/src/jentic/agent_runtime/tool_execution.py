@@ -5,7 +5,7 @@ import os
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
-from oak_runner import OAKRunner, WorkflowExecutionResult, WorkflowExecutionStatus
+from arazzo_runner import ArazzoRunner, WorkflowExecutionResult, WorkflowExecutionStatus
 
 from jentic import api
 from jentic.api import JenticAPIClient
@@ -54,7 +54,7 @@ class TaskExecutor:
         self.api_hub_client = api_hub_client or JenticAPIClient()
 
     async def execute_workflow(self, workflow_uuid: str, inputs: Dict[str, Any]) -> WorkflowResult:
-        """Executes a specified workflow using OAK runner.
+        """Executes a specified workflow using Arazzo runner.
 
         Args:
             workflow_uuid: The UUID of the workflow to execute.
@@ -94,18 +94,18 @@ class TaskExecutor:
                     error=f"Arazzo document or internal workflow ID missing for {workflow_uuid}",
                 )
 
-            # 4. Instantiate OAKRunner
+            # 4. Instantiate ArazzoRunner
             logger.debug(
-                f"Instantiating OAKRunner for internal workflow ID: {friendly_workflow_id}"
+                f"Instantiating ArazzoRunner for internal workflow ID: {friendly_workflow_id}"
             )
-            runner = OAKRunner(
+            runner = ArazzoRunner(
                 arazzo_doc=arazzo_doc,
                 source_descriptions=source_descriptions,
             )
 
             # 5. Execute the workflow using the INTERNAL workflow ID
             logger.debug(
-                f"Running workflow {friendly_workflow_id} via OAKRunner with UUID {workflow_uuid}."
+                f"Running workflow {friendly_workflow_id} via ArazzoRunner with UUID {workflow_uuid}."
             )
             # Removed await as runner.execute_workflow seems synchronous based on TypeError
             execution_output: WorkflowExecutionResult = runner.execute_workflow(
@@ -136,7 +136,7 @@ class TaskExecutor:
         inputs: Dict[str, Any],
     ) -> OperationResult:
         """
-        Executes a specified API operation using OAKRunner after fetching required files from the API.
+        Executes a specified API operation using ArazzoRunner after fetching required files from the API.
 
         Args:
             operation_uuid: The UUID of the operation to execute.
@@ -167,7 +167,7 @@ class TaskExecutor:
                 )
             operation_entry = exec_files_response.operations[operation_uuid]
 
-            # Prepare OpenAPI spec for OAKRunner
+            # Prepare OpenAPI spec for ArazzoRunner
             openapi_content = None
             openapi_files = exec_files_response.files.get("open_api", {})
             if operation_entry.files.open_api:
@@ -183,8 +183,8 @@ class TaskExecutor:
                 )
             source_descriptions = {"default": openapi_content}
 
-            # Prepare OAKRunner and execute the operation
-            runner = OAKRunner(source_descriptions=source_descriptions)
+            # Prepare ArazzoRunner and execute the operation
+            runner = ArazzoRunner(source_descriptions=source_descriptions)
             # Pass operation_uuid, path, and method from the operation_entry
             oak_result: Any = runner.execute_operation(
                 inputs=inputs, operation_path=f"{operation_entry.method} {operation_entry.path}"
@@ -203,10 +203,10 @@ class TaskExecutor:
     def _process_operation_result(
         self, oak_result: Dict[str, Any], operation_uuid: str, inputs: Dict[str, Any]
     ) -> "OperationResult":
-        """Process the OAKRunner operation result, check status codes, and handle casting.
+        """Process the ArazzoRunner operation result, check status codes, and handle casting.
 
         Args:
-            oak_result: The result dictionary from OAKRunner.execute_operation.
+            oak_result: The result dictionary from ArazzoRunner.execute_operation.
             operation_uuid: The UUID of the operation being executed, for logging.
 
         Returns:
