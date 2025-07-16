@@ -186,12 +186,12 @@ class TaskExecutor:
             # Prepare ArazzoRunner and execute the operation
             runner = ArazzoRunner(source_descriptions=source_descriptions)
             # Pass operation_uuid, path, and method from the operation_entry
-            oak_result: Any = runner.execute_operation(
+            runner_result: Any = runner.execute_operation(
                 inputs=inputs, operation_path=f"{operation_entry.method} {operation_entry.path}"
             )
-            logger.debug(f"Operation execution result: {oak_result}")
+            logger.debug(f"Operation execution result: {runner_result}")
 
-            return self._process_operation_result(oak_result, operation_uuid, inputs)
+            return self._process_operation_result(runner_result, operation_uuid, inputs)
         except Exception as e:
             logger.exception(f"Error executing operation {operation_uuid}: {e}")
             return OperationResult(
@@ -201,18 +201,18 @@ class TaskExecutor:
             )
 
     def _process_operation_result(
-        self, oak_result: Dict[str, Any], operation_uuid: str, inputs: Dict[str, Any]
+        self, runner_result: Dict[str, Any], operation_uuid: str, inputs: Dict[str, Any]
     ) -> "OperationResult":
         """Process the ArazzoRunner operation result, check status codes, and handle casting.
 
         Args:
-            oak_result: The result dictionary from ArazzoRunner.execute_operation.
+            runner_result: The result dictionary from ArazzoRunner.execute_operation.
             operation_uuid: The UUID of the operation being executed, for logging.
 
         Returns:
             An OperationResult object.
         """
-        status_code_uncast = oak_result.get("status_code")
+        status_code_uncast = runner_result.get("status_code")
 
         if status_code_uncast is None:
             logger.debug(
@@ -221,7 +221,7 @@ class TaskExecutor:
             )
             return OperationResult(
                 success=True,
-                output=oak_result.get("body") if "body" in oak_result else oak_result,
+                output=runner_result.get("body") if "body" in runner_result else runner_result,
                 inputs=inputs,
             )
 
@@ -240,7 +240,7 @@ class TaskExecutor:
                 return OperationResult(
                     success=False,
                     error=f"Invalid status_code format: '{status_code_uncast}'. Expected an integer or integer-convertible value.",
-                    output=oak_result,  # Include full OAK result for context on casting errors
+                    output=runner_result,  # Include full OAK result for context on casting errors
                     inputs=inputs,
                 )
         else:
@@ -252,12 +252,12 @@ class TaskExecutor:
             return OperationResult(
                 success=True,
                 status_code=status_code,
-                output=oak_result.get("body") if "body" in oak_result else oak_result,
+                output=runner_result.get("body") if "body" in runner_result else runner_result,
                 inputs=inputs,
             )
         else:
             # Non-2xx status code, indicates an error
-            body_content = oak_result.get("body")
+            body_content = runner_result.get("body")
             error_detail = ""
 
             if isinstance(body_content, dict):
@@ -284,7 +284,7 @@ class TaskExecutor:
                 success=False,
                 status_code=status_code,
                 error=error_detail,
-                output=oak_result,  # Return the full OAK result as output for context on errors
+                output=runner_result,  # Return the full OAK result as output for context on errors
                 inputs=inputs,
             )
 
