@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 # Represents a reference to a file ID
@@ -14,7 +14,25 @@ class FileEntry(BaseModel):
     filename: str
     type: str
     content: Dict[str, Any]  # Content can be any valid JSON object
-    oak_path: Optional[str] = None  # Contextual path for the file, e.g., from Arazzo spec_files
+    source_path: Optional[str] = None  # Contextual path for the file, e.g., from Arazzo spec_files
+    
+    @model_validator(mode='before')
+    @classmethod
+    def handle_oak_path_alias(cls, values):
+        """Handle backward compatibility for oak_path field name."""
+        if isinstance(values, dict):
+            # If oak_path is provided but source_path is not, use oak_path
+            if 'oak_path' in values and 'source_path' not in values:
+                values['source_path'] = values.pop('oak_path')
+            # If both are provided, prefer source_path and remove oak_path
+            elif 'oak_path' in values and 'source_path' in values:
+                values.pop('oak_path')
+        return values
+    
+    @property
+    def oak_path(self) -> Optional[str]:
+        """Backward compatibility property for oak_path."""
+        return self.source_path
 
 
 # Represents an API reference within a workflow

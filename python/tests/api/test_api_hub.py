@@ -51,10 +51,10 @@ def test_build_source_descriptions_happy_path(api_client):
     content2 = {"openapi": "3.0", "info": {"title": "API Two - Second File"}}
     all_openapi_files = {
         "file1_id": MockFileEntry(
-            id="file1_id", type="open_api", filename="api_one.json", content=content1, oak_path="./specs/api_one.json"
+            id="file1_id", type="open_api", filename="api_one.json", content=content1, source_path="./specs/api_one.json"
         ),
         "file2_id": MockFileEntry(
-            id="file2_id", type="open_api", filename="api_two.yaml", content=content2, oak_path="./specs/api_two.yaml"
+            id="file2_id", type="open_api", filename="api_two.yaml", content=content2, source_path="./specs/api_two.yaml"
         ),
     }
     # Sources with URLs that match the filenames
@@ -132,11 +132,11 @@ def test_build_source_descriptions_missing_file_in_response(api_client):
     content2 = {"info": "API Two - Content"}
     all_openapi_files = {
         "file2_id": MockFileEntry(
-            id="file2_id", type="open_api", filename="api_two.json", content=content2, oak_path="./actual_path/api_two.json"
+            id="file2_id", type="open_api", filename="api_two.json", content=content2, source_path="./actual_path/api_two.json"
         )
         # 'missing_id' is not present here, which is fine for this test's purpose.
     }
-    # Arazzo source with URL that doesn't match any oak_path
+    # Arazzo source with URL that doesn't match any source_path
     arazzo_source_name = "ApiSourceNoMatch"
     arazzo_doc = {
         "sourceDescriptions": [
@@ -150,7 +150,7 @@ def test_build_source_descriptions_missing_file_in_response(api_client):
         arazzo_doc=arazzo_doc,
     )
 
-    # With oak_path matching, if no exact match is found, the source is not included.
+    # With source_path matching, if no exact match is found, the source is not included.
     # The previous fallback logic is removed.
     assert len(result) == 0
     assert arazzo_source_name not in result

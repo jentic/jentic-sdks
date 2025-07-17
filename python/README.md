@@ -2,7 +2,7 @@
 
 Jentic SDK is a comprehensive library for discovery and execution of APIs and workflows.
 
-The Jentic SDK is backed by the data in the [Open Agentic Knowledge (OAK)](https://github.com/jentic/oak) repository.
+The Jentic SDK is backed by the data in the [Jentic Public API](https://github.com/jentic/jentic-public-api) repository.
 
 ## Core API & Use Cases
 

@@ -133,17 +133,17 @@ class JenticAPIClient:
                 openapi_file_id = openapi_file_id_obj.id
                 if openapi_file_id in all_openapi_files:
                     file_entry = all_openapi_files[openapi_file_id]
-                    # Store content and oak_path for direct matching
-                    # Assumes file_entry has an 'oak_path' attribute from the API response
-                    if hasattr(file_entry, 'oak_path') and file_entry.oak_path is not None:
+                    # Store content and source_path for direct matching
+                    # Assumes file_entry has a 'source_path' attribute from the API response
+                    if hasattr(file_entry, 'source_path') and file_entry.source_path is not None:
                         openapi_files[openapi_file_id] = {
                             "content": file_entry.content,
-                            "oak_path": file_entry.oak_path
+                            "source_path": file_entry.source_path
                         }
-                        logger.debug(f"Found OpenAPI file with oak_path: {file_entry.oak_path} (ID: {openapi_file_id})")
+                        logger.debug(f"Found OpenAPI file with source_path: {file_entry.source_path} (ID: {openapi_file_id})")
                     else:
                         logger.warning(
-                            f"OpenAPI file entry with ID {openapi_file_id} (filename: {file_entry.filename}) is missing 'oak_path'. Cannot use for matching."
+                            f"OpenAPI file entry with ID {openapi_file_id} (filename: {file_entry.filename}) is missing 'source_path'. Cannot use for matching."
                         )
                 else:
                     logger.warning(
@@ -152,7 +152,7 @@ class JenticAPIClient:
 
             if not openapi_files:
                 logger.warning(
-                    f"No usable OpenAPI file content (with oak_path) found for workflow {workflow_entry.workflow_id} despite references."
+                    f"No usable OpenAPI file content (with source_path) found for workflow {workflow_entry.workflow_id} despite references."
                 )
         elif not all_openapi_files:
             logger.warning(
@@ -163,7 +163,7 @@ class JenticAPIClient:
                 f"Workflow {workflow_entry.workflow_id} does not reference any OpenAPI files."
             )
 
-        # 3. Map each Arazzo source description to matching OpenAPI content by oak_path
+        # 3. Map each Arazzo source description to matching OpenAPI content by source_path
         if arazzo_source_names and openapi_files:
             # Extract source descriptions with their URLs
             arazzo_sources_with_urls = []
@@ -178,33 +178,33 @@ class JenticAPIClient:
             except Exception as e:
                 logger.error(f"Error extracting URLs from sourceDescriptions: {e}")
             
-            # Match Arazzo sourceDescriptions to OpenAPI files by comparing source.url with file.oak_path
+            # Match Arazzo sourceDescriptions to OpenAPI files by comparing source.url with file.source_path
             for source in arazzo_sources_with_urls:
                 source_name = source["name"]
                 source_url = source["url"]
                 
                 matched = False
                 for file_id, file_info in openapi_files.items():
-                    openapi_oak_path = file_info["oak_path"]
+                    openapi_source_path = file_info["source_path"]
                     
-                    if source_url == openapi_oak_path:
+                    if source_url == openapi_source_path:
                         source_descriptions[source_name] = file_info["content"]
                         matched = True
                         logger.info(
                             f"Matched Arazzo source '{source_name}' (URL: {source_url}) "
-                            f"to OpenAPI file with oak_path '{openapi_oak_path}' (ID: {file_id})"
+                            f"to OpenAPI file with source_path '{openapi_source_path}' (ID: {file_id})"
                         )
                         break # Found the match for this Arazzo source
                 
                 if not matched:
                     logger.warning(
-                        f"Could not find an OpenAPI file with oak_path matching Arazzo sourceDescription URL '{source_url}' "
+                        f"Could not find an OpenAPI file with source_path matching Arazzo sourceDescription URL '{source_url}' "
                         f"for source name '{source_name}' in workflow {workflow_entry.workflow_id}. This source will not be available."
                     )
 
         elif not openapi_files and arazzo_source_names:
             logger.warning(
-                f"No OpenAPI files with oak_path were available to match against Arazzo source descriptions for workflow {workflow_entry.workflow_id}."
+                f"No OpenAPI files with source_path were available to match against Arazzo source descriptions for workflow {workflow_entry.workflow_id}."
             )
 
         if not source_descriptions and arazzo_source_names:
