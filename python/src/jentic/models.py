@@ -42,6 +42,13 @@ class APIReference(BaseModel):
     api_version: str
 
 
+# Represents the spec info of an operation or workflow
+class SpecInfo(BaseModel):
+    api_vendor: str
+    api_name: str
+    api_version: str | None = None
+
+
 # Represents the file references associated with a workflow/operation, keyed by file type
 class AssociatedFiles(BaseModel):
     arazzo: List[FileId] = []
@@ -70,6 +77,7 @@ class OperationEntry(BaseModel):
     summary: Optional[str] = None
     files: AssociatedFiles
     api_references: Optional[List[APIReference]] = None
+    spec_info: Optional[SpecInfo] = None
 
 
 # The main response model
