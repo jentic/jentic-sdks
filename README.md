@@ -16,12 +16,30 @@ The Jentic SDK is backed by the data in the [Open Agentic Knowledge (OAK)](https
 
 ## Getting Started
 
+### Prerequisites
+- **Python 3.11 or later** 
+  If you're on macOS the system's default Python is 3.9; install a newer interpreter first.
+
+#### Option A – Homebrew
+```sh
+brew install python@3.11
+python3.11 -m pip install --upgrade pip
+python3.11 -m pip install jentic
+```
+#### Option B – uv (or other tools to create a virtual environment)
+```sh
+# Create a new project folder for jentic
+mkdir my-project && cd my-project
+# Create a local env with Python 3.11
+uv venv .venv --python 3.11
+uv pip install jentic
+```
+
 ### Get Your Jentic UUID
 
 To use the Jentic SDK or MCP Plugin, you must first obtain a Jentic UUID. The easiest way is using the Jentic CLI. You can _optionally_ include an email address for higher rate limits and for early access to new features.
 
 ```sh
-pip install jentic
 jentic register --email '<your_email>'
 ```
 
