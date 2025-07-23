@@ -122,5 +122,4 @@ class OperationSearchResult(BaseSearchResult):
 
 
 class APISearchResults(BaseModel):
-    workflows: list[WorkflowSearchResult]
-    operations: list[OperationSearchResult]
+    results: List[WorkflowSearchResult | OperationSearchResult]

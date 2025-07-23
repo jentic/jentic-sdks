@@ -2,7 +2,7 @@
 
 import logging
 import os
-from typing import Any, Optional
+from typing import Any, Optional, List
 
 import httpx
 
@@ -20,6 +20,8 @@ from jentic.models import (
 
 from .api_cache import api_cache
 
+from dotenv import load_dotenv
+
 logger = logging.getLogger(__name__)
 
 
@@ -34,6 +36,9 @@ class JenticAPIClient:
             api_key: This should contain the Jentic UUID (required for authentication).
             user_agent: User agent string for the API client.
         """
+
+        load_dotenv()
+
         # Set the base URL with default fallback
         self.base_url = base_url or os.environ.get(
             "JENTIC_API_URL", "https://api.jentic.com"
@@ -296,52 +301,47 @@ class JenticAPIClient:
         logger.info(
             f"Searching for API capabilities using unified search: {request.capability_description}"
         )
-        search_results = await self._search_all(request)
+        search_response = await self._search_operations_and_workflows(request)
 
-        # Parse API, workflow, and operation results from search_results
-        workflow_summaries: list[WorkflowSearchResult] = []
-        for wf in search_results.get("workflows", []):
-            try:
-                # Determine api_name: explicit, mapped by api_id, or vendor fallback
-                api_name_val = wf.get("api_name")
-                workflow_summaries.append(
-                    WorkflowSearchResult(
-                        workflow_id=wf.get("id", ""),
-                        summary=wf.get("name", wf.get("workflow_id", "")),
-                        description=wf.get("description", ""),
-                        api_name=api_name_val,
-                        match_score=wf.get("distance", 0.0),
+        search_results = search_response.get("results", [])
+        parsed_search_results: List[WorkflowSearchResult | OperationSearchResult] = []
+        for res in search_results:
+            entity_type = res.get("entity_type")
+            cosine_similarity = round(1 - res.get("distance", 1.0), 2)
+            if entity_type == "workflow":
+                try:
+                    # Determine api_name: explicit, mapped by api_id, or vendor fallback
+                    api_name_val = res.get("api_name")
+                    parsed_search_results.append(
+                        WorkflowSearchResult(
+                            workflow_id=res.get("id", ""),
+                            summary=res.get("name", res.get("workflow_id", "")),
+                            description=res.get("description", ""),
+                            api_name=api_name_val,
+                            match_score=cosine_similarity,
+                        )
                     )
-                )
-            except Exception as e:
-                logger.warning(f"Failed to parse workflow summary: {e}")
-        logger.info(
-            f"Found {len(workflow_summaries)} workflows matching '{request.capability_description}'"
-        )
-
-        operation_summaries: list[OperationSearchResult] = []
-        for op in search_results.get("operations", []):
-            try:
-                api_name_val = op.get("api_name")
-                operation_summaries.append(
-                    OperationSearchResult(
-                        operation_uuid=op.get("id", ""),
-                        summary=op.get("summary", ""),
-                        description=op.get("description", ""),
-                        path=op.get("path", ""),
-                        method=op.get("method", ""),
-                        match_score=op.get("distance", 0.0),
-                        api_name=api_name_val,
+                except Exception as e:
+                    logger.warning(f"Failed to parse workflow summary: {e}")
+            elif entity_type == "operation":
+                try:
+                    api_name_val = res.get("api_name")
+                    parsed_search_results.append(
+                        OperationSearchResult(
+                            operation_uuid=res.get("id", ""),
+                            summary=res.get("summary", ""),
+                            description=res.get("description", ""),
+                            path=res.get("path", ""),
+                            method=res.get("method", ""),
+                            match_score=cosine_similarity,
+                            api_name=api_name_val,
+                        )
                     )
-                )
-            except Exception as e:
-                logger.warning(f"Failed to parse operation summary: {e}")
-        logger.info(
-            f"Found {len(operation_summaries)} operations matching '{request.capability_description}'"
-        )
+                except Exception as e:
+                    logger.warning(f"Failed to parse operation summary: {e}")
 
         # Return as a SearchResults object for high-level structure
-        return APISearchResults(workflows=workflow_summaries, operations=operation_summaries)
+        return APISearchResults(results=parsed_search_results)
 
     # No need for _extract_api_name_from_refs method as our Pydantic models handle API name extraction
 
@@ -402,7 +402,7 @@ class JenticAPIClient:
             # Set a default API name if validation fails
             parent_dict[key]["api_name"] = ""
     
-    async def _search_all(self, request: ApiCapabilitySearchRequest) -> dict[str, Any]:
+    async def _search_operations_and_workflows(self, request: ApiCapabilitySearchRequest) -> dict[str, Any]:
         """Search across all entity types for the capability description.
 
         Args:
@@ -416,7 +416,7 @@ class JenticAPIClient:
             "query": request.capability_description,
             "limit": request.max_results
             * 2,  # Get more results to ensure we have enough after filtering
-            "entity_types": ["api", "workflow", "operation"],
+            "entity_types": ["workflow", "operation"],
         }
 
         if request.keywords:
@@ -430,7 +430,7 @@ class JenticAPIClient:
         logger.info(f"Searching all entities with query: {search_request['query']}")
 
         # Log the URL we're connecting to for debugging
-        search_url = f"{self.base_url}/api/v1/search/all"
+        search_url = f"{self.base_url}/api/v1/search/sdk"
         logger.info(f"Connecting to search URL: {search_url}")
 
         # Make the search request
@@ -445,12 +445,17 @@ class JenticAPIClient:
             search_response = response.json()
             # Ensure API names are properly set in the raw search response
             search_response = self.ensure_api_names_in_response(search_response)
-            api_count = len(search_response.get("apis", []))
-            workflow_count = len(search_response.get("workflows", []))
-            operation_count = len(search_response.get("operations", []))
+
+            results = search_response.get("results", [])
+            workflow_count, operation_count = 0, 0
+            for result in results:
+                if result["entity_type"] == "workflow":
+                    workflow_count += 1
+                elif result["entity_type"] == "operation":
+                    operation_count += 1
 
             logger.info(
-                f"Found {api_count} APIs, {workflow_count} workflows, {operation_count} operations"
+                f"Found {workflow_count} workflows and {operation_count} operations matching '{request.capability_description}'"
             )
 
             return search_response

@@ -7,7 +7,7 @@ import os
 import httpx
 
 from jentic import Jentic
-from jentic.models import ApiCapabilitySearchRequest, APISearchResults
+from jentic.models import ApiCapabilitySearchRequest, APISearchResults, WorkflowSearchResult, OperationSearchResult
 
 from mcp.core.generators.code_generator import generate_code_sample
 from mcp import version
@@ -35,22 +35,25 @@ class MCPAdapter:
             api_names=request.get("api_names"),
         )
 
-        results: APISearchResults = await self.jentic.search_api_capabilities(request=request)
+        search_results: APISearchResults = await self.jentic.search_api_capabilities(request=request)
 
         # Dump results including api_name
-        data = results.model_dump(exclude_none=False)
+        data = search_results.model_dump(exclude_none=False)
+        results: List[WorkflowSearchResult | OperationSearchResult] = data.get("results", [])
+
         # Prefix workflow summaries with their api_name
-        for wf in data.get("workflows", []):
-            api = wf.get("api_name")
-            if api:
-                # Prefix with full api_name (keep the dot)
-                wf_summary = wf.get("summary", "")
-                wf["summary"] = f"{api}-{wf_summary}"
+        for res in results:
+            if isinstance(res, WorkflowSearchResult):
+                api_name = res.get("api_name")
+                if api_name:
+                    # Prefix with full api_name (keep the dot)
+                    wf_summary = res.get("summary", "")
+                    res["summary"] = f"{api_name}-{wf_summary}"
         return {
             "result": {
-                "matches": data,
+                "matches": results,
                 "query": request.capability_description,
-                "total_matches": len(results.workflows) + len(results.operations),
+                "total_matches": len(results)
             }
         }
 
