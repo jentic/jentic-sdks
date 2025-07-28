@@ -19,13 +19,20 @@ The client looks for an explicit `api_key` argument or the environment variable 
 export JENTIC_AGENT_API_KEY="your-key-here"
 ```
 
-## Quick Start
+## Quick Start - Basic Usage
 ```python
 import jentic
 
+apis = jentic.list_apis()
+print(apis)
+
 results = jentic.search("discord search message")
 print(results)
+
+resp = jentic.execute(jentic.ExecutionRequest(operation_id="operation_id", args={"arg1": "value1"}))
+print(resp)
 ```
+
 
 ## Contributing
 Pull requests are welcome. See `CONTRIBUTING.md` for guidelines.
