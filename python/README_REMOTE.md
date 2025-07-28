@@ -23,13 +23,13 @@ export JENTIC_AGENT_API_KEY="your-key-here"
 ```python
 import jentic
 
-apis = jentic.list_apis()
+apis = await jentic.list_apis()
 print(apis)
 
-results = jentic.search("discord search message")
+results = await jentic.search("discord search message")
 print(results)
 
-resp = jentic.execute(jentic.ExecutionRequest(execution_type="operation", uuid="operation_id", inputs={"arg1": "value1"}))
+resp = await jentic.execute(jentic.ExecutionRequest(execution_type="operation", uuid="operation_id", inputs={"arg1": "value1"}))
 print(resp)
 ```
 
