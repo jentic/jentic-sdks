@@ -29,7 +29,7 @@ print(apis)
 results = jentic.search("discord search message")
 print(results)
 
-resp = jentic.execute(jentic.ExecutionRequest(operation_id="operation_id", args={"arg1": "value1"}))
+resp = jentic.execute(jentic.ExecutionRequest(execution_type="operation", uuid="operation_id", inputs={"arg1": "value1"}))
 print(resp)
 ```
 
