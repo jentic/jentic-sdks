@@ -1,75 +1,35 @@
 [project]
 name = "jentic"
-
-version = "0.8.3"
-
+version = "0.9.0"
 description = "Jentic SDK for the discovery and execution of APIs and workflows"
+requires-python = ">=3.11"
+readme = "README.md"
+license = {text = "MIT"}
 authors = [
     {name = "Jentic Labs", email = "info@jenticlabs.com"},
 ]
 dependencies = [
+    "arazzo-runner>=0.8.17",
     "pydantic>=2.0.0",
-    "pyyaml>=6.0",
-    "jsonpath-ng>=1.5.0",
     "httpx>=0.28.1",
-    "arazzo-runner>=0.8.17"
+    "tenacity>=9.1.2"
 ]
-requires-python = ">=3.11"
-readme = "README.md"
-license = {text = "MIT"}
-
-[project.scripts]
-jentic = "jentic.__main__:main"
-
-[build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
-
-[tool.pdm]
-[tool.pdm.scripts]
-lint = {composite = ["black .", "isort .", "ruff check .", "mypy ."]}
-test = "pytest --ignore=tests/integration"
-test-real = "python -m tests.arazzo_runner.run_real_tests"
-integration = "pytest tests/integration"
-integration-dev = "pytest tests/integration --test-env=dev"
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = "test_*.py"
-python_functions = "test_*"
-
-[tool.black]
-line-length = 100
-target-version = ["py311"]
-
-[tool.isort]
-profile = "black"
-line_length = 100
-
-[tool.mypy]
-python_version = "3.11"
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-disallow_untyped_decorators = true
-no_implicit_optional = true
-strict_optional = true
-warn_redundant_casts = true
-warn_return_any = true
-warn_unused_ignores = true
-
-[tool.ruff]
-line-length = 100
-target-version = "py311"
-select = ["E", "F", "B", "W", "I", "N", "UP", "YTT", "S"]
-ignore = []
 [dependency-groups]
 dev = [
     "pytest>=7.4.0",
     "mypy>=1.5.1",
     "black>=23.7.0",
     "ruff>=0.0.289",
-    "isort>=5.12.0",
     "pytest-asyncio>=0.25.3",
-    "python-dotenv>=1.1.0",
+    "pytest-coverage>=0.0",
 ]
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.black]
+line-length = 100
