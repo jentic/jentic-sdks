@@ -9,8 +9,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from jentic.agent_runtime.config import JenticConfig
-from jentic.models import AssociatedFiles, FileEntry, FileId, GetFilesResponse, WorkflowEntry
+from jentic.lib.agent_runtime.config import JenticConfig
+from jentic.lib.models import AssociatedFiles, FileEntry, FileId, GetFilesResponse, WorkflowEntry
 
 
 @pytest.fixture

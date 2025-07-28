@@ -31,4 +31,4 @@ def test_cfg_from_env__happy_path(monkeypatch):
     monkeypatch.setenv("JENTIC_ENVIRONMENT", "qa")
     cfg = AgentConfig.from_env()
     assert cfg.environment == "qa"
-    assert cfg.base_url == "https://api.qa.jentic.com/api/v1/"
+    assert cfg.base_url == "https://yq6wol1jye.execute-api.eu-west-1.amazonaws.com/api/v1/"

@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import yaml
 
-from jentic.agent_runtime.agent_tools import AgentToolManager
+from jentic.lib.agent_runtime.agent_tools import AgentToolManager
 
 
 @pytest.fixture
@@ -60,7 +60,7 @@ def agent_tool_manager(mock_project_structure, mock_api_hub_client):
     """Create a mocked AgentToolManager for testing."""
     # Then patch the TaskExecutor.execute_workflow method
     with patch(
-        "jentic.agent_runtime.tool_execution.TaskExecutor.execute_workflow"
+        "jentic.lib.agent_runtime.tool_execution.TaskExecutor.execute_workflow"
     ) as mock_execute_workflow:
         # Configure the mock workflow execution response
         mock_execute_workflow.return_value = {

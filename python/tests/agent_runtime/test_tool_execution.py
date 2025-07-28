@@ -7,11 +7,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 import pytest_asyncio
 
-from jentic.agent_runtime.tool_execution import (
+from jentic.lib.agent_runtime.tool_execution import (
     TaskExecutor,
 )
-from jentic.api import JenticAPIClient
-from jentic.models import (
+from jentic.lib.agent_runtime.api_hub import JenticAPIClient
+from jentic.lib.models import (
     AssociatedFiles,
     FileId,
     GetFilesResponse,
@@ -58,7 +58,7 @@ def comprehensive_config():
 async def mock_api_hub_client():
     """Create a mocked JenticAPIClient."""
     with patch(
-        "jentic.agent_runtime.tool_execution.JenticAPIClient", autospec=True
+        "jentic.lib.agent_runtime.tool_execution.JenticAPIClient", autospec=True
     ) as mock_client_class:
         mock_client = AsyncMock(spec=JenticAPIClient)
         mock_client_class.return_value = mock_client
@@ -88,7 +88,7 @@ class TestWorkflowExecution:
         )
 
         # Create a mock runner
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()  # ArazzoRunner.execute_workflow is synchronous
             # Update return value structure for ArazzoRunner
             mock_runner.execute_workflow.return_value = OakWorkflowExecutionResult(
@@ -145,7 +145,7 @@ class TestWorkflowExecution:
         )
 
         # Create a mock runner that returns an error status
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()
             mock_runner.execute_workflow.return_value = OakWorkflowExecutionResult(
                 status=WorkflowExecutionStatus.ERROR,
@@ -193,7 +193,7 @@ class TestWorkflowExecution:
         mock_api_hub_client.get_execution_details_for_workflow.return_value = None
 
         # Patch ArazzoRunner to ensure it's not called
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             # Create the tool executor
             executor = TaskExecutor(mock_api_hub_client)  
 
@@ -227,7 +227,7 @@ class TestWorkflowExecution:
         )
 
         # Mock runner class to raise an exception during instantiation
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner_class.side_effect = Exception("Runner Init Error")
 
             # Create the tool executor
@@ -269,7 +269,7 @@ class TestCompleteWorkflowExecution:
         )
 
         # Mock the runner
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()  
             # Update return value structure
             mock_runner.execute_workflow.return_value = OakWorkflowExecutionResult(
@@ -317,7 +317,7 @@ class TestCompleteWorkflowExecution:
         )
 
         # Mock the runner
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()  
             # Update return value structure
             mock_runner.execute_workflow.return_value = OakWorkflowExecutionResult(
@@ -362,7 +362,7 @@ class TestCompleteWorkflowExecution:
         )
 
         # Mock the runner to return an empty dictionary for outputs
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()  
             # Update return value structure
             mock_runner.execute_workflow.return_value = OakWorkflowExecutionResult(
@@ -411,7 +411,7 @@ class TestEdgeCases:
         )
 
         # Mock the runner
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()  
             # Update return value structure
             mock_runner.execute_workflow.return_value = OakWorkflowExecutionResult(
@@ -455,7 +455,7 @@ class TestEdgeCases:
         )
 
         # Create mock runner
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()  
             # Runner returns final result directly
             # Update return value structure
@@ -508,7 +508,7 @@ class TestOperationExecution:
         oak_response_body = {"data": "success_data"}
         oak_full_response = {"status_code": 200, "body": oak_response_body, "headers": {}}
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()
             mock_runner.execute_operation.return_value = oak_full_response
             mock_runner_class.return_value = mock_runner
@@ -543,7 +543,7 @@ class TestOperationExecution:
 
         oak_full_response = {"status_code": 204, "headers": {"X-Custom": "value"}} # No body for 204
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()
             mock_runner.execute_operation.return_value = oak_full_response
             mock_runner_class.return_value = mock_runner
@@ -573,7 +573,7 @@ class TestOperationExecution:
         error_detail = {"error": "Bad Request", "message": "Invalid parameter provided"}
         oak_full_response = {"status_code": 400, "body": error_detail, "headers": {}}
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()
             mock_runner.execute_operation.return_value = oak_full_response
             mock_runner_class.return_value = mock_runner
@@ -603,7 +603,7 @@ class TestOperationExecution:
 
         oak_full_response = {"status_code": 503, "body": "Service Unavailable", "headers": {}}
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()
             mock_runner.execute_operation.return_value = oak_full_response
             mock_runner_class.return_value = mock_runner
@@ -633,7 +633,7 @@ class TestOperationExecution:
         oak_response_body = {"message": "OK"}
         oak_full_response = {"status_code": "201", "body": oak_response_body, "headers": {}}
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()
             mock_runner.execute_operation.return_value = oak_full_response
             mock_runner_class.return_value = mock_runner
@@ -662,7 +662,7 @@ class TestOperationExecution:
 
         oak_full_response = {"status_code": "OK_NOT_A_NUMBER", "body": "Error", "headers": {}}
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()
             mock_runner.execute_operation.return_value = oak_full_response
             mock_runner_class.return_value = mock_runner
@@ -693,7 +693,7 @@ class TestOperationExecution:
         # OAK result missing status_code
         oak_full_response = {"body": oak_response_body, "headers": {}}
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()
             mock_runner.execute_operation.return_value = oak_full_response
             mock_runner_class.return_value = mock_runner
@@ -724,7 +724,7 @@ class TestOperationExecution:
         # ArazzoRunner returns a string instead of a dict
         oak_non_dict_response = "This is not a dictionary"
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()
             mock_runner.execute_operation.return_value = oak_non_dict_response
             mock_runner_class.return_value = mock_runner
@@ -748,7 +748,7 @@ class TestOperationExecution:
         mock_exec_files_response = GetFilesResponse(workflows={}, operations={}, files={})
         mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             executor = TaskExecutor(api_hub_client=mock_api_hub_client)
             result = await executor.execute_operation(operation_uuid, inputs)
 
@@ -778,7 +778,7 @@ class TestOperationExecution:
         )
         mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             executor = TaskExecutor(api_hub_client=mock_api_hub_client)
             result = await executor.execute_operation(operation_uuid, inputs)
 
@@ -808,7 +808,7 @@ class TestOperationExecution:
         )
         mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             executor = TaskExecutor(api_hub_client=mock_api_hub_client)
             result = await executor.execute_operation(operation_uuid, inputs)
 
@@ -828,7 +828,7 @@ class TestOperationExecution:
         expected_exception = RuntimeError("Network Error")
         mock_api_hub_client.get_execution_files.side_effect = expected_exception
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             executor = TaskExecutor(api_hub_client=mock_api_hub_client)
             result = await executor.execute_operation(operation_uuid, inputs)
 

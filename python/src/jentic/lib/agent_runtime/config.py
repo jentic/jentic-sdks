@@ -11,8 +11,8 @@ from arazzo_runner.auth.models import SecurityOption
 from arazzo_runner.extractor.openapi_extractor import extract_operation_io
 from arazzo_runner import ArazzoRunner
 
-from jentic.api.api_hub import JenticAPIClient
-from jentic.models import GetFilesResponse
+from jentic.lib.agent_runtime.api_hub import JenticAPIClient
+from jentic.lib.models import GetFilesResponse
 
 logger = logging.getLogger(__name__)
 
@@ -186,7 +186,9 @@ class JenticConfig:
             )
 
         # Step 5: Process authentication requirements
-        env_mappings = ArazzoRunner.generate_env_mappings(arazzo_docs=all_arazzo_specs, source_descriptions=all_openapi_specs)
+        env_mappings = ArazzoRunner.generate_env_mappings(
+            arazzo_docs=all_arazzo_specs, source_descriptions=all_openapi_specs
+        )
 
         # Step 6: Compose final config
         final_config = {
@@ -274,7 +276,9 @@ class JenticConfig:
             if workflow_entry.workflow_id and workflow_entry.workflow_id in workflows_in_doc:
                 workflow_details = workflows_in_doc[workflow_entry.workflow_id]
                 workflow_details["workflow_uuid"] = workflow_id
-                workflow_details["api_names"] = [ref.api_name for ref in workflow_entry.api_references]
+                workflow_details["api_names"] = [
+                    ref.api_name for ref in workflow_entry.api_references
+                ]
                 workflow_details["security_requirements"] = (
                     JenticConfig._flatten_security_requirements(
                         AuthProcessor.get_security_requirements_for_workflow(
@@ -328,7 +332,7 @@ class JenticConfig:
                         operation_entry.path,
                         operation_entry.method.lower(),
                         input_max_depth=4,
-                        output_max_depth=2
+                        output_max_depth=2,
                     )
                 except Exception as e:
                     logger.error(f"Failed to extract operation IO for {operation_uuid}: {e}")
@@ -343,7 +347,9 @@ class JenticConfig:
                     io_details["outputs"] if io_details and "outputs" in io_details else None
                 ),
                 "security_requirements": (
-                    io_details["security_requirements"] if io_details and "security_requirements" in io_details else None
+                    io_details["security_requirements"]
+                    if io_details and "security_requirements" in io_details
+                    else None
                 ),
             }
         return extracted_operation_details

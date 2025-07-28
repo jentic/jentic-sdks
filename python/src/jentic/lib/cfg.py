@@ -6,9 +6,9 @@ from jentic.lib.exc import JenticEnvironmentError, MissingAgentKeyError
 # TODO - Ensure we have one fqdn for each env, and  all endpoints are consistent
 _ENDPOINTS = {
     "prod": "https://api.jentic.com/api/v1/",
-    "qa": "https://api.qa.jentic.com/api/v1/",
+    "qa": "https://yq6wol1jye.execute-api.eu-west-1.amazonaws.com/api/v1/",
     "test": "https://api.test.jentic.com/api/v1/",
-    "local": "https://yq6wol1jye.execute-api.eu-west-1.amazonaws.com/api/v1/",  # TODO - remove this
+    "local": "https://yq6wol1jye.execute-api.eu-west-1.amazonaws.com/api/v1/"  # TODO - maybe remove this, local->qa
 }
 
 

@@ -1,6 +1,6 @@
 import pytest
 
-from jentic.agent_runtime.tool_specs import LLMToolSpecManager, create_llm_tool_manager
+from jentic.lib.agent_runtime.tool_specs import LLMToolSpecManager, create_llm_tool_manager
 
 
 def test_llm_tool_spec_manager_init():

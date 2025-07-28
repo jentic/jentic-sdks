@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from jentic.agent_runtime.tool_specs import (
+from jentic.lib.agent_runtime.tool_specs import (
     LLMToolSpecManager,
     create_llm_tool_manager,
 )

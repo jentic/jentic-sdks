@@ -8,7 +8,7 @@ from httpx import Response
 import tenacity
 
 from jentic.lib.cfg import AgentConfig
-from jentic.lib.exc import JenticException
+from jentic.lib.exc import JenticAPIError
 from jentic.lib.models import (
     APIIdentifier,
     ExecuteResponse,
@@ -146,8 +146,15 @@ class BackendAPI:
     # Validate the response(httpx.Response) and return the data (T_JSONResponse)
     def _validate_response(self, response: Response) -> T_JSONResponse:
         data = response.json()
-        if isinstance(data, dict) and data.get("body"):
-            return data["body"]
+
+        # Decode, and if we have 'body' then return this.
+        if isinstance(data, dict):
+            # TODO - not found (for now), just throw exc
+            if data.get("detail") == "Not Found":
+                raise JenticAPIError("Error: API Not Supported")
+
+            if data.get("body"):
+                return data["body"]
 
         return data
 

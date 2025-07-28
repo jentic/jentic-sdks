@@ -7,10 +7,9 @@ from typing import Any, Dict, Optional
 
 from arazzo_runner import ArazzoRunner, WorkflowExecutionResult, WorkflowExecutionStatus
 
-from jentic import api
-from jentic.api import JenticAPIClient
-from jentic.api.api_hub import JenticAPIClient
-from jentic.models import WorkflowExecutionDetails
+
+from jentic.lib.agent_runtime.api_hub import JenticAPIClient
+from jentic.lib.models import WorkflowExecutionDetails
 
 
 # Define a WorkflowResult class to standardize results
@@ -114,16 +113,13 @@ class TaskExecutor:
 
             # 6. Process result and return WorkflowResult
             if execution_output.status == WorkflowExecutionStatus.WORKFLOW_COMPLETE:
-                return WorkflowResult(
-                    success=True,
-                    output=execution_output.outputs
-                )
+                return WorkflowResult(success=True, output=execution_output.outputs)
             else:
                 return WorkflowResult(
                     success=False,
                     error=execution_output.error or "Workflow execution failed.",
                     step_results=execution_output.step_outputs,
-                    inputs=execution_output.inputs
+                    inputs=execution_output.inputs,
                 )
 
         except Exception as e:
@@ -271,9 +267,7 @@ class TaskExecutor:
             elif isinstance(body_content, (str, bytes)):
                 try:
                     error_detail = (
-                        body_content.decode()
-                        if isinstance(body_content, bytes)
-                        else body_content
+                        body_content.decode() if isinstance(body_content, bytes) else body_content
                     )
                 except UnicodeDecodeError:
                     error_detail = "Non-decodable binary content in body"
@@ -287,7 +281,6 @@ class TaskExecutor:
                 output=runner_result,  # Return the full OAK result as output for context on errors
                 inputs=inputs,
             )
-
 
     def _format_workflow_result(self, result: WorkflowResult) -> dict[str, Any]:
         """Format a workflow result for tool output.

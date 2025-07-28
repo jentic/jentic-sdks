@@ -3,11 +3,11 @@ from typing import Any, Dict, List, Optional
 import pytest
 from pydantic import BaseModel
 
-from jentic.api.api_hub import JenticAPIClient
+from jentic.lib.agent_runtime.api_hub import JenticAPIClient
 
 # Assuming models are accessible via the path below
 # Split imports to potentially resolve import errors
-from jentic.models import AssociatedFiles, FileEntry, FileId, WorkflowEntry
+from jentic.lib.models import AssociatedFiles, FileEntry, FileId, WorkflowEntry
 
 
 # Minimal mock models for testing
