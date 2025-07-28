@@ -9,7 +9,7 @@ authors = [
     {name = "Jentic Labs", email = "info@jenticlabs.com"},
 ]
 dependencies = [
-    "arazzo-runner>=0.8.17",
+    "arazzo-runner>=0.8.18",
     "pydantic>=2.0.0",
     "httpx>=0.28.1",
     "tenacity>=9.1.2"
