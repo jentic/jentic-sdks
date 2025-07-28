@@ -35,9 +35,9 @@ uv venv .venv --python 3.11
 uv pip install jentic
 ```
 
-### Get Your Jentic UUID
+### Get Your Jentic API Key
 
-To use the Jentic SDK or MCP Plugin, you must first obtain a Jentic UUID. The easiest way is using the Jentic CLI. You can _optionally_ include an email address for higher rate limits and for early access to new features.
+To use any Jentic product such as the Jentic SDK or MCP Plugin, you must first obtain a Jentic API Key. The easiest way is using the Jentic CLI. You can _optionally_ include an email address for higher rate limits and for early access to new features.
 
 ```sh
 jentic register --email '<your_email>'
@@ -49,7 +49,7 @@ This will print your UUID and an export command to set it in your environment:
 export JENTIC_UUID=<your-jentic-uuid>
 ```
 
-Alternatively, you can use curl to register and obtain your UUID:
+Alternatively, you can use curl to register and obtain your API Key:
 
 ```sh
 curl -X POST https://api.jentic.com/api/v1/auth/register \
