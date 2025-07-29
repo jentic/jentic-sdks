@@ -117,7 +117,7 @@ class TestAgentToolManager:
         # Create a temporary directory with a custom config file
         with tempfile.TemporaryDirectory() as tmp_dir:
             project_dir = Path(tmp_dir)
-            
+
             # Create a config with a workflow that has an api_name
             config = {
                 "workflows": {
@@ -141,19 +141,19 @@ class TestAgentToolManager:
                     }
                 }
             }
-            
+
             # Write the config to the temp dir
             config_file = project_dir / "jentic.json"
             with open(config_file, "w") as f:
                 json.dump(config, f)
-            
+
             # Test OpenAI format with the vendor name
             manager = AgentToolManager(config_file, format="openai")
             tools = manager.generate_tool_definitions()
             assert len(tools) > 0
             assert "function" in tools[0]
             assert tools[0]["function"]["name"] == "Discord-sendMessage"
-            
+
             # Test Anthropic format with the vendor name
             manager = AgentToolManager(config_file, format="anthropic")
             tools = manager.generate_tool_definitions()

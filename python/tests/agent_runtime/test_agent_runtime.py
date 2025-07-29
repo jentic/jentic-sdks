@@ -158,11 +158,11 @@ class TestLLMToolSpecManager:
         manager = create_llm_tool_manager()
         # Ensure vendor prefixes are enabled (default is True)
         manager.load_workflows({"testWorkflow": sample_workflow})
-        
+
         # Test OpenAI format
         openai_specs = manager.get_tool_specs("openai")
         assert openai_specs["tools"][0]["function"]["name"] == "Discord-testWorkflow"
-        
+
         # Test Anthropic format
         anthropic_specs = manager.get_tool_specs("anthropic")
         assert anthropic_specs["tools"][0]["name"] == "Discord-testWorkflow"

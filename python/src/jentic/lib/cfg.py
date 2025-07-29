@@ -8,7 +8,7 @@ _ENDPOINTS = {
     "prod": "https://api.jentic.com/api/v1/",
     "qa": "https://yq6wol1jye.execute-api.eu-west-1.amazonaws.com/api/v1/",
     "test": "https://api.test.jentic.com/api/v1/",
-    "local": "https://yq6wol1jye.execute-api.eu-west-1.amazonaws.com/api/v1/"  # TODO - maybe remove this, local->qa
+    "local": "https://yq6wol1jye.execute-api.eu-west-1.amazonaws.com/api/v1/",  # TODO - maybe remove this, local->qa
 }
 
 

@@ -26,7 +26,9 @@ logger = logging.getLogger(__name__)
 class JenticAPIClient:
     """Client for interacting with the Jentic API Knowledge Hub."""
 
-    def __init__(self, base_url: str | None = None, api_key: str | None = None, user_agent: str | None = None):
+    def __init__(
+        self, base_url: str | None = None, api_key: str | None = None, user_agent: str | None = None
+    ):
         """Initialize the API Hub client.
 
         Args:
@@ -35,9 +37,7 @@ class JenticAPIClient:
             user_agent: User agent string for the API client.
         """
         # Set the base URL with default fallback
-        self.base_url = base_url or os.environ.get(
-            "JENTIC_API_URL", "https://api.jentic.com"
-        )
+        self.base_url = base_url or os.environ.get("JENTIC_API_URL", "https://api.jentic.com")
 
         self.base_url = self.base_url.rstrip("/")
 
@@ -135,12 +135,14 @@ class JenticAPIClient:
                     file_entry = all_openapi_files[openapi_file_id]
                     # Store content and source_path for direct matching
                     # Assumes file_entry has a 'source_path' attribute from the API response
-                    if hasattr(file_entry, 'source_path') and file_entry.source_path is not None:
+                    if hasattr(file_entry, "source_path") and file_entry.source_path is not None:
                         openapi_files[openapi_file_id] = {
                             "content": file_entry.content,
-                            "source_path": file_entry.source_path
+                            "source_path": file_entry.source_path,
                         }
-                        logger.debug(f"Found OpenAPI file with source_path: {file_entry.source_path} (ID: {openapi_file_id})")
+                        logger.debug(
+                            f"Found OpenAPI file with source_path: {file_entry.source_path} (ID: {openapi_file_id})"
+                        )
                     else:
                         logger.warning(
                             f"OpenAPI file entry with ID {openapi_file_id} (filename: {file_entry.filename}) is missing 'source_path'. Cannot use for matching."
@@ -169,24 +171,30 @@ class JenticAPIClient:
             arazzo_sources_with_urls = []
             try:
                 for source in arazzo_doc.get("sourceDescriptions", []):
-                    if isinstance(source, dict) and source.get("type") == "openapi" and source.get("name") and source.get("url"):
-                        arazzo_sources_with_urls.append({
-                            "name": source.get("name"),
-                            "url": source.get("url")
-                        })
-                        logger.debug(f"Found Arazzo source with URL: {source.get('name')} -> {source.get('url')}")
+                    if (
+                        isinstance(source, dict)
+                        and source.get("type") == "openapi"
+                        and source.get("name")
+                        and source.get("url")
+                    ):
+                        arazzo_sources_with_urls.append(
+                            {"name": source.get("name"), "url": source.get("url")}
+                        )
+                        logger.debug(
+                            f"Found Arazzo source with URL: {source.get('name')} -> {source.get('url')}"
+                        )
             except Exception as e:
                 logger.error(f"Error extracting URLs from sourceDescriptions: {e}")
-            
+
             # Match Arazzo sourceDescriptions to OpenAPI files by comparing source.url with file.source_path
             for source in arazzo_sources_with_urls:
                 source_name = source["name"]
                 source_url = source["url"]
-                
+
                 matched = False
                 for file_id, file_info in openapi_files.items():
                     openapi_source_path = file_info["source_path"]
-                    
+
                     if source_url == openapi_source_path:
                         source_descriptions[source_name] = file_info["content"]
                         matched = True
@@ -194,8 +202,8 @@ class JenticAPIClient:
                             f"Matched Arazzo source '{source_name}' (URL: {source_url}) "
                             f"to OpenAPI file with source_path '{openapi_source_path}' (ID: {file_id})"
                         )
-                        break # Found the match for this Arazzo source
-                
+                        break  # Found the match for this Arazzo source
+
                 if not matched:
                     logger.warning(
                         f"Could not find an OpenAPI file with source_path matching Arazzo sourceDescription URL '{source_url}' "
@@ -347,16 +355,16 @@ class JenticAPIClient:
 
     def ensure_api_names_in_response(self, response_data: dict[str, Any]) -> dict[str, Any]:
         """Ensure API names are properly set in API responses using Pydantic models.
-        
+
         This implements Killian's recommendation to use Pydantic models for type safety.
-        
+
         Args:
             response_data: The response data that may need API names enriched.
-            
+
         Returns:
             The updated response data with API names properly set.
         """
-        
+
         # Handle workflows (could be list in search results or dict in execution info)
         workflows = response_data.get("workflows", {})
         if isinstance(workflows, list):
@@ -367,18 +375,20 @@ class JenticAPIClient:
             # Process dict format (execution info)
             for wf_id, wf in workflows.items():
                 self._enrich_entity_with_api_name(wf, workflows, wf_id, WorkflowEntry)
-        
+
         # Process operations (always in dict format)
         operations = response_data.get("operations", {})
         if isinstance(operations, dict):
             for op_id, op in operations.items():
                 self._enrich_entity_with_api_name(op, operations, op_id, OperationEntry)
-                
+
         return response_data
-        
-    def _enrich_entity_with_api_name(self, entity: dict, parent_dict: dict, key: Any, model_class: type) -> None:
+
+    def _enrich_entity_with_api_name(
+        self, entity: dict, parent_dict: dict, key: Any, model_class: type
+    ) -> None:
         """Helper method to enrich an entity with API name using Pydantic models.
-        
+
         Args:
             entity: The entity (workflow or operation) to enrich
             parent_dict: The parent dictionary containing the entity
@@ -388,20 +398,20 @@ class JenticAPIClient:
         # Skip if not a dict or already has api_name
         if not isinstance(entity, dict) or "api_name" in entity:
             return
-            
+
         try:
             # Create a Pydantic model with the entity data
             # Since api_name is required but has a default value, this will work
             model = model_class.model_validate(entity)
-            
+
             # Use the api_name directly from the model
             if model.api_name:
                 parent_dict[key]["api_name"] = model.api_name
-                
+
         except Exception:
             # Set a default API name if validation fails
             parent_dict[key]["api_name"] = ""
-    
+
     async def _search_all(self, request: ApiCapabilitySearchRequest) -> dict[str, Any]:
         """Search across all entity types for the capability description.
 
