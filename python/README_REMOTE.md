@@ -6,23 +6,56 @@
 
 ---
 
-## Table of Contents
+## 🚩 Features
+
+- **Remote Code Execution**: Run code and workflows securely in the cloud.
+- **Unified API**: Simple, consistent interface for all operations.
+- **Secure**: Built-in authentication and sandboxing.
+- **Async & Sync Support**: Use in any Python environment.
+
+---
+
+## 📖 Table of Contents
+
 - [Overview](#overview)
+- [Features](#-features)
+- [Architecture](#architecture)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Authentication](#authentication)
 - [Quick Start](#quick-start)
+- [API Reference](#api-reference)
+- [Advanced Usage](#advanced-usage)
 - [Contributing](#contributing)
+- [Community & Support](#community--support)
 - [License](#license)
 
 ---
 
 ## Overview
-A minimal guide to installing the Jentic Python SDK and executing code on a remote Jentic runtime.
+
+Jentic lets you execute code and automate workflows remotely, making it easy to build intelligent agents, integrate APIs, and manage distributed tasks.
+
+<!-- Optionally add a diagram here -->
+
+---
+
+## Architecture
+
+<!-- Add a simple diagram or bullet points explaining the architecture -->
+
+- **Client SDK**: Python interface for interacting with the Jentic runtime.
+- **Remote Runtime**: Secure environment for executing code and workflows.
+- **API Gateway**: Handles authentication, routing, and orchestration.
+
+---
 
 ## Prerequisites
+
 - Python 3.11+
-- A valid Jentic API key
+- A valid Jentic API key ([Get one here](https://your-signup-link))
+
+---
 
 ## Installation
 
@@ -32,26 +65,43 @@ pip install jentic
 
 ## Authentication
 
-> **Note:**
-> The client looks for an explicit `api_key` argument or the environment variable `JENTIC_AGENT_API_KEY`.
+ **Note:** The client looks for an explicit `api_key` argument or the environment variable `JENTIC_AGENT_API_KEY`.
+
+Set your API key as an environment variable:
 
 ```bash
 export JENTIC_AGENT_API_KEY="your-key-here"
 ```
 
-## Quick Start
-
-### Async Usage
+Or pass it directly in code:
 
 ```python
 import jentic
+client = jentic.Jentic(jentic.AgentConfig(api_key="your-key-here"))
+```
 
+---
+
+## Quick Start
+
+### List APIs
+
+```python
+import jentic
 apis = await jentic.list_apis()
 print(apis)
+```
 
-results = await jentic.search("discord search message")
+### Search
+
+```python
+results = await jentic.search("send message to discord channel")
 print(results)
+```
 
+### Execute an Operation
+
+```python
 resp = await jentic.execute(
     jentic.ExecutionRequest(
         execution_type="operation",
@@ -62,9 +112,7 @@ resp = await jentic.execute(
 print(resp)
 ```
 
-### Sync Context
-
-If running in a sync context, you can use `asyncio.run()`:
+> **Note:** For sync code, use `asyncio.run()`:
 
 ```python
 import asyncio
@@ -76,8 +124,21 @@ print(apis)
 
 ---
 
+
 ## Contributing
-Pull requests are welcome! See [`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines.
+
+Pull requests are welcome! See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+---
+
+## Community & Support
+
+- [GitHub Issues](https://github.com/your-repo/issues)
+- [Discord](https://discord.gg/your-invite)
+- [Discussions](https://github.com/your-repo/discussions)
+
+---
 
 ## License
+
 Distributed under the MIT license. See [`LICENSE`](../LICENSE) for details.
