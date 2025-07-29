@@ -24,8 +24,6 @@
 - [Installation](#installation)
 - [Authentication](#authentication)
 - [Quick Start](#quick-start)
-- [API Reference](#api-reference)
-- [Advanced Usage](#advanced-usage)
 - [Contributing](#contributing)
 - [Community & Support](#community--support)
 - [License](#license)
