@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from collections.abc import Callable
 from functools import wraps
@@ -98,6 +99,7 @@ class BackendAPI:
     def __init__(self, cfg: AgentConfig):
         self._cfg: AgentConfig = cfg
         self._client: httpx.AsyncClient | None = None
+        self._loop = asyncio.get_event_loop()
 
     # Repo-like access to the backend
     async def search(self, request: SearchRequest) -> SearchResponse:
@@ -122,8 +124,14 @@ class BackendAPI:
         """
         Get the configured httpx.AsyncClient, creating it if it doesn't exist.
         """
-        if self._client is None or cast(httpx.AsyncClient, self._client).is_closed:
+        current_loop = asyncio.get_event_loop()
+        if (
+            self._client is None
+            or cast(httpx.AsyncClient, self._client).is_closed
+            or current_loop != self._loop
+        ):
             self._client = self._create_client()
+            self._loop = current_loop
 
         return cast(httpx.AsyncClient, self._client)
 
