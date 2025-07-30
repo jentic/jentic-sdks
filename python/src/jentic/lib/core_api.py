@@ -115,7 +115,7 @@ class BackendAPI:
             "workflow_uuids": request.workflow_uuids,
             "operation_uuids": request.operation_uuids,
         }
-        resp: T_JSONResponse = await self._get(self._cfg.directory_url + "/files", params=params)
+        resp: T_JSONResponse = await self._get(self._cfg.directory_url + "files", params=params)
         return LoadResponse.model_validate(resp)
 
     async def list_apis(self) -> list[APIIdentifier]:
@@ -149,7 +149,6 @@ class BackendAPI:
     # HTTP methods, retry and validate - returns T_JSONResponse
     @retry_request
     async def _get(self, url: str, params: T_GETParams | None = None) -> T_JSONResponse:
-        logger.debug(f"GET {self._cfg.core_api_url} {url} with params {params}")
         result: Response = await self.client.get(url, params=params)
         return self._validate_response(result)
 
