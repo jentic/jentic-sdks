@@ -18,7 +18,6 @@ from jentic.lib.models import (
     OperationEntry,
 )
 
-from .api_cache import api_cache
 
 logger = logging.getLogger(__name__)
 

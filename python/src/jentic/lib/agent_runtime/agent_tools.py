@@ -1,7 +1,6 @@
 """Agent tool manager for integrating Jentic workflows with agent frameworks."""
 
 import logging
-from pathlib import Path
 from typing import Any
 
 from .config import JenticConfig

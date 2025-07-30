@@ -1,7 +1,6 @@
 """Tool execution library for Agent Runtime."""
 
 import logging
-import os
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 

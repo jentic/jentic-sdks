@@ -116,7 +116,7 @@ class LLMToolSpecManager:
             logger.debug(
                 f"Loaded {len(workflows)} workflows and {len(operations)} operations via JenticConfig getter methods."
             )
-        except Exception as e:
+        except Exception:
             logger.warning(
                 "Could not retrieve workflows or operations from the provided JenticConfig."
             )

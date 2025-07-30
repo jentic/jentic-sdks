@@ -2,12 +2,10 @@
 
 import json
 import logging
-import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from arazzo_runner.auth.auth_processor import AuthProcessor
-from arazzo_runner.auth.models import SecurityOption
 from arazzo_runner.extractor.openapi_extractor import extract_operation_io
 from arazzo_runner import ArazzoRunner
 

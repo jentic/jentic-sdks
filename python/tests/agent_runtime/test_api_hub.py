@@ -1,7 +1,6 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, List
 
 import pytest
-from pydantic import BaseModel
 
 from jentic.lib.agent_runtime.api_hub import JenticAPIClient
 

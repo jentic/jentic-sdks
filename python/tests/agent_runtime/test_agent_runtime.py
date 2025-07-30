@@ -1,7 +1,5 @@
 """Tests for the LLM tool specification manager."""
 
-from pathlib import Path
-
 import pytest
 
 from jentic.lib.agent_runtime.tool_specs import (

@@ -17,7 +17,6 @@ from jentic.lib.models import (
     GetFilesResponse,
     FileEntry,
     OperationEntry,
-    WorkflowEntry,
     WorkflowExecutionDetails,
 )
 from arazzo_runner import (

@@ -6,7 +6,6 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-import yaml
 
 from jentic.lib.agent_runtime.agent_tools import AgentToolManager
 

@@ -1,9 +1,8 @@
-import asyncio
 from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from jentic.lib.agent_runtime.api_cache import CACHE_TTL_SECONDS, APICache
+from jentic.lib.agent_runtime.api_cache import APICache
 
 
 @pytest.mark.asyncio

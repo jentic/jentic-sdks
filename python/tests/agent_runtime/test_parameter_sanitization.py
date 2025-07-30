@@ -1,9 +1,6 @@
 """Tests for parameter name sanitization in the LLM tool specification manager."""
 
-import pytest
-
 from jentic.lib.agent_runtime.tool_specs import (
-    LLMToolSpecManager,
     create_llm_tool_manager,
 )
 
