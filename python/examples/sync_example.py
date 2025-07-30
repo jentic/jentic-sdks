@@ -1,10 +1,11 @@
 import asyncio
 from jentic import Jentic, AgentConfig, ExecutionRequest
 
+
 def main():
     async def run():
         # Initialize the client (API key from env or pass explicitly)
-        client = Jentic(AgentConfig())
+        client = Jentic(AgentConfig.from_env())
 
         # List available APIs
         apis = await client.list_apis()
@@ -16,9 +17,7 @@ def main():
 
         # Example: Execute an operation (replace with real UUID and inputs)
         request = ExecutionRequest(
-            execution_type="operation",
-            uuid="your-operation-uuid",
-            inputs={"arg1": "value1"}
+            execution_type="operation", uuid="your-operation-uuid", inputs={"arg1": "value1"}
         )
         try:
             result = await client.execute(request)
@@ -28,5 +27,6 @@ def main():
 
     asyncio.run(run())
 
+
 if __name__ == "__main__":
-    main() 
+    main()

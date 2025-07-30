@@ -13,9 +13,7 @@ async def main():
 
     # Example: Execute an operation (replace with real UUID and inputs)
     request = jentic.ExecutionRequest(
-        execution_type="operation",
-        uuid="your-operation-uuid",
-        inputs={"arg1": "value1"}
+        execution_type="operation", uuid="your-operation-uuid", inputs={"arg1": "value1"}
     )
     try:
         result = await jentic.execute(request)
@@ -25,4 +23,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    asyncio.run(main())

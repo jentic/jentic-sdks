@@ -111,7 +111,11 @@ class BackendAPI:
         return ExecuteResponse.model_validate(resp)
 
     async def load(self, request: LoadRequest) -> LoadResponse:
-        resp: T_JSONResponse = await self._post("/files", data=request.model_dump())
+        params = {
+            "workflow_uuids": request.workflow_uuids,
+            "operation_uuids": request.operation_uuids,
+        }
+        resp: T_JSONResponse = await self._get(self._cfg.directory_url + "files", params=params)
         return LoadResponse.model_validate(resp)
 
     async def list_apis(self) -> list[APIIdentifier]:
@@ -191,7 +195,7 @@ class BackendAPI:
         # Create the client
         return httpx.AsyncClient(
             headers=headers,
-            base_url=self._cfg.base_url,
+            base_url=self._cfg.core_api_url,
             timeout=timeouts,
             limits=limits,
         )

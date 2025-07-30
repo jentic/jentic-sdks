@@ -5,10 +5,22 @@ from jentic.lib.exc import JenticEnvironmentError, MissingAgentKeyError
 
 # TODO - Ensure we have one fqdn for each env, and  all endpoints are consistent
 _ENDPOINTS = {
-    "prod": "https://api.jentic.com/api/v1/",
-    "qa": "https://yq6wol1jye.execute-api.eu-west-1.amazonaws.com/api/v1/",
-    "test": "https://api.test.jentic.com/api/v1/",
-    "local": "https://yq6wol1jye.execute-api.eu-west-1.amazonaws.com/api/v1/",  # TODO - maybe remove this, local->qa
+    "prod": {
+        "core_api_url": "https://api.jentic.com/api/v1/",
+        "directory_url": "https://directory-api.qa1.eu-west-1.jenticdev.net/api/v1/",
+    },
+    "qa": {
+        "core_api_url": "https://yq6wol1jye.execute-api.eu-west-1.amazonaws.com/api/v1/",
+        "directory_url": "https://directory-api.qa1.eu-west-1.jenticdev.net/api/v1/",
+    },
+    "test": {
+        "core_api_url": "https://api.test.jentic.com/api/v1/",
+        "directory_url": "https://directory-api.qa1.eu-west-1.jenticdev.net/api/v1/",
+    },
+    "local": {
+        "core_api_url": "https://yq6wol1jye.execute-api.eu-west-1.amazonaws.com/api/v1/",
+        "directory_url": "https://directory-api.qa1.eu-west-1.jenticdev.net/api/v1/",
+    },
 }
 
 
@@ -31,8 +43,16 @@ class AgentConfig:
     max_keepalive_connections: int = 5
 
     @property
-    def base_url(self) -> str:
+    def endpoints_cfg(self) -> dict[str, str]:
         return _ENDPOINTS.get(self.environment, _ENDPOINTS["prod"])
+
+    @property
+    def core_api_url(self) -> str:
+        return self.endpoints_cfg["core_api_url"]
+
+    @property
+    def directory_url(self) -> str:
+        return self.endpoints_cfg["directory_url"]
 
     @classmethod
     def from_env(cls) -> "AgentConfig":
