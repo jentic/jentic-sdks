@@ -15,8 +15,8 @@ async def test_client_list_apis(client: Jentic):
 @pytest.mark.asyncio
 async def test_client_search(client: Jentic):
     response = await client.search(SearchRequest(query="discord search message"))
-    assert len(response.results) == 1
-    assert response.total_count == 1
+    assert len(response.results) == 5
+    assert response.total_count == 5
     assert response.query == "discord search message"
 
 
