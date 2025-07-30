@@ -47,4 +47,4 @@ coverage:
 check:
 	@pdm run black .
 	@pdm run mypy . --exclude=src/jentic/lib/agent_runtime --exclude=tests/agent_runtime
-	@pdm run ruff check --fix
+	@pdm run ruff check --fix --exclude=tests/agent_runtime

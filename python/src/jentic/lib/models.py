@@ -155,11 +155,16 @@ class SearchRequest(BaseModel):
     limit: int = 5
     apis: list[str] | None = None
     keywords: list[str] | None = None
+    filter_by_credentials: bool = True
 
 
 class SearchResponse(BaseModel):
-    workflows: list[WorkflowSearchResult]
-    operations: list[OperationSearchResult]
+    # Search All /combined results response
+    results: list[WorkflowSearchResult | OperationSearchResult] = Field(
+        default_factory=list, description="Operation and Workflow results"
+    )
+    total_count: int = Field(0, description="Total number of results")
+    query: str = Field(..., description="Original search query")
 
 
 # Load Request

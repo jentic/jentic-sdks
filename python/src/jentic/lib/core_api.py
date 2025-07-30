@@ -115,7 +115,7 @@ class BackendAPI:
             "workflow_uuids": request.workflow_uuids,
             "operation_uuids": request.operation_uuids,
         }
-        resp: T_JSONResponse = await self._get(self._cfg.directory_url + "files", params=params)
+        resp: T_JSONResponse = await self._get(self._cfg.directory_url + "/files", params=params)
         return LoadResponse.model_validate(resp)
 
     async def list_apis(self) -> list[APIIdentifier]:
@@ -128,6 +128,8 @@ class BackendAPI:
         """
         Get the configured httpx.AsyncClient, creating it if it doesn't exist.
         """
+        # Need to check against current loop, if loop is different AsyncClient will
+        # need to be recreated, else get loop error
         current_loop = asyncio.get_event_loop()
         if (
             self._client is None
@@ -147,11 +149,13 @@ class BackendAPI:
     # HTTP methods, retry and validate - returns T_JSONResponse
     @retry_request
     async def _get(self, url: str, params: T_GETParams | None = None) -> T_JSONResponse:
+        logger.debug(f"GET {self._cfg.core_api_url} {url} with params {params}")
         result: Response = await self.client.get(url, params=params)
         return self._validate_response(result)
 
     @retry_request
     async def _post(self, url: str, data: T_POSTData | None = None) -> T_JSONResponse:
+        logger.debug(f"POST {url} with data {data}")
         result: Response = await self.client.post(url, json=data)
         return self._validate_response(result)
 
@@ -161,10 +165,12 @@ class BackendAPI:
 
         # Decode, and if we have 'body' then return this.
         if isinstance(data, dict):
-            # TODO - not found (for now), just throw exc
+            # This shouldnt happened, but just in case
             if data.get("detail") == "Not Found":
+                print(data)
                 raise JenticAPIError("Error: API Not Supported")
 
+            # If we have a body, return this
             if data.get("body"):
                 return data["body"]
 

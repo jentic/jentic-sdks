@@ -68,7 +68,7 @@ class LLMToolSpecManager:
         for workflow_name, workflow in workflows.items():
             try:
                 workflow_uuid = workflow.get("workflow_uuid")
-            except:
+            except Exception:
                 logger.warning(
                     f"Could not find UUID for workflow tool name {workflow_name}, skipping mapping."
                 )
@@ -637,7 +637,6 @@ class LLMToolSpecManager:
 
         # Apply consistent sanitization to all parameters
         used_names = set()
-        required_param_name = None
 
         # Process all parameters
         for original_name, schema in parameters.items():

@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from jentic.lib.exc import JenticEnvironmentError, MissingAgentKeyError
 
 # TODO - Ensure we have one fqdn for each env, and  all endpoints are consistent
+# TODO - WE DONT WANT THIS!  API GATEWAY CHANGES need to be reflected here
+
 _ENDPOINTS = {
     "prod": {
         "core_api_url": "https://api.jentic.com/api/v1/",
