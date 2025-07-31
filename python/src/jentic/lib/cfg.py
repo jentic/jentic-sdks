@@ -12,7 +12,7 @@ _ENDPOINTS = {
         "directory_url": "https://directory-api.qa1.eu-west-1.jenticdev.net/api/v1/",
     },
     "qa": {
-        "core_api_url": "https://g09k3c5i2e.execute-api.eu-west-1.amazonaws.com/dev/",
+        "core_api_url": "https://g09k3c5i2e.execute-api.eu-west-1.amazonaws.com/dev/api/v1/",
         "directory_url": "https://directory-api.qa1.eu-west-1.jenticdev.net/api/v1/",
     },
     "test": {
