@@ -103,11 +103,11 @@ class BackendAPI:
 
     # Repo-like access to the backend
     async def search(self, request: SearchRequest) -> SearchResponse:
-        resp: T_JSONResponse = await self._post("/agent/search", data=request.model_dump())
+        resp: T_JSONResponse = await self._post("agents/search", data=request.model_dump())
         return SearchResponse.model_validate(resp)
 
     async def execute(self, request: ExecutionRequest) -> ExecuteResponse:
-        resp: T_JSONResponse = await self._post("/agent/execute", data=request.model_dump())
+        resp: T_JSONResponse = await self._post("agents/execute", data=request.model_dump())
         return ExecuteResponse.model_validate(resp)
 
     async def load(self, request: LoadRequest) -> LoadResponse:
@@ -119,7 +119,7 @@ class BackendAPI:
         return LoadResponse.model_validate(resp)
 
     async def list_apis(self) -> list[APIIdentifier]:
-        resp: T_JSONResponse = await self._get("/agent/apis")
+        resp: T_JSONResponse = await self._get("agents/apis")
         return [APIIdentifier.model_validate(api) for api in resp]
 
     # Client management
@@ -149,7 +149,7 @@ class BackendAPI:
     # HTTP methods, retry and validate - returns T_JSONResponse
     @retry_request
     async def _get(self, url: str, params: T_GETParams | None = None) -> T_JSONResponse:
-        result: Response = await self.client.get(url, params=params)
+        result: Response = await self.client.get(url, params=params or {})
         return self._validate_response(result)
 
     @retry_request

@@ -45,7 +45,7 @@ class APIReference(BaseModel):
 
 class APIIdentifier(BaseModel):
     api_vendor: str
-    api_name: str
+    api_name: str | None = None
     api_version: str | None = None
 
 
@@ -164,7 +164,7 @@ class SearchResponse(BaseModel):
         default_factory=list, description="Operation and Workflow results"
     )
     total_count: int = Field(0, description="Total number of results")
-    query: str = Field(..., description="Original search query")
+    # query: str = Field(..., description="Original search query")
 
 
 # Load Request

@@ -8,19 +8,11 @@ from jentic.lib.exc import JenticEnvironmentError, MissingAgentKeyError
 
 _ENDPOINTS = {
     "prod": {
-        "core_api_url": "https://api.jentic.com/api/v1/",
-        "directory_url": "https://directory-api.qa1.eu-west-1.jenticdev.net/api/v1/",
+        "core_api_url": "https://NOT-YET",
+        "directory_url": "https://api.jentic.com/api/v1/"
     },
     "qa": {
-        "core_api_url": "https://g09k3c5i2e.execute-api.eu-west-1.amazonaws.com/dev/api/v1/",
-        "directory_url": "https://directory-api.qa1.eu-west-1.jenticdev.net/api/v1/",
-    },
-    "test": {
-        "core_api_url": "https://api.test.jentic.com/api/v1/",
-        "directory_url": "https://directory-api.qa1.eu-west-1.jenticdev.net/api/v1/",
-    },
-    "local": {
-        "core_api_url": "https://yq6wol1jye.execute-api.eu-west-1.amazonaws.com/api/v1/",
+        "core_api_url": "https://api-gw.qa1.eu-west-1.jenticdev.net/api/v1/",
         "directory_url": "https://directory-api.qa1.eu-west-1.jenticdev.net/api/v1/",
     },
 }
