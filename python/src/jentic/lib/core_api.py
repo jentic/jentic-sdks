@@ -18,6 +18,7 @@ from jentic.lib.models import (
     LoadResponse,
     SearchRequest,
     SearchResponse,
+    GetFilesResponse,
 )
 
 logger = logging.getLogger(__name__)

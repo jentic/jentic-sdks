@@ -10,7 +10,7 @@ from jentic.lib.core_api import BackendAPI
 def agent_config() -> AgentConfig:
     return AgentConfig(
         agent_api_key="ak_Rw723dw7oy4EjQB5x8lh7d",
-        environment="local",
+        environment="qa",
     )
 
 

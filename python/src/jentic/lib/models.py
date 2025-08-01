@@ -164,7 +164,7 @@ class SearchResponse(BaseModel):
         default_factory=list, description="Operation and Workflow results"
     )
     total_count: int = Field(0, description="Total number of results")
-    # query: str = Field(..., description="Original search query")
+    query: str = Field(..., description="Original search query")
 
 
 # Load Request
@@ -173,11 +173,38 @@ class LoadRequest(BaseModel):
     operation_uuids: list[str] | None = None
 
 
-# Load Response (same as GetFilesResponse)
+# GetFilesResponse
 class LoadResponse(BaseModel):
     files: dict[str, dict[str, FileEntry]]  # FileType -> FileId -> FileEntry
     workflows: dict[str, WorkflowEntry]  # WorkflowUUID -> WorkflowEntry
     operations: dict[str, OperationEntry] | None = None  # OperationUUID -> OperationEntry
+
+    def parsed(self) -> "LoadResponse":
+        # Transform GetFilesResponse to LoadResponse
+        # This matches the agent_runtime.config parsing
+        from jentic.lib.agent_runtime.config import JenticConfig
+
+        # Get workflow and operation UUIDs
+        workflow_uuids = list(self.workflows.keys())
+        operation_uuids = list(self.operations.keys()) if self.operations else []
+
+        # Extract workflow details
+        all_arazzo_specs, extracted_workflow_details = JenticConfig._extract_all_workflow_details(
+            self, workflow_uuids
+        )
+
+        # Step 3: Extract operation details if present
+        extracted_operation_details = {}
+        if operation_uuids:
+            extracted_operation_details = JenticConfig._extract_all_operation_details(
+                self, operation_uuids
+            )
+
+        return {
+            "version": "1.0",
+            "workflows": extracted_workflow_details,
+            "operations": extracted_operation_details,
+        }
 
 
 class ExecutionType(str, Enum):
