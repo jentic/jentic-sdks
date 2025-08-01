@@ -1,7 +1,6 @@
 """Agent tool manager for integrating Jentic workflows with agent frameworks."""
 
 import logging
-from pathlib import Path
 from typing import Any
 
 from .config import JenticConfig
@@ -41,7 +40,7 @@ class AgentToolManager:
         self.tool_spec_manager.load_from_jentic_config(self.project)
 
         # Setup tool executor
-        from jentic.api.api_hub import JenticAPIClient
+        from jentic.lib.agent_runtime.api_hub import JenticAPIClient
 
         self.tool_executor = TaskExecutor(api_hub_client or JenticAPIClient())
 

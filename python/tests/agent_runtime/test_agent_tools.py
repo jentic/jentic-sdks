@@ -6,9 +6,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-import yaml
 
-from jentic.agent_runtime.agent_tools import AgentToolManager
+from jentic.lib.agent_runtime.agent_tools import AgentToolManager
 
 
 @pytest.fixture
@@ -60,7 +59,7 @@ def agent_tool_manager(mock_project_structure, mock_api_hub_client):
     """Create a mocked AgentToolManager for testing."""
     # Then patch the TaskExecutor.execute_workflow method
     with patch(
-        "jentic.agent_runtime.tool_execution.TaskExecutor.execute_workflow"
+        "jentic.lib.agent_runtime.tool_execution.TaskExecutor.execute_workflow"
     ) as mock_execute_workflow:
         # Configure the mock workflow execution response
         mock_execute_workflow.return_value = {
@@ -117,7 +116,7 @@ class TestAgentToolManager:
         # Create a temporary directory with a custom config file
         with tempfile.TemporaryDirectory() as tmp_dir:
             project_dir = Path(tmp_dir)
-            
+
             # Create a config with a workflow that has an api_name
             config = {
                 "workflows": {
@@ -141,19 +140,19 @@ class TestAgentToolManager:
                     }
                 }
             }
-            
+
             # Write the config to the temp dir
             config_file = project_dir / "jentic.json"
             with open(config_file, "w") as f:
                 json.dump(config, f)
-            
+
             # Test OpenAI format with the vendor name
             manager = AgentToolManager(config_file, format="openai")
             tools = manager.generate_tool_definitions()
             assert len(tools) > 0
             assert "function" in tools[0]
             assert tools[0]["function"]["name"] == "Discord-sendMessage"
-            
+
             # Test Anthropic format with the vendor name
             manager = AgentToolManager(config_file, format="anthropic")
             tools = manager.generate_tool_definitions()

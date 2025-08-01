@@ -1,13 +1,12 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, List
 
 import pytest
-from pydantic import BaseModel
 
-from jentic.api.api_hub import JenticAPIClient
+from jentic.lib.agent_runtime.api_hub import JenticAPIClient
 
 # Assuming models are accessible via the path below
 # Split imports to potentially resolve import errors
-from jentic.models import AssociatedFiles, FileEntry, FileId, WorkflowEntry
+from jentic.lib.models import AssociatedFiles, FileEntry, FileId, WorkflowEntry
 
 
 # Minimal mock models for testing
@@ -51,10 +50,18 @@ def test_build_source_descriptions_happy_path(api_client):
     content2 = {"openapi": "3.0", "info": {"title": "API Two - Second File"}}
     all_openapi_files = {
         "file1_id": MockFileEntry(
-            id="file1_id", type="open_api", filename="api_one.json", content=content1, source_path="./specs/api_one.json"
+            id="file1_id",
+            type="open_api",
+            filename="api_one.json",
+            content=content1,
+            source_path="./specs/api_one.json",
         ),
         "file2_id": MockFileEntry(
-            id="file2_id", type="open_api", filename="api_two.yaml", content=content2, source_path="./specs/api_two.yaml"
+            id="file2_id",
+            type="open_api",
+            filename="api_two.yaml",
+            content=content2,
+            source_path="./specs/api_two.yaml",
         ),
     }
     # Sources with URLs that match the filenames
@@ -132,7 +139,11 @@ def test_build_source_descriptions_missing_file_in_response(api_client):
     content2 = {"info": "API Two - Content"}
     all_openapi_files = {
         "file2_id": MockFileEntry(
-            id="file2_id", type="open_api", filename="api_two.json", content=content2, source_path="./actual_path/api_two.json"
+            id="file2_id",
+            type="open_api",
+            filename="api_two.json",
+            content=content2,
+            source_path="./actual_path/api_two.json",
         )
         # 'missing_id' is not present here, which is fine for this test's purpose.
     }

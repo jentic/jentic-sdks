@@ -1,6 +1,4 @@
-import pytest
-
-from jentic.agent_runtime.tool_specs import LLMToolSpecManager, create_llm_tool_manager
+from jentic.lib.agent_runtime.tool_specs import LLMToolSpecManager, create_llm_tool_manager
 
 
 def test_llm_tool_spec_manager_init():
@@ -109,7 +107,7 @@ def test_openai_operation_schema_default_description():
 def test_vendor_name_sanitization():
     """Test that vendor names from api_name are properly sanitized."""
     mgr = create_llm_tool_manager()
-    
+
     # Test with a domain in api_name
     operation_with_domain = {
         "method": "GET",
@@ -119,7 +117,7 @@ def test_vendor_name_sanitization():
     }
     openai_schema = mgr._create_openai_operation_schema("test-id", operation_with_domain)
     assert openai_schema["name"] == "discord-com-get-test"
-    
+
     # Test with special characters
     operation_with_special_chars = {
         "method": "GET",
@@ -129,7 +127,7 @@ def test_vendor_name_sanitization():
     }
     openai_schema = mgr._create_openai_operation_schema("test-id", operation_with_special_chars)
     assert openai_schema["name"] == "company-example-com-get-test"
-    
+
     # Test with empty api_name after sanitization - should have no vendor prefix
     operation_with_invalid_api_name = {
         "method": "GET",
