@@ -18,7 +18,6 @@ from jentic.lib.models import (
     LoadResponse,
     SearchRequest,
     SearchResponse,
-    GetFilesResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -167,7 +166,6 @@ class BackendAPI:
         if isinstance(data, dict):
             # This shouldnt happened, but just in case
             if data.get("detail") == "Not Found":
-                print(data)
                 raise JenticAPIError("Error: API Not Supported")
 
             # If we have a body, return this
@@ -181,7 +179,7 @@ class BackendAPI:
         headers = {
             "Content-Type": "application/json",
             "X-JENTIC-API-KEY": self._cfg.agent_api_key,
-            "X-JENTIC-USER-AGENT": "Jentic/1.0 Agent (Python)",  # TODO - TILMAN: what should this be?
+            "X-JENTIC-USER-AGENT": self._cfg.user_agent,
         }
 
         # Timeouts (connect, read, write, pool)

@@ -22,6 +22,7 @@ _ENDPOINTS = {
 class AgentConfig:
     # Jentic API key, required for all requests
     agent_api_key: str
+    user_agent: str = "Jentic/1.0 Agent (Python)"
 
     # Jentic environment, defaults to production
     environment: str = "prod"
