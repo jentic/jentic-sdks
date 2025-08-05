@@ -2,9 +2,11 @@ import pytest
 
 
 @pytest.fixture
-def fresh_client():
+def fresh_client(monkeypatch):
     import jentic
 
+    monkeypatch.delenv("JENTIC_ENVIRONMENT")
+    monkeypatch.delenv("JENTIC_AGENT_API_KEY")
     jentic._JENTIC_CLIENT = None
     yield
     jentic._JENTIC_CLIENT = None
@@ -49,7 +51,7 @@ def test_imports(monkeypatch, fresh_client):
     assert jentic.AgentConfig is not None
 
 
-def test_global_and_local_client(as_agent):
+def test_global_and_local_client(as_agent, monkeypatch):
     import jentic
 
     assert jentic._JENTIC_CLIENT is None

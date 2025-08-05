@@ -11,10 +11,8 @@ from jentic.lib.models import (
     SearchResponse as APISearchResults,
     FileEntry,
     GetFilesResponse,
-    OperationSearchResult,
     WorkflowEntry,
     WorkflowExecutionDetails,
-    WorkflowSearchResult,
     OperationEntry,
 )
 

@@ -24,6 +24,6 @@ async def test_client_search(client: Jentic):
 @pytest.mark.asyncio
 async def test_client_load(client: Jentic):
     operation_id = "6d1cac84da642f4ebc31e2688484a0c5"
-    response: LoadResponse = await client.load(LoadRequest(operation_uuids=[operation_id]))
+    response: LoadResponse = await client.load(LoadRequest(ids=[operation_id]))
     assert response.operations is not None
     assert response.operations[operation_id].operation_uuid == operation_id

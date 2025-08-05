@@ -104,17 +104,16 @@ class BackendAPI:
     # Repo-like access to the backend
     async def search(self, request: SearchRequest) -> SearchResponse:
         resp: T_JSONResponse = await self._post("agents/search", data=request.model_dump())
+        print(f"Search response: {resp}")
         return SearchResponse.model_validate(resp)
 
     async def execute(self, request: ExecutionRequest) -> ExecuteResponse:
         resp: T_JSONResponse = await self._post("agents/execute", data=request.model_dump())
+        print(f"Execute response: {resp}")
         return ExecuteResponse.model_validate(resp)
 
     async def load(self, request: LoadRequest) -> GetFilesResponse:
-        params = {
-            "workflow_uuids": request.workflow_uuids,
-            "operation_uuids": request.operation_uuids,
-        }
+        params = request.to_dict()
         resp: T_JSONResponse = await self._get(self._cfg.directory_url + "files", params=params)
         return GetFilesResponse.model_validate(resp)
 

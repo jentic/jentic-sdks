@@ -101,48 +101,39 @@ class WorkflowExecutionDetails(BaseModel):
     friendly_workflow_id: str | None = None
 
 
-class BaseSearchResult(BaseModel):
+class SearchResult(BaseModel):
+    id: str
+    path: str
+    method: str
+    api_name: str
+    entity_type: str
     summary: str
     description: str
     match_score: float = 0.0
 
-
-class WorkflowSearchResult(BaseSearchResult):
-    workflow_id: str
-    api_name: str
-
-    @model_validator(mode="before")
-    @classmethod
-    def set_data(cls, data: dict[str, Any]) -> dict[str, Any]:
-        return {
-            "workflow_id": data.get("id", ""),
-            "summary": data.get("name", data.get("workflow_id", "")),  # TODO - no summary?
-            "description": data.get("description", ""),
-            "api_name": data.get("api_name", ""),
-            "match_score": data.get(
-                "distance", 0.0
-            ),  # TODO - change to distance, or rank or something?
-        }
-
-
-class OperationSearchResult(BaseSearchResult):
-    operation_uuid: str
-    path: str
-    method: str
-    api_name: str
+    operation_id: str | None = None
+    workflow_id: str | None = None
 
     @model_validator(mode="before")
     @classmethod
     def set_data(cls, data: Any) -> dict[str, Any]:
+        if data.get("entity_type") == "operation":
+            summary = data.get("summary", "")
+        else:
+            summary = data.get("name", data.get("workflow_id", ""))
+
         if isinstance(data, dict):
             return {
-                "operation_uuid": data.get("id", ""),
-                "summary": data.get("summary", ""),
+                "id": data.get("id", ""),
+                "entity_type": data.get("entity_type", ""),
+                "summary": summary,
                 "description": data.get("description", ""),
                 "path": data.get("path", ""),
                 "method": data.get("method", ""),
                 "api_name": data.get("api_name", ""),
                 "match_score": data.get("distance", 0.0),
+                "operation_id": data.get("operation_id", None),
+                "workflow_id": data.get("workflow_id", None),
             }
         return data
 
@@ -160,7 +151,7 @@ class SearchRequest(BaseModel):
 
 class SearchResponse(BaseModel):
     # Search All /combined results response
-    results: list[WorkflowSearchResult | OperationSearchResult] = Field(
+    results: list[SearchResult] = Field(
         default_factory=list, description="Operation and Workflow results"
     )
     total_count: int = Field(0, description="Total number of results")
@@ -169,8 +160,25 @@ class SearchResponse(BaseModel):
 
 # Load Request
 class LoadRequest(BaseModel):
-    workflow_uuids: list[str] | None = None
-    operation_uuids: list[str] | None = None
+    ids: list[str] | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        if self.ids is None:
+            return {}
+
+        workflow_uuids = []
+        operation_uuids = []
+
+        for id in self.ids:
+            if id.startswith("wf_"):
+                workflow_uuids.append(id)
+            elif id.startswith("op_"):
+                operation_uuids.append(id)
+
+        return {
+            "workflow_uuids": workflow_uuids,
+            "operation_uuids": operation_uuids,
+        }
 
 
 class WorkflowDetail(BaseModel):
@@ -182,8 +190,8 @@ class WorkflowDetail(BaseModel):
     inputs: dict[str, Any] = Field(default_factory=dict)
     outputs: dict[str, Any] = Field(default_factory=dict)
     api_names: list[str] = Field(default_factory=list)
-    security_requirements: list[dict[str, Any]] = Field(
-        default_factory=list,
+    security_requirements: dict[str, list[dict[str, Any]]] = Field(
+        default_factory=dict,
         description="Flattened security requirements keyed by source filename.",
     )
 
@@ -221,7 +229,9 @@ class LoadResponse(BaseModel):
         from jentic.lib.agent_runtime.config import JenticConfig
 
         # Get workflow and operation UUIDs
-        workflow_uuids = list(get_files_response.workflows.keys())
+        workflow_uuids = (
+            list(get_files_response.workflows.keys()) if get_files_response.workflows else []
+        )
         operation_uuids = (
             list(get_files_response.operations.keys()) if get_files_response.operations else []
         )
