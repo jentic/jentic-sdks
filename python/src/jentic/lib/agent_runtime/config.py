@@ -3,7 +3,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from arazzo_runner.auth.auth_processor import AuthProcessor
 from arazzo_runner.extractor.openapi_extractor import extract_operation_io
@@ -228,7 +228,7 @@ class JenticConfig:
 
     @staticmethod
     def _extract_all_workflow_details(
-        exec_files_response: "GetFilesResponse" | "LoadResponse", workflow_uuids: list[str]
+        exec_files_response: Union[GetFilesResponse, LoadResponse], workflow_uuids: list[str]
     ) -> tuple[list[dict], dict[str, dict]]:
         all_arazzo_specs: list[dict] = []
         extracted_workflow_details: dict[str, dict] = {}
@@ -296,7 +296,7 @@ class JenticConfig:
 
     @staticmethod
     def _extract_all_operation_details(
-        exec_files_response: "GetFilesResponse" | "LoadResponse", operation_uuids: list[str]
+        exec_files_response: Union[GetFilesResponse, LoadResponse], operation_uuids: list[str]
     ) -> dict[str, dict]:
         extracted_operation_details: dict[str, dict] = {}
         if not hasattr(exec_files_response, "operations") or not exec_files_response.operations:
