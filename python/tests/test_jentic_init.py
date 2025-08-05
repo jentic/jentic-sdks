@@ -5,8 +5,8 @@ import pytest
 def fresh_client(monkeypatch):
     import jentic
 
-    monkeypatch.delenv("JENTIC_ENVIRONMENT")
-    monkeypatch.delenv("JENTIC_AGENT_API_KEY")
+    monkeypatch.delenv("JENTIC_ENVIRONMENT", raising=False)
+    monkeypatch.delenv("JENTIC_AGENT_API_KEY", raising=False)
     jentic._JENTIC_CLIENT = None
     yield
     jentic._JENTIC_CLIENT = None
