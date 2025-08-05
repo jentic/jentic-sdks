@@ -15,7 +15,7 @@ from jentic.lib.models import (
     ExecuteResponse,
     ExecutionRequest,
     LoadRequest,
-    LoadResponse,
+    GetFilesResponse,
     SearchRequest,
     SearchResponse,
 )
@@ -110,13 +110,13 @@ class BackendAPI:
         resp: T_JSONResponse = await self._post("agents/execute", data=request.model_dump())
         return ExecuteResponse.model_validate(resp)
 
-    async def load(self, request: LoadRequest) -> LoadResponse:
+    async def load(self, request: LoadRequest) -> GetFilesResponse:
         params = {
             "workflow_uuids": request.workflow_uuids,
             "operation_uuids": request.operation_uuids,
         }
         resp: T_JSONResponse = await self._get(self._cfg.directory_url + "files", params=params)
-        return LoadResponse.model_validate(resp)
+        return GetFilesResponse.model_validate(resp)
 
     async def list_apis(self) -> list[APIIdentifier]:
         resp: T_JSONResponse = await self._get("agents/apis")

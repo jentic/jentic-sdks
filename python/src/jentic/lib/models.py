@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Dict
+from typing import Any, Dict, cast
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -173,38 +173,76 @@ class LoadRequest(BaseModel):
     operation_uuids: list[str] | None = None
 
 
-# GetFilesResponse
-class LoadResponse(BaseModel):
-    files: dict[str, dict[str, FileEntry]]  # FileType -> FileId -> FileEntry
-    workflows: dict[str, WorkflowEntry]  # WorkflowUUID -> WorkflowEntry
-    operations: dict[str, OperationEntry] | None = None  # OperationUUID -> OperationEntry
+class WorkflowDetail(BaseModel):
+    """Schema for a single workflow entry in the generated config."""
 
-    def parsed(self) -> dict[str, Any]:
-        # Transform GetFilesResponse to LoadResponse
+    description: str = ""
+    workflow_uuid: str
+    summary: str = ""
+    inputs: dict[str, Any] = Field(default_factory=dict)
+    outputs: dict[str, Any] = Field(default_factory=dict)
+    api_names: list[str] = Field(default_factory=list)
+    security_requirements: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Flattened security requirements keyed by source filename.",
+    )
+
+
+class OperationDetail(BaseModel):
+    """Schema for a single operation entry in the generated config."""
+
+    operation_uuid: str
+    method: str | None = None
+    path: str | None = None
+    summary: str | None = None
+    api_name: str | None = None
+    inputs: dict[str, Any] | None = None
+    outputs: dict[str, Any] | None = None
+    security_requirements: list[dict[str, Any]] | None = None
+
+
+class LoadResponse(BaseModel):
+    """Top-level model returned by `load`."""
+
+    version: str = "1.0"
+    workflows: Dict[str, WorkflowDetail] = Field(
+        default_factory=dict,
+        description="Friendly workflow ID → details",
+    )
+    operations: Dict[str, OperationDetail] = Field(
+        default_factory=dict,
+        description="Operation UUID → details",
+    )
+
+    @classmethod
+    def from_get_files_response(cls, get_files_response: GetFilesResponse) -> "LoadResponse":
+        # Transform LoadResponse to dict[str, Any]
         # This matches the agent_runtime.config parsing
         from jentic.lib.agent_runtime.config import JenticConfig
 
         # Get workflow and operation UUIDs
-        workflow_uuids = list(self.workflows.keys())
-        operation_uuids = list(self.operations.keys()) if self.operations else []
+        workflow_uuids = list(get_files_response.workflows.keys())
+        operation_uuids = (
+            list(get_files_response.operations.keys()) if get_files_response.operations else []
+        )
 
         # Extract workflow details
         all_arazzo_specs, extracted_workflow_details = JenticConfig._extract_all_workflow_details(
-            self, workflow_uuids
+            get_files_response, workflow_uuids
         )
 
         # Step 3: Extract operation details if present
         extracted_operation_details = {}
         if operation_uuids:
             extracted_operation_details = JenticConfig._extract_all_operation_details(
-                self, operation_uuids
+                get_files_response, operation_uuids
             )
 
-        return {
-            "version": "1.0",
-            "workflows": extracted_workflow_details,
-            "operations": extracted_operation_details,
-        }
+        return LoadResponse(
+            version="1.0",
+            workflows=cast(dict[str, WorkflowDetail], extracted_workflow_details),
+            operations=cast(dict[str, OperationDetail], extracted_operation_details),
+        )
 
 
 class ExecutionType(str, Enum):

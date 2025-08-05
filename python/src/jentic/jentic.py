@@ -1,3 +1,4 @@
+from typing import Any
 from jentic.lib.cfg import AgentConfig
 from jentic.lib.core_api import BackendAPI
 from jentic.lib.models import (
@@ -65,6 +66,7 @@ class Jentic:
             request: LoadRequest instance.
 
         Returns:
-            LoadResponse: Load response.
+            LoadedExecutionDetails: Load response.
         """
-        return await self._backend.load(request)
+        get_files_response = await self._backend.load(request)
+        return LoadResponse.from_get_files_response(get_files_response)

@@ -46,6 +46,8 @@ async def mock_adapter():
     """Create an MCP adapter with mock components."""
     # Force mock mode on - this needs to be set before any other imports
     os.environ["MOCK_ENABLED"] = "true"
+    os.environ["JENTIC_ENVIRONMENT"] = "qa"
+    os.environ["JENTIC_AGENT_API_KEY"] = "ak_Rw723dw7oy4EjQB5x8lh7d"
 
     # Create a temporary directory for test storage - explicitly use .test_output for tests
     temp_dir = os.path.join(os.getcwd(), ".test_output", "test_integration")
