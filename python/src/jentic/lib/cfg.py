@@ -7,10 +7,7 @@ from jentic.lib.exc import JenticEnvironmentError, MissingAgentKeyError
 # TODO - WE DONT WANT THIS!  API GATEWAY CHANGES need to be reflected here
 
 _ENDPOINTS = {
-    "prod": {
-        "core_api_url": "https://NOT-YET",
-        "directory_url": "https://api.jentic.com/api/v1/"
-    },
+    "prod": {"core_api_url": "https://NOT-YET", "directory_url": "https://api.jentic.com/api/v1/"},
     "qa": {
         "core_api_url": "https://api-gw.qa1.eu-west-1.jenticdev.net/api/v1/",
         "directory_url": "https://directory-api.qa1.eu-west-1.jenticdev.net/api/v1/",

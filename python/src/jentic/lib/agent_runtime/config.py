@@ -10,7 +10,7 @@ from arazzo_runner.extractor.openapi_extractor import extract_operation_io
 from arazzo_runner import ArazzoRunner
 
 from jentic.lib.agent_runtime.api_hub import JenticAPIClient
-from jentic.lib.models import GetFilesResponse
+from jentic.lib.models import GetFilesResponse, LoadResponse
 
 logger = logging.getLogger(__name__)
 
@@ -228,7 +228,7 @@ class JenticConfig:
 
     @staticmethod
     def _extract_all_workflow_details(
-        exec_files_response: "GetFilesResponse", workflow_uuids: list[str]
+        exec_files_response: "GetFilesResponse" | "LoadResponse", workflow_uuids: list[str]
     ) -> tuple[list[dict], dict[str, dict]]:
         all_arazzo_specs: list[dict] = []
         extracted_workflow_details: dict[str, dict] = {}
@@ -296,7 +296,7 @@ class JenticConfig:
 
     @staticmethod
     def _extract_all_operation_details(
-        exec_files_response: "GetFilesResponse", operation_uuids: list[str]
+        exec_files_response: "GetFilesResponse" | "LoadResponse", operation_uuids: list[str]
     ) -> dict[str, dict]:
         extracted_operation_details: dict[str, dict] = {}
         if not hasattr(exec_files_response, "operations") or not exec_files_response.operations:

@@ -179,7 +179,7 @@ class LoadResponse(BaseModel):
     workflows: dict[str, WorkflowEntry]  # WorkflowUUID -> WorkflowEntry
     operations: dict[str, OperationEntry] | None = None  # OperationUUID -> OperationEntry
 
-    def parsed(self) -> "LoadResponse":
+    def parsed(self) -> dict[str, Any]:
         # Transform GetFilesResponse to LoadResponse
         # This matches the agent_runtime.config parsing
         from jentic.lib.agent_runtime.config import JenticConfig
