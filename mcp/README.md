@@ -1,5 +1,5 @@
 # Jentic MCP Plugin
-[![smithery badge](https://smithery.ai/badge/@jentic/jentic-tools)](https://smithery.ai/server/@jentic/jentic-tools)
+[![smithery badge](https://smithery.ai/badge/@jentic/jentic-sdks)](https://smithery.ai/server/@jentic/jentic-sdks)
 
 
 ## Why Use Jentic MCP?
@@ -26,22 +26,15 @@ You will need to install `uv` first using:
 
 `brew install uv` or `pip install uv`
 
-### Get Your Jentic UUID
+### Agent API Key
 
-To use the Jentic SDK, you must first obtain a Jentic UUID. The easiest way is using the Jentic CLI. You can _optionally_ include an email address for higher rate limits and for early access to new features.
+Create an agent at https://jentic.com/register and copy its API key.
 
-```sh
-pip install jentic
-jentic register --email '<your_email>'
+```bash
+export JENTIC_AGENT_API_KEY=<your-agent-api-key>
 ```
 
-This will print your UUID and an export command to set it in your environment:
-
-```sh
-export JENTIC_UUID=<your-jentic-uuid>
-```
-
-Set the Jentic UUID in your MCP client configuration as shown below.
+Set the key in your MCP client configuration as shown below.
 
 The location of the configuration file depends on the client you are using and your OS. Some common examples:
 
@@ -60,11 +53,11 @@ For other clients, check your client's documentation for how to add MCP servers.
             "command": "uvx",
             "args": [
                 "--from",
-                "git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp",
+                "git+https://github.com/jentic/jentic-sdks.git@main#subdirectory=mcp",
                 "mcp"
             ],
             "env": {
-                "JENTIC_UUID": "<your-jentic-uuid>"
+                "JENTIC_AGENT_API_KEY": "<your-agent-api-key>"
             }
         }
     }
@@ -92,7 +85,7 @@ When you are using an API that requires authentication, the `load_execution_info
             "command": "uvx",
             "args": [
                 "--from",
-                "git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp",
+                "git+https://github.com/jentic/jentic-sdks.git@main#subdirectory=mcp",
                 "mcp"
             ],
             "env": {
@@ -131,7 +124,7 @@ _Optional:_ Add a `JENTIC_API_URL` environment variable to your `mcp_config.json
             "command": "uvx",
             "args": [
                 "--from",
-                "git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp",
+                "git+https://github.com/jentic/jentic-sdks.git@main#subdirectory=mcp",
                 "mcp"
             ],
             "env": {
@@ -154,10 +147,10 @@ tail /path/to/mcp/jentic_ark2_mcp.log
 
 ### Installing via Smithery
 
-To install Jentic Plugin for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@jentic/jentic-tools):
+To install Jentic Plugin for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@jentic/jentic-sdks):
 
 ```bash
-npx -y @smithery/cli install @jentic/jentic-tools --client claude
+npx -y @smithery/cli install @jentic/jentic-sdks --client claude
 ```
 
 ### Manual Installation
@@ -192,7 +185,7 @@ uvx --from . mcp
 
 ```bash
 uvx --from \
-  git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp \
+  git+https://github.com/jentic/jentic-sdks.git@main#subdirectory=mcp \
   mcp
 ```
 
@@ -219,7 +212,7 @@ uvx --from /path/to/your/project/mcp mcp serve --transport http --host 0.0.0.0 -
 
 ```bash
 uvx --from \
-  git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp \
+  git+https://github.com/jentic/jentic-sdks.git@main#subdirectory=mcp \
   mcp serve --transport http --port 8080
 ```
 
@@ -230,7 +223,7 @@ You can also run the MCP server directly from a Git repository URL without cloni
 ```bash
 # Example from a specific branch and subdirectory
 uvx --from \
-  git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp
+  git+https://github.com/jentic/jentic-sdks.git@main#subdirectory=mcp
 
 # Explanation:
 # - git+https://... .git : The repository URL
@@ -244,7 +237,7 @@ You can add other arguments like `--log-level DEBUG` or `--mock` after the URL f
 
 ```bash
 uvx --from \
-  git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp \
+  git+https://github.com/jentic/jentic-sdks.git@main#subdirectory=mcp \
   --log-level DEBUG --mock
 ```
 
@@ -252,7 +245,7 @@ To run in HTTP mode from a remote source:
 
 ```bash
 uvx --from \
-  git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp \
+  git+https://github.com/jentic/jentic-sdks.git@main#subdirectory=mcp \
   serve --transport http --port 8080
 ```
 
@@ -303,7 +296,7 @@ The MCP plugin can be used with Claude or other LLMs that support the MCP specif
 ```
 # Run the server in HTTP mode first
 uvx --from \
-  git+https://github.com/jentic/jentic-tools.git@main#subdirectory=mcp \
+  git+https://github.com/jentic/jentic-sdks.git@main#subdirectory=mcp \
   mcp serve --transport http --port 8000
 
 # Then connect claude-cli
