@@ -15,14 +15,14 @@ from jentic.lib.models import (
 class Jentic:
     """High-level async client for the Jentic API Hub.
 
-    This class is opinionated but intentionally thin: it validates inputs, 
-    delegates all network traffic to :pyclass:`jentic.lib.core_api.BackendAPI`, 
-    and returns Pydantic models so you get autocompletion and type checking 
+    This class is opinionated but intentionally thin: it validates inputs,
+    delegates all network traffic to :pyclass:`jentic.lib.core_api.BackendAPI`,
+    and returns Pydantic models so you get autocompletion and type checking
     out-of-the-box.
 
     Environment
     -----------
-    Unless you explicitly supply an :class:`~jentic.lib.cfg.AgentConfig` the 
+    Unless you explicitly supply an :class:`~jentic.lib.cfg.AgentConfig` the
     client loads configuration from *environment variables* via
     :meth:`jentic.lib.cfg.AgentConfig.from_env`.
 

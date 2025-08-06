@@ -9,7 +9,7 @@ from httpx import Response
 import tenacity
 
 from jentic.lib.cfg import AgentConfig
-from jentic.lib.exc import JenticAPIError
+from jentic.lib.exc import JenticAPIError, JenticCredentialsError
 from jentic.lib.models import (
     APIIdentifier,
     ExecuteResponse,
@@ -112,7 +112,7 @@ class BackendAPI:
 
     async def load(self, request: LoadRequest) -> GetFilesResponse:
         params = request.to_dict()
-        resp: T_JSONResponse = await self._get(self._cfg.directory_url + "files", params=params)
+        resp: T_JSONResponse = await self._get("files", params=params)
         return GetFilesResponse.model_validate(resp)
 
     async def list_apis(self) -> list[APIIdentifier]:
@@ -158,6 +158,9 @@ class BackendAPI:
     # Validate the response(httpx.Response) and return the data (T_JSONResponse)
     def _validate_response(self, response: Response) -> T_JSONResponse:
         data = response.json()
+        # If we get back a 401, then we need to raise a credentials error
+        if response.status_code == 401:
+            raise JenticCredentialsError(f"Error: {response.status_code} - {data.get('detail')}")
 
         # Decode, and if we have 'body' then return this.
         if isinstance(data, dict):

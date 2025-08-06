@@ -3,15 +3,9 @@ from dataclasses import dataclass
 
 from jentic.lib.exc import JenticEnvironmentError, MissingAgentKeyError
 
-# TODO - Ensure we have one fqdn for each env, and  all endpoints are consistent
-# TODO - WE DONT WANT THIS!  API GATEWAY CHANGES need to be reflected here
-
 _ENDPOINTS = {
-    "prod": {"core_api_url": "https://NOT-YET", "directory_url": "https://api.jentic.com/api/v1/"},
-    "qa": {
-        "core_api_url": "https://api-gw.qa1.eu-west-1.jenticdev.net/api/v1/",
-        "directory_url": "https://directory-api.qa1.eu-west-1.jenticdev.net/api/v1/",
-    },
+    "prod": "https://api-gw.main.us-east-1.jenticprod.net/api/v1/",
+    "qa": "https://api-gw.qa1.eu-west-1.jenticdev.net/api/v1/",
 }
 
 
@@ -35,16 +29,8 @@ class AgentConfig:
     max_keepalive_connections: int = 5
 
     @property
-    def endpoints_cfg(self) -> dict[str, str]:
-        return _ENDPOINTS.get(self.environment, _ENDPOINTS["prod"])
-
-    @property
     def core_api_url(self) -> str:
-        return self.endpoints_cfg["core_api_url"]
-
-    @property
-    def directory_url(self) -> str:
-        return self.endpoints_cfg["directory_url"]
+        return _ENDPOINTS[self.environment]
 
     @classmethod
     def from_env(cls) -> "AgentConfig":
