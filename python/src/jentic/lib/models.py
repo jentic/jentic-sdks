@@ -212,7 +212,7 @@ class OperationDetail(BaseModel):
 class LoadResponse(BaseModel):
     """Top-level model returned by `load`."""
 
-    results: dict[str, OperationDetail | WorkflowDetail | None] = Field(
+    tool_info: dict[str, OperationDetail | WorkflowDetail | None] = Field(
         default_factory=dict,
         description="Results of the load operation, keyed by UUID",
     )
@@ -244,7 +244,7 @@ class LoadResponse(BaseModel):
             )
 
         return LoadResponse(
-            results=cast(
+            tool_info=cast(
                 dict[str, OperationDetail | WorkflowDetail | None],
                 {**extracted_operation_details, **extracted_workflow_details},
             ),
