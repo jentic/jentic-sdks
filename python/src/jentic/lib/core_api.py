@@ -104,12 +104,10 @@ class BackendAPI:
     # Repo-like access to the backend
     async def search(self, request: SearchRequest) -> SearchResponse:
         resp: T_JSONResponse = await self._post("agents/search", data=request.model_dump())
-        print(f"Search response: {resp}")
         return SearchResponse.model_validate(resp)
 
     async def execute(self, request: ExecutionRequest) -> ExecuteResponse:
         resp: T_JSONResponse = await self._post("agents/execute", data=request.to_dict())
-        print(f"Execute response: {resp}")
         return ExecuteResponse.model_validate(resp)
 
     async def load(self, request: LoadRequest) -> GetFilesResponse:
