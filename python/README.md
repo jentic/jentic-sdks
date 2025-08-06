@@ -18,15 +18,16 @@ async def main():
     client = Jentic()
 
     # 1️⃣ find a capability
-    search = await client.search(SearchRequest(query="send a Discord DM"))
+    results = await client.search(SearchRequest(query="send a Discord DM"))
     entity_id = search.results[0].id  # op_... or wf_...
 
-    # 2️⃣ inspect schemas / auth
-    await client.load(LoadRequest(ids=[entity_id]))
+    # 2️⃣ load details (inspect schemas / auth, see inputs for operations)
+    resp = await client.load(LoadRequest(ids=[entity_id]))
+    inputs = resp.operations[entity_id].inputs
 
     # 3️⃣ run it
     result = await client.execute(
-        ExecutionRequest(id=entity_id, inputs={"recipientId": "123", "content": "Hello!"})
+        ExecutionRequest(id=entity_id, inputs={"recipient_id": "123", "content": "Hello!"})
     )
     print(result)
 
