@@ -24,7 +24,10 @@ class JenticAPIClient:
     """Client for interacting with the Jentic API Knowledge Hub."""
 
     def __init__(
-        self, base_url: str | None = None, agent_api_key: str | None = None, user_agent: str | None = None
+        self,
+        base_url: str | None = None,
+        agent_api_key: str | None = None,
+        user_agent: str | None = None,
     ):
         """Initialize the API Hub client.
 

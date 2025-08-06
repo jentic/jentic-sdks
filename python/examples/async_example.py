@@ -12,9 +12,7 @@ async def main():
     print("Search result:", search_result)
 
     # Example: Execute an operation (replace with real UUID and inputs)
-    request = jentic.ExecutionRequest(
-        id="op_1234567890", inputs={"message": "Hello, world!"}
-    )
+    request = jentic.ExecutionRequest(id="op_1234567890", inputs={"message": "Hello, world!"})
 
     result = await jentic.execute(request)
     print("Execution result:", result)
