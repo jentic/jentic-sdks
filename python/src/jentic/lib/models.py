@@ -255,26 +255,28 @@ class LoadResponse(BaseModel):
         )
 
 
-class ExecutionType(str, Enum):
-    """Allowed execution types handled by the Lambda."""
-
-    OPERATION = "operation"
-    WORKFLOW = "workflow"
-
-
 class ExecutionRequest(BaseModel):
     """
     Request model for execute.
     """
 
-    execution_type: str = Field(
-        ...,
-        description="Whether the request should run a single *operation* or an entire *workflow*.",
-    )
-    uuid: str = Field(..., description="The UUID of the operation / workflow to execute.")
+    id: str = Field(..., description="The UUID of the operation / workflow to execute.")
     inputs: Dict[str, Any] = Field(
         default_factory=dict, description="Arbitrary key-value inputs forwarded to the runner."
     )
+
+    def to_dict(self) -> dict[str, Any]:
+        # Transform the id to execution_type and uuid
+        if self.id.startswith("op_"):
+            execution_type = "operation"
+        else:
+            execution_type = "workflow"
+
+        return {
+            "execution_type": execution_type,
+            "uuid": self.id,
+            "inputs": self.inputs,
+        }
 
 
 class ExecuteResponse(BaseModel):

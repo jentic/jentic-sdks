@@ -74,8 +74,7 @@ class MCPAdapter:
         try:
             # In generate_runtime_config method replace load_execution_info call
             load_request = LoadRequest(
-                workflow_uuids=workflow_uuids if workflow_uuids else None,
-                operation_uuids=operation_uuids if operation_uuids else None,
+                ids=workflow_uuids + operation_uuids,
             )
             load_response = await self.jentic.load(load_request)
             result = load_response.parsed()
@@ -145,26 +144,22 @@ class MCPAdapter:
             MCP tool response with the execution result.
         """
         logger = logging.getLogger(__name__)
-        execution_type = params.get("execution_type")
-        uuid = params.get("uuid")
+        id = params.get("id")
         inputs = params.get("inputs", {})
 
-        if not execution_type or execution_type not in ["operation", "workflow"]:
-            logger.error(f"Invalid execution_type: {execution_type}")
-            return {"result": {"success": False, "message": "Invalid execution_type. Must be 'operation' or 'workflow'."}}
-        if not uuid:
-            logger.error("Missing required parameter: uuid")
-            return {"result": {"success": False, "message": "Missing required parameter: uuid"}}
+        if not id:
+            logger.error(f"Invalid id: {id}")
+            return {"result": {"success": False, "message": "Invalid id. Must be 'op_' or 'wf_'."}}
+
         if not isinstance(inputs, dict):
              logger.error(f"Invalid inputs type: {type(inputs)}. Must be a dictionary.")
              return {"result": {"success": False, "message": "Invalid inputs type. Must be a dictionary."}}
 
-        logger.info(f"Executing {execution_type} with uuid: {uuid} and inputs: {inputs}")
+        logger.info(f"Executing {id} with inputs: {inputs}")
 
         try:
             execution_request = ExecutionRequest(
-                execution_type=execution_type,
-                uuid=uuid,
+                id=id,
                 inputs=inputs,
             )
             exec_response: ExecuteResponse = await self.jentic.execute(execution_request)
@@ -187,7 +182,7 @@ class MCPAdapter:
             }
 
         except Exception as e:
-            logger.error(f"Error executing {execution_type} {uuid}: {str(e)}", exc_info=True)
+            logger.error(f"Error executing {id}: {str(e)}", exc_info=True)
             return {
                         "result": {
                             "success": False,

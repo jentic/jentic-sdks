@@ -13,13 +13,11 @@ async def main():
 
     # Example: Execute an operation (replace with real UUID and inputs)
     request = jentic.ExecutionRequest(
-        execution_type="operation", uuid="your-operation-uuid", inputs={"arg1": "value1"}
+        id="op_1234567890", inputs={"message": "Hello, world!"}
     )
-    try:
-        result = await jentic.execute(request)
-        print("Execution result:", result)
-    except Exception as e:
-        print("Execution failed:", e)
+
+    result = await jentic.execute(request)
+    print("Execution result:", result)
 
 
 if __name__ == "__main__":

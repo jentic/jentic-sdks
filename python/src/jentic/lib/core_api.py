@@ -108,7 +108,7 @@ class BackendAPI:
         return SearchResponse.model_validate(resp)
 
     async def execute(self, request: ExecutionRequest) -> ExecuteResponse:
-        resp: T_JSONResponse = await self._post("agents/execute", data=request.model_dump())
+        resp: T_JSONResponse = await self._post("agents/execute", data=request.to_dict())
         print(f"Execute response: {resp}")
         return ExecuteResponse.model_validate(resp)
 
