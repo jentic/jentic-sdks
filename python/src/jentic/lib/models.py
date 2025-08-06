@@ -213,13 +213,9 @@ class LoadResponse(BaseModel):
     """Top-level model returned by `load`."""
 
     version: str = "1.0"
-    workflows: Dict[str, WorkflowDetail] = Field(
+    results: dict[str, OperationDetail | WorkflowDetail | None] = Field(
         default_factory=dict,
-        description="Friendly workflow ID → details",
-    )
-    operations: Dict[str, OperationDetail] = Field(
-        default_factory=dict,
-        description="Operation UUID → details",
+        description="Results of the load operation, keyed by UUID",
     )
 
     @classmethod
@@ -250,8 +246,10 @@ class LoadResponse(BaseModel):
 
         return LoadResponse(
             version="1.0",
-            workflows=cast(dict[str, WorkflowDetail], extracted_workflow_details),
-            operations=cast(dict[str, OperationDetail], extracted_operation_details),
+            results=cast(
+                dict[str, OperationDetail | WorkflowDetail | None],
+                {**extracted_operation_details, **extracted_workflow_details},
+            ),
         )
 
 

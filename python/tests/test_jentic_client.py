@@ -20,10 +20,9 @@ async def test_client_search(client: Jentic):
     assert response.query == "discord search message"
 
 
-@pytest.mark.skip("skip for now, load not implemented")
 @pytest.mark.asyncio
 async def test_client_load(client: Jentic):
-    operation_id = "6d1cac84da642f4ebc31e2688484a0c5"
+    operation_id = "op_3f6410c622b96114"
     response: LoadResponse = await client.load(LoadRequest(ids=[operation_id]))
-    assert response.operations is not None
-    assert response.operations[operation_id].operation_uuid == operation_id
+    assert response.results is not None
+    assert response.results[operation_id].operation_uuid == operation_id
