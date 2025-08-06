@@ -52,7 +52,6 @@ async def search(
     keywords: list[str] | None = None,
     limit: int = 5,
 ) -> SearchResponse:
-    # TODO - do we want to allow search as a string?
     if isinstance(request, str):
         request = SearchRequest(query=request, apis=apis, keywords=keywords, limit=limit)
     return await _get_client().search(request)

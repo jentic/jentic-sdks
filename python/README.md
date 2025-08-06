@@ -23,7 +23,7 @@ async def main():
 
     # 2️⃣ load details (inspect schemas / auth, see inputs for operations)
     resp = await client.load(LoadRequest(ids=[entity_id]))
-    inputs = resp.operations[entity_id].inputs
+    inputs = resp.tool_info[entity_id].inputs
 
     # 3️⃣ run it
     result = await client.execute(
