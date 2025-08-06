@@ -1,12 +1,16 @@
 [project]
 name = "jentic"
-version = "0.9.0"
+version = "0.9.0b1"
 description = "Jentic SDK for the discovery and execution of APIs and workflows"
 requires-python = ">=3.11"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
     {name = "Jentic Labs", email = "info@jenticlabs.com"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3"
 ]
 dependencies = [
     "arazzo-runner>=0.8.18",
