@@ -1,13 +1,11 @@
 """MCP adapter for the Jentic MCP Plugin."""
 
 import logging
-from dataclasses import asdict
 from typing import Any
 import os
 import httpx
 
-from jentic import Jentic
-from jentic.models import ApiCapabilitySearchRequest, APISearchResults
+from jentic import Jentic, SearchRequest, LoadRequest, ExecutionRequest, ExecuteResponse
 
 from mcp.core.generators.code_generator import generate_code_sample
 from mcp import version
@@ -17,7 +15,7 @@ class MCPAdapter:
 
     def __init__(self):
         """Initialize the MCP adapter."""
-        self.jentic = Jentic(user_agent=f"Jentic/1.0 MCP Plugin/{version.__version__} (Python)")
+        self.jentic = Jentic()
 
     async def search_api_capabilities(self, request: dict[str, Any]) -> dict[str, Any]:
         """MCP endpoint for searching API capabilities.
@@ -28,29 +26,23 @@ class MCPAdapter:
         Returns:
             MCP tool response.
         """
-        request = ApiCapabilitySearchRequest(
-            capability_description=request["capability_description"],
+        # Build SearchRequest using the new SDK
+        search_request = SearchRequest(
+            query=request.get("capability_description") or request.get("query", ""),
             keywords=request.get("keywords"),
-            max_results=request.get("max_results", 5),
-            api_names=request.get("api_names"),
+            limit=request.get("max_results", 5),
+            apis=request.get("api_names"),
         )
 
-        results: APISearchResults = await self.jentic.search_api_capabilities(request=request)
+        search_response = await self.jentic.search(search_request)
 
-        # Dump results including api_name
-        data = results.model_dump(exclude_none=False)
-        # Prefix workflow summaries with their api_name
-        for wf in data.get("workflows", []):
-            api = wf.get("api_name")
-            if api:
-                # Prefix with full api_name (keep the dot)
-                wf_summary = wf.get("summary", "")
-                wf["summary"] = f"{api}-{wf_summary}"
+        # We adopt the unified results list returned by SearchResponse
+        response_data = search_response.model_dump(exclude_none=False)
         return {
             "result": {
-                "matches": data,
-                "query": request.capability_description,
-                "total_matches": len(results.workflows) + len(results.operations),
+                "matches": response_data,
+                "query": search_request.query,
+                "total_matches": search_response.total_count,
             }
         }
 
@@ -80,10 +72,12 @@ class MCPAdapter:
         )
 
         try:
-            # Generate configuration from the selection set
-            result = await self.jentic.load_execution_info(
-                workflow_uuids=workflow_uuids, operation_uuids=operation_uuids, api_name=api_name
+            # In generate_runtime_config method replace load_execution_info call
+            load_request = LoadRequest(
+                ids=workflow_uuids + operation_uuids,
             )
+            load_response = await self.jentic.load(load_request)
+            result = load_response.parsed()
             return {"result": result}
 
         except ValueError as e:
@@ -150,52 +144,45 @@ class MCPAdapter:
             MCP tool response with the execution result.
         """
         logger = logging.getLogger(__name__)
-        execution_type = params.get("execution_type")
-        uuid = params.get("uuid")
+        id = params.get("id")
         inputs = params.get("inputs", {})
 
-        if not execution_type or execution_type not in ["operation", "workflow"]:
-            logger.error(f"Invalid execution_type: {execution_type}")
-            return {"result": {"success": False, "message": "Invalid execution_type. Must be 'operation' or 'workflow'."}}
-        if not uuid:
-            logger.error("Missing required parameter: uuid")
-            return {"result": {"success": False, "message": "Missing required parameter: uuid"}}
+        if not id:
+            logger.error(f"Invalid id: {id}")
+            return {"result": {"success": False, "message": "Invalid id. Must be 'op_' or 'wf_'."}}
+
         if not isinstance(inputs, dict):
              logger.error(f"Invalid inputs type: {type(inputs)}. Must be a dictionary.")
              return {"result": {"success": False, "message": "Invalid inputs type. Must be a dictionary."}}
 
-        logger.info(f"Executing {execution_type} with uuid: {uuid} and inputs: {inputs}")
+        logger.info(f"Executing {id} with inputs: {inputs}")
 
         try:
-            if execution_type == "operation":
-                result = await self.jentic.execute_operation(operation_uuid=uuid, inputs=inputs)
-                if hasattr(result, 'success') and not result.success:
-                    return {
-                        "result": {
-                                "success": False,
-                                 "message": result.error or "Operation execution failed.",
-                                 "output": asdict(result),
-                                 "suggested_next_actions": self.get_execute_tool_failure_suggested_next_actions()
-                             }
-                    }
+            execution_request = ExecutionRequest(
+                id=id,
+                inputs=inputs,
+            )
+            exec_response: ExecuteResponse = await self.jentic.execute(execution_request)
 
-                return {"result": {"success": True, "output": asdict(result)}}
-            elif execution_type == "workflow":
-                result = await self.jentic.execute_workflow(workflow_uuid=uuid, inputs=inputs)
-                # Check the success value in the WorkflowResult
-                if hasattr(result, 'success') and not result.success:
-                    return {
-                        "result": {
-                                "success": False,
-                                 "message": result.error or "Workflow execution failed.",
-                                 "output": asdict(result),
-                                 "suggested_next_actions": self.get_execute_tool_failure_suggested_next_actions()
-                             }
+            if not exec_response.success:
+                return {
+                    "result": {
+                        "success": False,
+                        "message": exec_response.error or "Execution failed.",
+                        "output": exec_response.model_dump(exclude_none=True),
+                        "suggested_next_actions": self.get_execute_tool_failure_suggested_next_actions(),
                     }
-                return {"result": {"success": True, "output": asdict(result)}}
+                }
+
+            return {
+                "result": {
+                    "success": True,
+                    "output": exec_response.output,
+                }
+            }
 
         except Exception as e:
-            logger.error(f"Error executing {execution_type} {uuid}: {str(e)}", exc_info=True)
+            logger.error(f"Error executing {id}: {str(e)}", exc_info=True)
             return {
                         "result": {
                             "success": False,
@@ -222,13 +209,13 @@ class MCPAdapter:
             logger.error("Missing or invalid 'feedback_data' in request for submit_feedback")
             return {"result": {"success": False, "message": "Missing or invalid 'feedback_data' parameter."}}
 
-        # Source user JENTIC_UUID from environment to pass in the feedback.
-        env_jentic_uuid = os.environ.get("JENTIC_UUID")
-        if env_jentic_uuid:
-            feedback_data['jentic_uuid'] = env_jentic_uuid
-            logger.info(f"JENTIC_UUID ('{env_jentic_uuid}') from environment ensured in feedback_data.")
+        # Include Agent API Key in feedback if present.
+        env_jentic_api_key = os.environ.get("JENTIC_AGENT_API_KEY")
+        if env_jentic_api_key:
+            feedback_data['agent_api_key'] = env_jentic_api_key
+            logger.info(f"JENTIC_AGENT_API_KEY found and added to feedback_data.")
         else:
-            logger.debug("JENTIC_UUID not found in environment. It will not be included in the feedback.")
+            logger.debug("JENTIC_AGENT_API_KEY not found in environment. It will not be included in the feedback.")
 
         feedback_endpoint_url = os.environ.get("FEEDBACK_ENDPOINT_URL", "https://xze2r4egy7.execute-api.eu-west-1.amazonaws.com/dev/workflow-feedback")
         logger.info(f"Submitting feedback to {feedback_endpoint_url}: {feedback_data}")

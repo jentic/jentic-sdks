@@ -1,9 +1,8 @@
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jentic.agent_runtime.config import JenticConfig
+from jentic.lib.agent_runtime.config import JenticConfig
 
 
 @pytest.mark.asyncio
@@ -38,7 +37,7 @@ async def test_generate_config_from_uuids():
 
     # Patch AuthProcessor.process_api_auth and JenticConfig._extract_workflow_details
     with (
-        patch("jentic.agent_runtime.config.AuthProcessor") as MockAuthProcessor,
+        patch("jentic.lib.agent_runtime.config.AuthProcessor") as MockAuthProcessor,
         patch.object(
             JenticConfig,
             "_extract_workflow_details",
@@ -55,7 +54,7 @@ async def test_generate_config_from_uuids():
     assert "workflows" in config
     assert "friendly-id" in config["workflows"]
     assert config["workflows"]["friendly-id"]["name"] == "Test Workflow"
-    assert config["workflows"]["friendly-id"]["workflow_uuid"] == workflow_uuid
+    assert config["workflows"]["friendly-id"]["id"] == workflow_uuid
 
 
 @pytest.mark.asyncio
@@ -70,7 +69,7 @@ async def test_generate_config_security_requirements():
     """Test that per-workflow security_requirements are outputted correctly."""
     from unittest.mock import AsyncMock, MagicMock, patch
 
-    from jentic.agent_runtime.config import JenticConfig
+    from jentic.lib.agent_runtime.config import JenticConfig
 
     mock_api_hub_client = MagicMock()
     workflow_uuid = "uuid-9999"
@@ -106,7 +105,7 @@ async def test_generate_config_security_requirements():
     fake_security_requirements = {"openapi.json": [fake_security_option]}
 
     with (
-        patch("jentic.agent_runtime.config.AuthProcessor") as MockAuthProcessor,
+        patch("jentic.lib.agent_runtime.config.AuthProcessor") as MockAuthProcessor,
         patch.object(
             JenticConfig,
             "_extract_workflow_details",
@@ -141,7 +140,7 @@ def test_extract_operations_and_get_operations():
     import os
     import tempfile
 
-    from jentic.agent_runtime.config import JenticConfig
+    from jentic.lib.agent_runtime.config import JenticConfig
 
     # Case 1: config with operations
     config_with_ops = {"operations": {"op1": {"desc": "Operation 1"}}, "workflows": {}}

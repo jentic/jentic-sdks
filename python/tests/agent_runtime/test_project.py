@@ -1,16 +1,15 @@
 """Tests for the JenticConfig class."""
 
 import json
-import os
 import sys
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
-from jentic.agent_runtime.config import JenticConfig
-from jentic.models import AssociatedFiles, FileEntry, FileId, GetFilesResponse, WorkflowEntry
+from jentic.lib.agent_runtime.config import JenticConfig
+from jentic.lib.models import AssociatedFiles, FileEntry, FileId, GetFilesResponse, WorkflowEntry
 
 
 @pytest.fixture

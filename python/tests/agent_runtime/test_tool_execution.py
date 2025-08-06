@@ -7,20 +7,22 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 import pytest_asyncio
 
-from jentic.agent_runtime.tool_execution import (
+from jentic.lib.agent_runtime.tool_execution import (
     TaskExecutor,
 )
-from jentic.api import JenticAPIClient
-from jentic.models import (
+from jentic.lib.agent_runtime.api_hub import JenticAPIClient
+from jentic.lib.models import (
     AssociatedFiles,
     FileId,
     GetFilesResponse,
     FileEntry,
     OperationEntry,
-    WorkflowEntry,
     WorkflowExecutionDetails,
 )
-from arazzo_runner import WorkflowExecutionResult as OakWorkflowExecutionResult, WorkflowExecutionStatus
+from arazzo_runner import (
+    WorkflowExecutionResult as OakWorkflowExecutionResult,
+    WorkflowExecutionStatus,
+)
 
 
 @pytest.fixture
@@ -58,7 +60,7 @@ def comprehensive_config():
 async def mock_api_hub_client():
     """Create a mocked JenticAPIClient."""
     with patch(
-        "jentic.agent_runtime.tool_execution.JenticAPIClient", autospec=True
+        "jentic.lib.agent_runtime.tool_execution.JenticAPIClient", autospec=True
     ) as mock_client_class:
         mock_client = AsyncMock(spec=JenticAPIClient)
         mock_client_class.return_value = mock_client
@@ -88,13 +90,13 @@ class TestWorkflowExecution:
         )
 
         # Create a mock runner
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()  # ArazzoRunner.execute_workflow is synchronous
             # Update return value structure for ArazzoRunner
             mock_runner.execute_workflow.return_value = OakWorkflowExecutionResult(
                 status=WorkflowExecutionStatus.WORKFLOW_COMPLETE,
                 workflow_id=friendly_workflow_id,
-                outputs={"final_output": "success"}
+                outputs={"final_output": "success"},
             )
             mock_runner_class.return_value = mock_runner
 
@@ -121,11 +123,11 @@ class TestWorkflowExecution:
             assert result.success is True
             assert result.output == {"final_output": "success"}
             assert result.error is None
-            assert result.step_results is None # Not populated on success by TaskExecutor
-            assert result.inputs is None # Not populated on success by TaskExecutor
+            assert result.step_results is None  # Not populated on success by TaskExecutor
+            assert result.inputs is None  # Not populated on success by TaskExecutor
 
     @pytest.mark.asyncio
-    async def test_execute_workflow_runner_returns_error(self, mock_api_hub_client): 
+    async def test_execute_workflow_runner_returns_error(self, mock_api_hub_client):
         """Test workflow execution when the runner returns an error status."""
         workflow_id = "test_workflow_runner_error_uuid"
         friendly_workflow_id = "internal_test_workflow_runner_error"
@@ -145,20 +147,20 @@ class TestWorkflowExecution:
         )
 
         # Create a mock runner that returns an error status
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()
             mock_runner.execute_workflow.return_value = OakWorkflowExecutionResult(
                 status=WorkflowExecutionStatus.ERROR,
                 workflow_id=friendly_workflow_id,
                 error=expected_error_message,
-                outputs=None, 
+                outputs=None,
                 step_outputs=expected_step_outputs,
-                inputs=parameters
+                inputs=parameters,
             )
             mock_runner_class.return_value = mock_runner
 
             # Create the tool executor
-            executor = TaskExecutor(mock_api_hub_client)  
+            executor = TaskExecutor(mock_api_hub_client)
 
             # Call the method
             result = await executor.execute_workflow(workflow_id, parameters)
@@ -193,9 +195,9 @@ class TestWorkflowExecution:
         mock_api_hub_client.get_execution_details_for_workflow.return_value = None
 
         # Patch ArazzoRunner to ensure it's not called
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             # Create the tool executor
-            executor = TaskExecutor(mock_api_hub_client)  
+            executor = TaskExecutor(mock_api_hub_client)
 
             # Call the method
             result = await executor.execute_workflow(workflow_id, parameters)
@@ -204,7 +206,7 @@ class TestWorkflowExecution:
             mock_api_hub_client.get_execution_details_for_workflow.assert_called_once_with(
                 workflow_id
             )
-            mock_runner_class.assert_not_called()  
+            mock_runner_class.assert_not_called()
             assert result.success is False
             assert f"Execution details not found for workflow {workflow_id}" == result.error
 
@@ -227,11 +229,11 @@ class TestWorkflowExecution:
         )
 
         # Mock runner class to raise an exception during instantiation
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner_class.side_effect = Exception("Runner Init Error")
 
             # Create the tool executor
-            executor = TaskExecutor(mock_api_hub_client)  
+            executor = TaskExecutor(mock_api_hub_client)
 
             # Call the method
             result = await executor.execute_workflow(workflow_id, parameters)
@@ -269,18 +271,18 @@ class TestCompleteWorkflowExecution:
         )
 
         # Mock the runner
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
-            mock_runner = MagicMock()  
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+            mock_runner = MagicMock()
             # Update return value structure
             mock_runner.execute_workflow.return_value = OakWorkflowExecutionResult(
                 status=WorkflowExecutionStatus.WORKFLOW_COMPLETE,
                 workflow_id=friendly_workflow_id,
-                outputs={"final_output": "success"}
+                outputs={"final_output": "success"},
             )
             mock_runner_class.return_value = mock_runner
 
             # Create the tool executor
-            executor = TaskExecutor(mock_api_hub_client)  
+            executor = TaskExecutor(mock_api_hub_client)
 
             # Execute the workflow
             result = await executor.execute_workflow(workflow_id, parameters)
@@ -304,7 +306,7 @@ class TestCompleteWorkflowExecution:
         """Test executing a workflow with an empty parameters dictionary."""
         workflow_id = "empty_params_workflow_uuid"
         friendly_workflow_id = "internal_empty_params"
-        mock_arazzo_doc = {"some_key": "some_value"}  
+        mock_arazzo_doc = {"some_key": "some_value"}
         mock_source_descriptions = {}
 
         # Setup mock API Hub response
@@ -317,18 +319,18 @@ class TestCompleteWorkflowExecution:
         )
 
         # Mock the runner
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
-            mock_runner = MagicMock()  
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+            mock_runner = MagicMock()
             # Update return value structure
             mock_runner.execute_workflow.return_value = OakWorkflowExecutionResult(
                 status=WorkflowExecutionStatus.WORKFLOW_COMPLETE,
                 workflow_id=friendly_workflow_id,
-                outputs={"output": "empty_params_success"}
+                outputs={"output": "empty_params_success"},
             )
             mock_runner_class.return_value = mock_runner
 
             # Create the tool executor
-            executor = TaskExecutor(mock_api_hub_client)  
+            executor = TaskExecutor(mock_api_hub_client)
 
             # Call the method with empty parameters
             result = await executor.execute_workflow(workflow_id, {})
@@ -349,7 +351,7 @@ class TestCompleteWorkflowExecution:
         workflow_id = "no_output_workflow_uuid"
         friendly_workflow_id = "internal_no_output"
         parameters = {"input": "data"}
-        mock_arazzo_doc = {"some_key": "some_value"}  
+        mock_arazzo_doc = {"some_key": "some_value"}
         mock_source_descriptions = {}
 
         # Setup mock API Hub response
@@ -362,18 +364,18 @@ class TestCompleteWorkflowExecution:
         )
 
         # Mock the runner to return an empty dictionary for outputs
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
-            mock_runner = MagicMock()  
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+            mock_runner = MagicMock()
             # Update return value structure
             mock_runner.execute_workflow.return_value = OakWorkflowExecutionResult(
                 status=WorkflowExecutionStatus.WORKFLOW_COMPLETE,
                 workflow_id=friendly_workflow_id,
-                outputs={}
+                outputs={},
             )
             mock_runner_class.return_value = mock_runner
 
             # Create the tool executor
-            executor = TaskExecutor(mock_api_hub_client)  
+            executor = TaskExecutor(mock_api_hub_client)
 
             # Call the method
             result = await executor.execute_workflow(workflow_id, parameters)
@@ -386,7 +388,7 @@ class TestCompleteWorkflowExecution:
                 workflow_id=friendly_workflow_id, inputs=parameters
             )
             assert result.success is True
-            assert result.output == {}  
+            assert result.output == {}
             assert result.error is None
 
 
@@ -398,7 +400,7 @@ class TestEdgeCases:
         """Test executing a workflow with an empty parameters dictionary."""
         workflow_id = "edge_empty_params_workflow_uuid"
         friendly_workflow_id = "internal_edge_empty_params"
-        mock_arazzo_doc = {"some_key": "some_value"}  
+        mock_arazzo_doc = {"some_key": "some_value"}
         mock_source_descriptions = {}
 
         # Setup mock API Hub response
@@ -411,18 +413,18 @@ class TestEdgeCases:
         )
 
         # Mock the runner
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
-            mock_runner = MagicMock()  
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+            mock_runner = MagicMock()
             # Update return value structure
             mock_runner.execute_workflow.return_value = OakWorkflowExecutionResult(
                 status=WorkflowExecutionStatus.WORKFLOW_COMPLETE,
                 workflow_id=friendly_workflow_id,
-                outputs={"output": "empty_params_success"}
+                outputs={"output": "empty_params_success"},
             )
             mock_runner_class.return_value = mock_runner
 
             # Create the tool executor
-            executor = TaskExecutor(mock_api_hub_client)  
+            executor = TaskExecutor(mock_api_hub_client)
 
             # Call the method with empty parameters
             result = await executor.execute_workflow(workflow_id, {})
@@ -442,7 +444,7 @@ class TestEdgeCases:
         """Test workflow execution with an alternate (but valid) completion status."""
         workflow_id = "alt_complete_workflow_uuid"
         friendly_workflow_id = "internal_alt_complete"
-        mock_arazzo_doc = {"some_key": "some_value"}  
+        mock_arazzo_doc = {"some_key": "some_value"}
         mock_source_descriptions = {}
 
         # Setup mock API Hub response
@@ -455,19 +457,19 @@ class TestEdgeCases:
         )
 
         # Create mock runner
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
-            mock_runner = MagicMock()  
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+            mock_runner = MagicMock()
             # Runner returns final result directly
             # Update return value structure
             mock_runner.execute_workflow.return_value = OakWorkflowExecutionResult(
                 status=WorkflowExecutionStatus.WORKFLOW_COMPLETE,
                 workflow_id=friendly_workflow_id,
-                outputs={"result": "success"}
+                outputs={"result": "success"},
             )
             mock_runner_class.return_value = mock_runner
 
             # Create the tool executor
-            executor = TaskExecutor(mock_api_hub_client)  
+            executor = TaskExecutor(mock_api_hub_client)
 
             # Call the method
             result = await executor.execute_workflow(workflow_id, {})
@@ -499,16 +501,26 @@ class TestOperationExecution:
             path="/test",
             files=AssociatedFiles(open_api=[FileId(id="openapi_file_id")]),
         )
-        mock_exec_files_response = GetFilesResponse(workflows={}, 
+        mock_exec_files_response = GetFilesResponse(
+            workflows={},
             operations={operation_uuid: mock_operation_entry},
-            files={"open_api": {"openapi_file_id": FileEntry(id="openapi_file_id", filename="spec.json", type="open_api", content=mock_openapi_content)}},
+            files={
+                "open_api": {
+                    "openapi_file_id": FileEntry(
+                        id="openapi_file_id",
+                        filename="spec.json",
+                        type="open_api",
+                        content=mock_openapi_content,
+                    )
+                }
+            },
         )
         mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
 
         oak_response_body = {"data": "success_data"}
         oak_full_response = {"status_code": 200, "body": oak_response_body, "headers": {}}
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()
             mock_runner.execute_operation.return_value = oak_full_response
             mock_runner_class.return_value = mock_runner
@@ -516,10 +528,15 @@ class TestOperationExecution:
             executor = TaskExecutor(api_hub_client=mock_api_hub_client)
             result = await executor.execute_operation(operation_uuid, inputs)
 
-            mock_api_hub_client.get_execution_files.assert_called_once_with(operation_uuids=[operation_uuid])
-            mock_runner_class.assert_called_once_with(source_descriptions={"default": mock_openapi_content})
+            mock_api_hub_client.get_execution_files.assert_called_once_with(
+                operation_uuids=[operation_uuid]
+            )
+            mock_runner_class.assert_called_once_with(
+                source_descriptions={"default": mock_openapi_content}
+            )
             mock_runner.execute_operation.assert_called_once_with(
-                inputs=inputs, operation_path=f"{mock_operation_entry.method} {mock_operation_entry.path}"
+                inputs=inputs,
+                operation_path=f"{mock_operation_entry.method} {mock_operation_entry.path}",
             )
 
             assert result.success is True
@@ -534,16 +551,32 @@ class TestOperationExecution:
         operation_uuid = "op_success_no_body_uuid"
         inputs = {}
         mock_openapi_content = {"openapi": "3.0.0"}
-        mock_operation_entry = OperationEntry(api_version_id="v1", id=operation_uuid, method="POST", path="/submit", files=AssociatedFiles(open_api=[FileId(id="f1")]))
-        mock_exec_files_response = GetFilesResponse(workflows={}, 
+        mock_operation_entry = OperationEntry(
+            api_version_id="v1",
+            id=operation_uuid,
+            method="POST",
+            path="/submit",
+            files=AssociatedFiles(open_api=[FileId(id="f1")]),
+        )
+        mock_exec_files_response = GetFilesResponse(
+            workflows={},
             operations={operation_uuid: mock_operation_entry},
-            files={"open_api": {"f1": FileEntry(id="f1", filename="spec.json", type="open_api", content=mock_openapi_content)}},
+            files={
+                "open_api": {
+                    "f1": FileEntry(
+                        id="f1", filename="spec.json", type="open_api", content=mock_openapi_content
+                    )
+                }
+            },
         )
         mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
 
-        oak_full_response = {"status_code": 204, "headers": {"X-Custom": "value"}} # No body for 204
+        oak_full_response = {
+            "status_code": 204,
+            "headers": {"X-Custom": "value"},
+        }  # No body for 204
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()
             mock_runner.execute_operation.return_value = oak_full_response
             mock_runner_class.return_value = mock_runner
@@ -553,7 +586,7 @@ class TestOperationExecution:
 
             assert result.success is True
             assert result.status_code == 204
-            assert result.output == oak_full_response # Should return the full OAK result
+            assert result.output == oak_full_response  # Should return the full OAK result
             assert result.error is None
             assert result.inputs == inputs
 
@@ -563,17 +596,30 @@ class TestOperationExecution:
         operation_uuid = "op_client_error_uuid"
         inputs = {"bad_param": "invalid"}
         mock_openapi_content = {"openapi": "3.0.0"}
-        mock_operation_entry = OperationEntry(api_version_id="v1", id=operation_uuid, method="GET", path="/test", files=AssociatedFiles(open_api=[FileId(id="f1")]))
-        mock_exec_files_response = GetFilesResponse(workflows={}, 
+        mock_operation_entry = OperationEntry(
+            api_version_id="v1",
+            id=operation_uuid,
+            method="GET",
+            path="/test",
+            files=AssociatedFiles(open_api=[FileId(id="f1")]),
+        )
+        mock_exec_files_response = GetFilesResponse(
+            workflows={},
             operations={operation_uuid: mock_operation_entry},
-            files={"open_api": {"f1": FileEntry(id="f1", filename="spec.json", type="open_api", content=mock_openapi_content)}},
+            files={
+                "open_api": {
+                    "f1": FileEntry(
+                        id="f1", filename="spec.json", type="open_api", content=mock_openapi_content
+                    )
+                }
+            },
         )
         mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
 
         error_detail = {"error": "Bad Request", "message": "Invalid parameter provided"}
         oak_full_response = {"status_code": 400, "body": error_detail, "headers": {}}
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()
             mock_runner.execute_operation.return_value = oak_full_response
             mock_runner_class.return_value = mock_runner
@@ -585,7 +631,7 @@ class TestOperationExecution:
             assert result.status_code == 400
             # The error message is now just the detail from the body
             assert result.error == error_detail["error"]
-            assert result.output == oak_full_response # Full OAK response in output for context
+            assert result.output == oak_full_response  # Full OAK response in output for context
             assert result.inputs == inputs
 
     @pytest.mark.asyncio
@@ -594,16 +640,29 @@ class TestOperationExecution:
         operation_uuid = "op_server_error_uuid"
         inputs = {}
         mock_openapi_content = {"openapi": "3.0.0"}
-        mock_operation_entry = OperationEntry(api_version_id="v1", id=operation_uuid, method="GET", path="/status", files=AssociatedFiles(open_api=[FileId(id="f1")]))
-        mock_exec_files_response = GetFilesResponse(workflows={}, 
+        mock_operation_entry = OperationEntry(
+            api_version_id="v1",
+            id=operation_uuid,
+            method="GET",
+            path="/status",
+            files=AssociatedFiles(open_api=[FileId(id="f1")]),
+        )
+        mock_exec_files_response = GetFilesResponse(
+            workflows={},
             operations={operation_uuid: mock_operation_entry},
-            files={"open_api": {"f1": FileEntry(id="f1", filename="spec.json", type="open_api", content=mock_openapi_content)}},
+            files={
+                "open_api": {
+                    "f1": FileEntry(
+                        id="f1", filename="spec.json", type="open_api", content=mock_openapi_content
+                    )
+                }
+            },
         )
         mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
 
         oak_full_response = {"status_code": 503, "body": "Service Unavailable", "headers": {}}
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()
             mock_runner.execute_operation.return_value = oak_full_response
             mock_runner_class.return_value = mock_runner
@@ -623,17 +682,30 @@ class TestOperationExecution:
         operation_uuid = "op_status_string_uuid"
         inputs = {}
         mock_openapi_content = {"openapi": "3.0.0"}
-        mock_operation_entry = OperationEntry(api_version_id="v1", id=operation_uuid, method="GET", path="/test", files=AssociatedFiles(open_api=[FileId(id="f1")]))
-        mock_exec_files_response = GetFilesResponse(workflows={}, 
+        mock_operation_entry = OperationEntry(
+            api_version_id="v1",
+            id=operation_uuid,
+            method="GET",
+            path="/test",
+            files=AssociatedFiles(open_api=[FileId(id="f1")]),
+        )
+        mock_exec_files_response = GetFilesResponse(
+            workflows={},
             operations={operation_uuid: mock_operation_entry},
-            files={"open_api": {"f1": FileEntry(id="f1", filename="spec.json", type="open_api", content=mock_openapi_content)}},
+            files={
+                "open_api": {
+                    "f1": FileEntry(
+                        id="f1", filename="spec.json", type="open_api", content=mock_openapi_content
+                    )
+                }
+            },
         )
         mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
 
         oak_response_body = {"message": "OK"}
         oak_full_response = {"status_code": "201", "body": oak_response_body, "headers": {}}
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()
             mock_runner.execute_operation.return_value = oak_full_response
             mock_runner_class.return_value = mock_runner
@@ -642,7 +714,7 @@ class TestOperationExecution:
             result = await executor.execute_operation(operation_uuid, inputs)
 
             assert result.success is True
-            assert result.status_code == 201 # Should be cast to int
+            assert result.status_code == 201  # Should be cast to int
             assert result.output == oak_response_body
             assert result.error is None
             assert result.inputs == inputs
@@ -653,16 +725,29 @@ class TestOperationExecution:
         operation_uuid = "op_status_invalid_string_uuid"
         inputs = {}
         mock_openapi_content = {"openapi": "3.0.0"}
-        mock_operation_entry = OperationEntry(api_version_id="v1", id=operation_uuid, method="GET", path="/test", files=AssociatedFiles(open_api=[FileId(id="f1")]))
-        mock_exec_files_response = GetFilesResponse(workflows={}, 
+        mock_operation_entry = OperationEntry(
+            api_version_id="v1",
+            id=operation_uuid,
+            method="GET",
+            path="/test",
+            files=AssociatedFiles(open_api=[FileId(id="f1")]),
+        )
+        mock_exec_files_response = GetFilesResponse(
+            workflows={},
             operations={operation_uuid: mock_operation_entry},
-            files={"open_api": {"f1": FileEntry(id="f1", filename="spec.json", type="open_api", content=mock_openapi_content)}},
+            files={
+                "open_api": {
+                    "f1": FileEntry(
+                        id="f1", filename="spec.json", type="open_api", content=mock_openapi_content
+                    )
+                }
+            },
         )
         mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
 
         oak_full_response = {"status_code": "OK_NOT_A_NUMBER", "body": "Error", "headers": {}}
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()
             mock_runner.execute_operation.return_value = oak_full_response
             mock_runner_class.return_value = mock_runner
@@ -671,9 +756,9 @@ class TestOperationExecution:
             result = await executor.execute_operation(operation_uuid, inputs)
 
             assert result.success is False
-            assert result.status_code is None # Status code is not set on casting failure
+            assert result.status_code is None  # Status code is not set on casting failure
             assert "Invalid status_code format: 'OK_NOT_A_NUMBER'" in result.error
-            assert result.output == oak_full_response # Full OAK response in output
+            assert result.output == oak_full_response  # Full OAK response in output
             assert result.inputs == inputs
 
     @pytest.mark.asyncio
@@ -682,10 +767,23 @@ class TestOperationExecution:
         operation_uuid = "op_missing_status_uuid"
         inputs = {}
         mock_openapi_content = {"openapi": "3.0.0"}
-        mock_operation_entry = OperationEntry(api_version_id="v1", id=operation_uuid, method="GET", path="/test", files=AssociatedFiles(open_api=[FileId(id="f1")]))
-        mock_exec_files_response = GetFilesResponse(workflows={}, 
+        mock_operation_entry = OperationEntry(
+            api_version_id="v1",
+            id=operation_uuid,
+            method="GET",
+            path="/test",
+            files=AssociatedFiles(open_api=[FileId(id="f1")]),
+        )
+        mock_exec_files_response = GetFilesResponse(
+            workflows={},
             operations={operation_uuid: mock_operation_entry},
-            files={"open_api": {"f1": FileEntry(id="f1", filename="spec.json", type="open_api", content=mock_openapi_content)}},
+            files={
+                "open_api": {
+                    "f1": FileEntry(
+                        id="f1", filename="spec.json", type="open_api", content=mock_openapi_content
+                    )
+                }
+            },
         )
         mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
 
@@ -693,7 +791,7 @@ class TestOperationExecution:
         # OAK result missing status_code
         oak_full_response = {"body": oak_response_body, "headers": {}}
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()
             mock_runner.execute_operation.return_value = oak_full_response
             mock_runner_class.return_value = mock_runner
@@ -714,17 +812,30 @@ class TestOperationExecution:
         operation_uuid = "op_runner_not_dict_uuid"
         inputs = {}
         mock_openapi_content = {"openapi": "3.0.0"}
-        mock_operation_entry = OperationEntry(api_version_id="v1", id=operation_uuid, method="GET", path="/test", files=AssociatedFiles(open_api=[FileId(id="f1")]))
-        mock_exec_files_response = GetFilesResponse(workflows={}, 
+        mock_operation_entry = OperationEntry(
+            api_version_id="v1",
+            id=operation_uuid,
+            method="GET",
+            path="/test",
+            files=AssociatedFiles(open_api=[FileId(id="f1")]),
+        )
+        mock_exec_files_response = GetFilesResponse(
+            workflows={},
             operations={operation_uuid: mock_operation_entry},
-            files={"open_api": {"f1": FileEntry(id="f1", filename="spec.json", type="open_api", content=mock_openapi_content)}},
+            files={
+                "open_api": {
+                    "f1": FileEntry(
+                        id="f1", filename="spec.json", type="open_api", content=mock_openapi_content
+                    )
+                }
+            },
         )
         mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
 
         # ArazzoRunner returns a string instead of a dict
         oak_non_dict_response = "This is not a dictionary"
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             mock_runner = MagicMock()
             mock_runner.execute_operation.return_value = oak_non_dict_response
             mock_runner_class.return_value = mock_runner
@@ -738,7 +849,6 @@ class TestOperationExecution:
             assert result.output is None
             assert result.inputs == inputs
 
-
     @pytest.mark.asyncio
     async def test_execute_operation_no_operation_entry(self, mock_api_hub_client):
         """Test failure when operation_uuid is not found in API Hub response."""
@@ -748,13 +858,16 @@ class TestOperationExecution:
         mock_exec_files_response = GetFilesResponse(workflows={}, operations={}, files={})
         mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             executor = TaskExecutor(api_hub_client=mock_api_hub_client)
             result = await executor.execute_operation(operation_uuid, inputs)
 
-            mock_runner_class.assert_not_called() # ArazzoRunner should not be initialized or called
+            mock_runner_class.assert_not_called()  # ArazzoRunner should not be initialized or called
             assert result.success is False
-            assert result.error == f"Operation ID {operation_uuid} not found in execution files response."
+            assert (
+                result.error
+                == f"Operation ID {operation_uuid} not found in execution files response."
+            )
             assert result.status_code is None
             assert result.output is None
             assert result.inputs == inputs
@@ -770,15 +883,22 @@ class TestOperationExecution:
             id=operation_uuid,
             method="GET",
             path="/test",
-            files=AssociatedFiles(open_api=[FileId(id="openapi_file_id")]), # Points to a file
+            files=AssociatedFiles(open_api=[FileId(id="openapi_file_id")]),  # Points to a file
         )
-        mock_exec_files_response = GetFilesResponse(workflows={}, 
+        mock_exec_files_response = GetFilesResponse(
+            workflows={},
             operations={operation_uuid: mock_operation_entry},
-            files={"open_api": {"openapi_file_id": FileEntry(id="openapi_file_id", filename="spec.json", type="open_api", content={})}}, # File content is empty
+            files={
+                "open_api": {
+                    "openapi_file_id": FileEntry(
+                        id="openapi_file_id", filename="spec.json", type="open_api", content={}
+                    )
+                }
+            },  # File content is empty
         )
         mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             executor = TaskExecutor(api_hub_client=mock_api_hub_client)
             result = await executor.execute_operation(operation_uuid, inputs)
 
@@ -788,7 +908,7 @@ class TestOperationExecution:
             assert result.status_code is None
             assert result.output is None
             assert result.inputs == inputs
-            
+
     @pytest.mark.asyncio
     async def test_execute_operation_no_openapi_file_entry_in_files(self, mock_api_hub_client):
         """Test failure when OpenAPI spec file ID from operation_entry.files.open_api is not in exec_files_response.files."""
@@ -799,16 +919,26 @@ class TestOperationExecution:
             id=operation_uuid,
             method="GET",
             path="/test",
-            files=AssociatedFiles(open_api=[FileId(id="actual_openapi_file_id")]), 
+            files=AssociatedFiles(open_api=[FileId(id="actual_openapi_file_id")]),
         )
         # The 'files' dict does not contain 'actual_openapi_file_id' under 'open_api'
-        mock_exec_files_response = GetFilesResponse(workflows={}, 
+        mock_exec_files_response = GetFilesResponse(
+            workflows={},
             operations={operation_uuid: mock_operation_entry},
-            files={"open_api": {"some_other_file_id": FileEntry(id="some_other_file_id", filename="spec.json", type="open_api", content={"openapi":"3.0"})}},
+            files={
+                "open_api": {
+                    "some_other_file_id": FileEntry(
+                        id="some_other_file_id",
+                        filename="spec.json",
+                        type="open_api",
+                        content={"openapi": "3.0"},
+                    )
+                }
+            },
         )
         mock_api_hub_client.get_execution_files.return_value = mock_exec_files_response
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             executor = TaskExecutor(api_hub_client=mock_api_hub_client)
             result = await executor.execute_operation(operation_uuid, inputs)
 
@@ -819,7 +949,6 @@ class TestOperationExecution:
             assert result.output is None
             assert result.inputs == inputs
 
-
     @pytest.mark.asyncio
     async def test_execute_operation_general_exception_api_call(self, mock_api_hub_client):
         """Test failure when get_execution_files raises an unexpected exception."""
@@ -828,7 +957,7 @@ class TestOperationExecution:
         expected_exception = RuntimeError("Network Error")
         mock_api_hub_client.get_execution_files.side_effect = expected_exception
 
-        with patch("jentic.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
+        with patch("jentic.lib.agent_runtime.tool_execution.ArazzoRunner") as mock_runner_class:
             executor = TaskExecutor(api_hub_client=mock_api_hub_client)
             result = await executor.execute_operation(operation_uuid, inputs)
 

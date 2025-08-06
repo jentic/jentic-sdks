@@ -114,8 +114,8 @@ def load_config() -> Config:
             base_url=os.environ.get("MCP_BASE_URL", "http://localhost:8000"),
         ),
         api_hub=APIHubConfig(
-            url=os.environ.get("JENTIC_API_URL", "https://api.jenticlabs.com"),
-            api_key=os.environ.get("JENTIC_UUID"),
+            url=os.environ.get("JENTIC_API_URL", "https://api.jentic.com"),
+            api_key=os.environ.get("JENTIC_AGENT_API_KEY"),
             search_server_url=os.environ.get(
                 "JENTIC_API_SERVER_URL", "https://api.jentic.com"
             ),

@@ -1,6 +1,6 @@
 _CLAUDE_PYTHON_SAMPLE = """
 ```python
-from jentic import Jentic
+from jentic.lib.agent_runtime import AgentToolManager
 import anthropic
 import os
 
@@ -11,8 +11,8 @@ class JenticAgent:
         self.client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
         self.conversation_history = []
 
-        self.jentic = Jentic()
-        self.jentic_tools = self.jentic.generate_llm_tool_definitions("anthropic")
+        self.manager = AgentToolManager(format="anthropic")
+        self.jentic_tools = self.manager.generate_tool_definitions()
 
     async def process_message(self, user_message): 
         # Add the user message
@@ -44,7 +44,7 @@ class JenticAgent:
             
             try:
                 # Execute the tool
-                tool_result = await self.jentic.run_llm_tool(
+                tool_result = await self.manager.execute_tool(
                     tool_name,
                     tool_input 
                 )
@@ -116,7 +116,7 @@ if __name__ == "__main__":
 
 _CHATGPT_PYTHON_SAMPLE = """
 ```python
-from jentic import Jentic
+from jentic.lib.agent_runtime import AgentToolManager
 import openai
 import os
 
@@ -126,8 +126,8 @@ class JenticAgent:
         self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.conversation_history = []
         
-        self.jentic = Jentic()
-        self.jentic_tools = self.jentic.generate_llm_tool_definitions("openai")
+        self.manager = AgentToolManager(format="openai")
+        self.jentic_tools = self.manager.generate_tool_definitions()
         
     async def process_message(self, user_message):
         # Add the user message to history
@@ -158,7 +158,7 @@ class JenticAgent:
                 
                 try:
                     # Execute the tool
-                    tool_result = await self.jentic.run_llm_tool(
+                    tool_result = await self.manager.execute_tool(
                         tool_name,
                         tool_input
                     )
