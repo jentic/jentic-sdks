@@ -54,7 +54,7 @@ async def test_generate_config_from_uuids():
     assert "workflows" in config
     assert "friendly-id" in config["workflows"]
     assert config["workflows"]["friendly-id"]["name"] == "Test Workflow"
-    assert config["workflows"]["friendly-id"]["workflow_uuid"] == workflow_uuid
+    assert config["workflows"]["friendly-id"]["id"] == workflow_uuid
 
 
 @pytest.mark.asyncio
