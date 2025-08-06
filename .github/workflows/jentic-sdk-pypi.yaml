@@ -8,6 +8,15 @@ on:
       - main
     paths:
       - "python/**"
+  workflow_dispatch:
+    inputs:
+      publish_target:
+        description: "Where to publish"
+        required: true
+        default: "testpypi"
+        type: choice
+        options:
+          - testpypi # Only allow this to testpypi for now
 
 jobs:
   check-version:
@@ -92,7 +101,9 @@ jobs:
     needs:
     - build
     - check-version
-    if: needs.check-version.outputs.version_changed == 'true'
+    if: |
+      needs.check-version.outputs.version_changed == 'true' ||
+      github.event_name == 'workflow_dispatch' && github.event.inputs.publish_target == 'testpypi'
     runs-on: ubuntu-latest
 
     environment:
