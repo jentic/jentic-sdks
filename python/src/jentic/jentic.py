@@ -13,60 +13,151 @@ from jentic.lib.models import (
 
 
 class Jentic:
-    """
-    Jentic client for interacting with the Jentic API.
+    """High-level async client for the Jentic API Hub.
 
-    Args:
-        config: AgentConfig instance, defaults to AgentConfig.from_env()
+    This class is opinionated but intentionally thin: it validates inputs, 
+    delegates all network traffic to :pyclass:`jentic.lib.core_api.BackendAPI`, 
+    and returns Pydantic models so you get autocompletion and type checking 
+    out-of-the-box.
+
+    Environment
+    -----------
+    Unless you explicitly supply an :class:`~jentic.lib.cfg.AgentConfig` the 
+    client loads configuration from *environment variables* via
+    :meth:`jentic.lib.cfg.AgentConfig.from_env`.
+
+    The only **required** variable is ``JENTIC_AGENT_API_KEY`` – the Agent API
+    key you copy from the Jentic dashboard. Example::
+
+        export JENTIC_AGENT_API_KEY=ak_live_*******
+
+    All other values (``JENTIC_ENVIRONMENT`` etc.) default sensibly for production.
+
+    Examples
+    --------
+    Minimal search → load → execute loop ::
+
+        import asyncio
+        from jentic import Jentic, SearchRequest, LoadRequest, ExecutionRequest
+
+        async def main() -> None:
+            client = Jentic()
+            search = await client.search(SearchRequest(query="send an email"))
+            op_id  = search.results[0].id
+            await client.load(LoadRequest(ids=[op_id]))
+            result = await client.execute(ExecutionRequest(id=op_id, inputs={"to":"bob@example.com","body":"Hi"}))
+            print(result.output)
+
+        asyncio.run(main())
+
+    Notes for advanced users
+    ------------------------
+    • If you need fully-specified LLM tools, see
+      :pyclass:`jentic.lib.agent_runtime.AgentToolManager` instead.
+
+    Parameters
+    ----------
+    config : AgentConfig | None, optional
+        Pre-validated agent configuration. If ``None`` the instance resolves
+        config from the current environment.
     """
 
     def __init__(self, config: AgentConfig | None = None):
         self._backend = BackendAPI(config or AgentConfig.from_env())
 
     async def list_apis(self) -> list[APIIdentifier]:
-        """
-        List all APIs available to the agent.
+        """Return every API the current agent is authorised to see.
 
-        Returns:
-            list[APIIdentifier]: List of API identifiers.
+        Returns
+        -------
+        list[APIIdentifier]
+            Each identifier contains the *vendor*, *name* and *version*.
         """
         return await self._backend.list_apis()
 
     async def search(self, request: SearchRequest) -> SearchResponse:
-        """
-        Search for apis, operations and workflows via a SearchRequest.
+        """Full-text search across APIs, operations and workflows.
 
-        Results are filtered by the APIs the current Agent has access to.
+        The `query` string supports natural-language phrases – the backend uses
+        semantic search to find best matches. Results are automatically scoped
+        to the APIs your *agent key* grants access to.
 
-        Args:
-            request: SearchRequest instance.
+        Parameters
+        ----------
+        request : SearchRequest
+            Pass an instance for maximum control (limit, keywords, filter list
+            of APIs). For convenience you can also call
+            ``await client.search(SearchRequest(query="..."))``.
 
-        Returns:
-            SearchResponse: Search response.
+        Returns
+        -------
+        SearchResponse
+            • ``results`` – ranked list of operations & workflows
+            • ``total_count`` – total hits before pagination
+            • ``query`` – the original query string
+
+        Examples
+        --------
+        >>> sr = SearchRequest(query="create a Trello card", limit=10)
+        >>> hits = await client.search(sr)
+        >>> hits.results[0].summary
+        'Create a new card in a Trello list'
         """
         return await self._backend.search(request)
 
     async def execute(self, request: ExecutionRequest) -> ExecuteResponse:
-        """
-        Execute an ExecutionRequest.
+        """Execute a previously-loaded operation or workflow.
 
-        Args:
-            request: ExecutionRequest instance.
+        ``ExecutionRequest.id`` must be the *exact* UUID you obtained from the
+        search results – the SDK figures out whether it is an operation or a
+        workflow.
 
-        Returns:
-            ExecuteResponse: Execute response.
+        Parameters
+        ----------
+        request : ExecutionRequest
+            • ``id`` – UUID prefixed with ``op_`` or ``wf_``
+            • ``inputs`` – dict that satisfies the JSON schema returned by
+              :meth:`load`
+
+        Returns
+        -------
+        ExecuteResponse
+            If ``success`` is *True* the ``output`` field contains the tool’s
+            returned data (often JSON). On failure the ``error`` field is
+            populated and ``success`` is *False*.
+
+        Example
+        -------
+        >>> req = ExecutionRequest(id="op_123", inputs={"text":"hello"})
+        >>> resp = await client.execute(req)
+        >>> resp.success
+        True
         """
         return await self._backend.execute(request)
 
     async def load(self, request: LoadRequest) -> LoadResponse:
-        """
-        Load a LoadRequest.
+        """Fetch JSON schemas & auth metadata for given IDs.
 
-        Args:
-            request: LoadRequest instance.
+        Call this *after* a successful search and *before* execute so you can
+        validate user input and inform the LLM of required environment
+        variables (OAuth tokens, API keys, etc.).
 
-        Returns:
-            LoadedExecutionDetails: Load response.
+        Parameters
+        ----------
+        request : LoadRequest
+            ``ids`` should contain one or many UUIDs returned by search.
+
+        Returns
+        -------
+        LoadResponse
+            • ``operations`` – mapping ``op_uuid`` → OpenAPI-derived schema
+            • ``workflows`` – mapping ``wf_uuid`` → Arazzo-derived schema
+
+        Tip
+        ---
+        The returned object is compatible with
+        :class:`jentic.lib.agent_runtime.AgentToolManager` so you can write the
+        JSON to *jentic.json* and immediately generate tool definitions.
         """
         get_files_response = await self._backend.load(request)
         return LoadResponse.from_get_files_response(get_files_response)
