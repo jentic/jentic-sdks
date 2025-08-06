@@ -24,13 +24,13 @@ class JenticAPIClient:
     """Client for interacting with the Jentic API Knowledge Hub."""
 
     def __init__(
-        self, base_url: str | None = None, api_key: str | None = None, user_agent: str | None = None
+        self, base_url: str | None = None, agent_api_key: str | None = None, user_agent: str | None = None
     ):
         """Initialize the API Hub client.
 
         Args:
             base_url: Base URL for the Jentic API Knowledge Hub.
-            api_key: This should contain the Jentic UUID (required for authentication).
+            agent_api_key: Agent API Key used for authentication with the Jentic hub.
             user_agent: User agent string for the API client.
         """
         # Set the base URL with default fallback
@@ -38,8 +38,8 @@ class JenticAPIClient:
 
         self.base_url = self.base_url.rstrip("/")
 
-        # Set the Jentic UUID (from api_key or environment variable)
-        self.user_uuid = api_key or os.environ.get("JENTIC_UUID", "")
+        # Get agent key from param or environment
+        self.agent_api_key = agent_api_key or os.environ.get("JENTIC_AGENT_API_KEY", "")
 
         logger.info(f"Initialized API Hub client with base_url: {self.base_url}")
 
@@ -49,8 +49,8 @@ class JenticAPIClient:
             self.headers["X-Jentic-User-Agent"] = user_agent
         else:
             self.headers["X-Jentic-User-Agent"] = "Jentic/1.0 SDK (Python)"
-        if self.user_uuid:
-            self.headers["X-Jentic-User-UUID"] = self.user_uuid
+        if self.agent_api_key:
+            self.headers["X-JENTIC-API-KEY"] = self.agent_api_key
 
     async def get_execution_files(
         self, workflow_ids: list[str] = [], operation_uuids: list[str] = []

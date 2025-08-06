@@ -115,7 +115,7 @@ def load_config() -> Config:
         ),
         api_hub=APIHubConfig(
             url=os.environ.get("JENTIC_API_URL", "https://api.jenticlabs.com"),
-            api_key=os.environ.get("JENTIC_UUID"),
+            api_key=os.environ.get("JENTIC_AGENT_API_KEY"),
             search_server_url=os.environ.get(
                 "JENTIC_API_SERVER_URL", "https://api.jentic.com"
             ),
