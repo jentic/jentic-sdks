@@ -185,7 +185,7 @@ class WorkflowDetail(BaseModel):
     """Schema for a single workflow entry in the generated config."""
 
     description: str = ""
-    workflow_uuid: str
+    id: str
     summary: str = ""
     inputs: dict[str, Any] = Field(default_factory=dict)
     outputs: dict[str, Any] = Field(default_factory=dict)
@@ -199,7 +199,7 @@ class WorkflowDetail(BaseModel):
 class OperationDetail(BaseModel):
     """Schema for a single operation entry in the generated config."""
 
-    operation_uuid: str
+    id: str
     method: str | None = None
     path: str | None = None
     summary: str | None = None

@@ -25,4 +25,4 @@ async def test_client_load(client: Jentic):
     operation_id = "op_3f6410c622b96114"
     response: LoadResponse = await client.load(LoadRequest(ids=[operation_id]))
     assert response.results is not None
-    assert response.results[operation_id].operation_uuid == operation_id
+    assert response.results[operation_id].id == operation_id

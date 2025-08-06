@@ -273,7 +273,7 @@ class JenticConfig:
             workflows_in_doc = JenticConfig._extract_workflow_details(arazzo_doc)
             if workflow_entry.workflow_id and workflow_entry.workflow_id in workflows_in_doc:
                 workflow_details = workflows_in_doc[workflow_entry.workflow_id]
-                workflow_details["workflow_uuid"] = workflow_id
+                workflow_details["id"] = workflow_id
                 workflow_details["api_names"] = [
                     ref.api_name for ref in workflow_entry.api_references
                 ]
@@ -335,7 +335,7 @@ class JenticConfig:
                 except Exception as e:
                     logger.error(f"Failed to extract operation IO for {operation_uuid}: {e}")
             extracted_operation_details[operation_uuid] = {
-                "operation_uuid": operation_uuid,
+                "id": operation_uuid,
                 "method": getattr(operation_entry, "method", None),
                 "path": getattr(operation_entry, "path", None),
                 "summary": getattr(operation_entry, "summary", None),
