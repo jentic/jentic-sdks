@@ -16,7 +16,8 @@ on:
         default: "testpypi"
         type: choice
         options:
-          - testpypi # Only allow this to testpypi for now
+          - testpypi
+          - pypi
 
 jobs:
   check-version:
@@ -79,7 +80,9 @@ jobs:
     needs:
     - build
     - check-version
-    if: needs.check-version.outputs.version_changed == 'true'
+    if: |
+      needs.check-version.outputs.version_changed == 'true' ||
+      github.event_name == 'workflow_dispatch' && github.event.inputs.publish_target == 'pypi'
     runs-on: ubuntu-latest
     environment:
       name: pypi
