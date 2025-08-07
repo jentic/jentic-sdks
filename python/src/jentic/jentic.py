@@ -16,7 +16,7 @@ class Jentic:
     """High-level async client for the Jentic API Hub.
 
     This class is opinionated but intentionally thin: it validates inputs,
-    delegates all network traffic to :pyclass:`jentic.lib.core_api.BackendAPI`,
+    delegates all network traffic to :class:`jentic.lib.core_api.BackendAPI`,
     and returns Pydantic models so you get autocompletion and type checking
     out-of-the-box.
 
@@ -53,7 +53,7 @@ class Jentic:
     Notes for advanced users
     ------------------------
     • If you need fully-specified LLM tools, see
-      :pyclass:`jentic.lib.agent_runtime.AgentToolManager` instead.
+      :class:`jentic.lib.agent_runtime.AgentToolManager` instead.
 
     Parameters
     ----------

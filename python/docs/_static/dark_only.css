@@ -1,0 +1,10 @@
+html {
+    color-scheme: dark !important;
+    background: #181818 !important;
+}
+body {
+    background: #181818 !important;
+}
+.theme-switch-button {
+    display: none !important;
+}
