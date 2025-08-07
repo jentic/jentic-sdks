@@ -9,7 +9,7 @@ from httpx import Response
 import tenacity
 
 from jentic.lib.cfg import AgentConfig
-from jentic.lib.exc import JenticAPIError, JenticCredentialsError
+from jentic.lib.exc import JenticAPIError
 from jentic.lib.models import (
     APIIdentifier,
     ExecuteResponse,
@@ -158,9 +158,6 @@ class BackendAPI:
     # Validate the response(httpx.Response) and return the data (T_JSONResponse)
     def _validate_response(self, response: Response) -> T_JSONResponse:
         data = response.json()
-        # If we get back a 401, then we need to raise a credentials error
-        if response.status_code == 401:
-            raise JenticCredentialsError(f"Error: {response.status_code} - {data.get('detail')}")
 
         # Decode, and if we have 'body' then return this.
         if isinstance(data, dict):
@@ -171,6 +168,16 @@ class BackendAPI:
             # If we have a body, return this
             if data.get("body"):
                 return data["body"]
+
+        # If we have a list, return this (only for list_apis)
+        if isinstance(data, list):
+            return data
+
+        # If we dont have status code, set it from the response
+        if data.get("output") and data["output"].get("status_code"):
+            data["status_code"] = data["output"]["status_code"]
+        elif not data.get("status_code"):
+            data["status_code"] = response.status_code
 
         return data
 

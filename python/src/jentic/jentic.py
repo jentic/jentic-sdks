@@ -121,9 +121,10 @@ class Jentic:
         Returns
         -------
         ExecuteResponse
-            If ``success`` is *True* the ``output`` field contains the tool’s
-            returned data (often JSON). On failure the ``error`` field is
-            populated and ``success`` is *False*.
+            • ``success`` is *True* the ``output`` field contains the tool’s
+              returned data (often JSON). On failure the ``error`` field is
+              populated and ``success`` is *False*.
+            • ``status_code`` – HTTP status code of the response
 
         Example
         -------

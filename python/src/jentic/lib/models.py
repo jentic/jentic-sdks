@@ -276,6 +276,7 @@ class ExecutionRequest(BaseModel):
 
 class ExecuteResponse(BaseModel):
     success: bool
+    status_code: int
     output: dict[str, Any] | None = None
     error: str | None = None
     step_results: dict[str, Any] | None = None
