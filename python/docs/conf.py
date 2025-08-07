@@ -17,11 +17,14 @@ extensions = [
     "sphinx_autodoc_typehints",
     "sphinxcontrib.mermaid",
     "sphinx_copybutton",
+    "sphinxcontrib.autodoc_pydantic",
 ]
 
 napoleon_google_docstring = True
 napoleon_numpy_docstring = False
 add_module_names = False
+
+autodoc_pydantic_model_show_json = True
 
 # -- Options for HTML output -------------------------------------------------
 html_theme = "sphinx_book_theme"
