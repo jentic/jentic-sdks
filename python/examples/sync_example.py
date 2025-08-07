@@ -1,11 +1,11 @@
 import asyncio
-from jentic import Jentic, AgentConfig, ExecutionRequest
+import jentic
 
 
 def main():
     async def run():
         # Initialize the client (API key from env or pass explicitly)
-        client = Jentic()
+        client = jentic.Jentic()
 
         # List available APIs
         apis = await client.list_apis()

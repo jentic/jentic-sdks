@@ -1,4 +1,3 @@
-from typing import Any
 from jentic.lib.cfg import AgentConfig
 from jentic.lib.core_api import BackendAPI
 from jentic.lib.models import (
@@ -150,8 +149,7 @@ class Jentic:
         Returns
         -------
         LoadResponse
-            • ``operations`` – mapping ``op_uuid`` → OpenAPI-derived schema
-            • ``workflows`` – mapping ``wf_uuid`` → Arazzo-derived schema
+            • ``tool_info`` - mapping id -> tool info
 
         Tip
         ---

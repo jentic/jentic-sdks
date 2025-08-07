@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, List
+from typing import List
 
 from jentic.lib.models import (
     APIIdentifier,
@@ -10,7 +10,6 @@ from jentic.lib.models import (
     ExecutionRequest,
     SearchResult,
     LoadRequest,
-    LoadResponse,
     GetFilesResponse,
     SearchRequest,
     SearchResponse,

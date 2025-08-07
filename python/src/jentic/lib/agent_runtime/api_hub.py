@@ -14,6 +14,7 @@ from jentic.lib.models import (
     WorkflowEntry,
     WorkflowExecutionDetails,
     OperationEntry,
+    SearchResult,
 )
 
 
@@ -307,14 +308,14 @@ class JenticAPIClient:
         search_results = await self._search_all(request)
 
         # Parse API, workflow, and operation results from search_results
-        workflow_summaries: list[WorkflowSearchResult] = []
+        workflow_summaries: list[SearchResult] = []
         for wf in search_results.get("workflows", []):
             try:
                 # Determine api_name: explicit, mapped by api_id, or vendor fallback
                 api_name_val = wf.get("api_name")
                 workflow_summaries.append(
-                    WorkflowSearchResult(
-                        workflow_id=wf.get("id", ""),
+                    SearchResult(
+                        id=wf.get("id", ""),
                         summary=wf.get("name", wf.get("workflow_id", "")),
                         description=wf.get("description", ""),
                         api_name=api_name_val,
@@ -327,13 +328,13 @@ class JenticAPIClient:
             f"Found {len(workflow_summaries)} workflows matching '{request.capability_description}'"
         )
 
-        operation_summaries: list[OperationSearchResult] = []
+        operation_summaries: list[SearchResult] = []
         for op in search_results.get("operations", []):
             try:
                 api_name_val = op.get("api_name")
                 operation_summaries.append(
-                    OperationSearchResult(
-                        operation_uuid=op.get("id", ""),
+                    SearchResult(
+                        id=op.get("id", ""),
                         summary=op.get("summary", ""),
                         description=op.get("description", ""),
                         path=op.get("path", ""),
