@@ -1,28 +1,34 @@
 Execute
 =======
 
-**What is Execute?**
+Run the operation or workflow you loaded using the required inputs. This is where your agent performs the action you requested.
 
-Execute runs the operation or workflow you loaded, using the required inputs. This is where your agent actually performs the action you requested.
-
-**Why Execute?**
+Why Execute?
+------------
 - Trigger real-world actions (send emails, fetch data, automate workflows).
 - Get results from APIs and services.
 
-**How to Use Execute**
+How to Use Execute
+------------------
 
 .. code-block:: python
 
-   from jentic import Jentic, SearchRequest, LoadRequest, ExecutionRequest
+   import jentic
    import asyncio
 
    async def main():
-       jentic = Jentic()
-       search = await jentic.search(SearchRequest(query="Find me a restaurant in Dublin"))
-       op_id = search.results[0].id
-       await jentic.load(LoadRequest(ids=[op_id]))
+       ... load result already found ...
+
+       op_id = ...
+
+       # Execute the operation
        result = await jentic.execute(ExecutionRequest(id=op_id, inputs={"area": "D2"}))
-       print(result.output)
+
+       # Print the result
+       if result.success:
+           print(result.output)
+       else:
+           print(result.error)
 
    asyncio.run(main())
 

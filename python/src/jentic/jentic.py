@@ -41,11 +41,19 @@ class Jentic:
 
         async def main() -> None:
             client = Jentic()
-            search = await client.search(SearchRequest(query="send an email"))
+            search = await client.search(SearchRequest(query="send an message via discord"))
             op_id  = search.results[0].id
-            await client.load(LoadRequest(ids=[op_id]))
+
+            # Load the operation, view inputs and outputs
+            response = await client.load(LoadRequest(ids=[op_id]))
+            tool_info = response.tool_info[op_id]
+
+            # Execute the operation
             result = await client.execute(ExecutionRequest(id=op_id, inputs={"to":"bob@example.com","body":"Hi"}))
-            print(result.output)
+
+            # Print the result
+            print (result.status_code)
+            print (result.output)
 
         asyncio.run(main())
 
