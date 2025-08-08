@@ -1,7 +1,8 @@
 Load
 ====
 
-Fetch schemas and authentication requirements for the operations or workflows you found with Search. This prepares your agent to execute them safely and correctly.
+Fetch schemas for the operations or workflows you found with Search. This provides your agent with the input and output schemas for the operation,
+and prepares your agent to execute them safely and correctly.
 
 Why Load?
 ---------

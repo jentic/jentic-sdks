@@ -148,7 +148,7 @@ class Jentic:
 
         Call this *after* a successful search and *before* execute so you can
         validate user input and inform the LLM of required environment
-        variables (OAuth tokens, API keys, etc.).
+        variables.
 
         Parameters
         ----------
