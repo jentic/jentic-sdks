@@ -104,6 +104,10 @@ class BackendAPI:
     # Repo-like access to the backend
     async def search(self, request: SearchRequest) -> SearchResponse:
         resp: T_JSONResponse = await self._post("agents/search", data=request.model_dump())
+        # We have some error conditions that we need to handle here
+        if resp.get("status_code") != 200:
+            raise JenticAPIError(resp.get("detail", "Unknown error"))
+
         return SearchResponse.model_validate(resp)
 
     async def execute(self, request: ExecutionRequest) -> ExecuteResponse:

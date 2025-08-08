@@ -77,7 +77,7 @@ class MCPAdapter:
                 ids=workflow_uuids + operation_uuids,
             )
             load_response = await self.jentic.load(load_request)
-            result = load_response.parsed()
+            result = load_response
             return {"result": result}
 
         except ValueError as e:
