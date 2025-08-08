@@ -1,6 +1,6 @@
 [project]
 name = "jentic"
-version = "0.9.1"
+version = "0.9.2"
 description = "Jentic SDK for the discovery and execution of APIs and workflows"
 requires-python = ">=3.11"
 readme = "README.md"
@@ -33,6 +33,7 @@ dev = [
     "sphinxcontrib-napoleon>=0.7",
     "sphinx-book-theme>=1.1.4",
     "autodoc-pydantic>=2.2.0",
+    "click>=8.2.1",
 ]
 
 [build-system]
