@@ -77,7 +77,7 @@ class MCPAdapter:
                 ids=workflow_uuids + operation_uuids,
             )
             load_response = await self.jentic.load(load_request)
-            result = load_response
+            result = load_response.model_dump(exclude_none=False)
             return {"result": result}
 
         except ValueError as e:
@@ -144,7 +144,7 @@ class MCPAdapter:
             MCP tool response with the execution result.
         """
         logger = logging.getLogger(__name__)
-        id = params.get("id")
+        id = params.get("uuid")
         inputs = params.get("inputs", {})
 
         if not id:
