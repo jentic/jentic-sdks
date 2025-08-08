@@ -1,4 +1,3 @@
-from typing import Any
 from jentic.lib.cfg import AgentConfig
 from jentic.lib.core_api import BackendAPI
 from jentic.lib.models import (
@@ -16,7 +15,7 @@ class Jentic:
     """High-level async client for the Jentic API Hub.
 
     This class is opinionated but intentionally thin: it validates inputs,
-    delegates all network traffic to :pyclass:`jentic.lib.core_api.BackendAPI`,
+    delegates all network traffic to :class:`jentic.lib.core_api.BackendAPI`,
     and returns Pydantic models so you get autocompletion and type checking
     out-of-the-box.
 
@@ -42,18 +41,26 @@ class Jentic:
 
         async def main() -> None:
             client = Jentic()
-            search = await client.search(SearchRequest(query="send an email"))
+            search = await client.search(SearchRequest(query="send an message via discord"))
             op_id  = search.results[0].id
-            await client.load(LoadRequest(ids=[op_id]))
+
+            # Load the operation, view inputs and outputs
+            response = await client.load(LoadRequest(ids=[op_id]))
+            tool_info = response.tool_info[op_id]
+
+            # Execute the operation
             result = await client.execute(ExecutionRequest(id=op_id, inputs={"to":"bob@example.com","body":"Hi"}))
-            print(result.output)
+
+            # Print the result
+            print (result.status_code)
+            print (result.output)
 
         asyncio.run(main())
 
     Notes for advanced users
     ------------------------
     • If you need fully-specified LLM tools, see
-      :pyclass:`jentic.lib.agent_runtime.AgentToolManager` instead.
+      :class:`jentic.lib.agent_runtime.AgentToolManager` instead.
 
     Parameters
     ----------
@@ -122,9 +129,10 @@ class Jentic:
         Returns
         -------
         ExecuteResponse
-            If ``success`` is *True* the ``output`` field contains the tool’s
-            returned data (often JSON). On failure the ``error`` field is
-            populated and ``success`` is *False*.
+            • ``success`` is *True* the ``output`` field contains the tool’s
+              returned data (often JSON). On failure the ``error`` field is
+              populated and ``success`` is *False*.
+            • ``status_code`` – HTTP status code of the response
 
         Example
         -------
@@ -140,7 +148,7 @@ class Jentic:
 
         Call this *after* a successful search and *before* execute so you can
         validate user input and inform the LLM of required environment
-        variables (OAuth tokens, API keys, etc.).
+        variables.
 
         Parameters
         ----------
@@ -150,8 +158,7 @@ class Jentic:
         Returns
         -------
         LoadResponse
-            • ``operations`` – mapping ``op_uuid`` → OpenAPI-derived schema
-            • ``workflows`` – mapping ``wf_uuid`` → Arazzo-derived schema
+            • ``tool_info`` - mapping id -> tool info
 
         Tip
         ---

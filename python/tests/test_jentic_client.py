@@ -1,6 +1,7 @@
 import pytest
-
+from typing import cast
 from jentic import Jentic, SearchRequest, LoadRequest, APIIdentifier, LoadResponse
+from jentic.lib.models import OperationDetail
 
 
 @pytest.mark.asyncio
@@ -25,4 +26,4 @@ async def test_client_load(client: Jentic):
     operation_id = "op_3f6410c622b96114"
     response: LoadResponse = await client.load(LoadRequest(ids=[operation_id]))
     assert response.tool_info is not None
-    assert response.tool_info[operation_id].id == operation_id
+    assert cast(OperationDetail, response.tool_info[operation_id]).id == operation_id

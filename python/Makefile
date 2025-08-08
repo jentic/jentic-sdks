@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: check install test clean
+.PHONY: check install test clean docs docs-open
 
 # Pretty colors
 GREEN  := \033[0;32m
@@ -22,6 +22,8 @@ help:
 	@echo "  $(YELLOW)Developer:$(NC)"
 	@echo "    $(GREEN)install$(NC)        Install project dependencies via PDM"
 	@echo "    $(GREEN)test$(NC)           Run tests"
+	@echo "    $(GREEN)docs$(NC)           Build Sphinx documentation (HTML) in docs/build/html"
+	@echo "    $(GREEN)docs-open$(NC)      Open the built documentation (index.html) in your browser"
 
 	@echo ""
 	@echo "  $(YELLOW)Formatting:$(NC)"
@@ -48,3 +50,9 @@ check:
 	@pdm run black .
 	@pdm run mypy . --exclude=src/jentic/lib/agent_runtime --exclude=tests/agent_runtime
 	@pdm run ruff check --fix --exclude=tests/agent_runtime
+
+docs:
+	@cd docs && pdm run make html
+
+docs-open:
+	@open docs/build/html/index.html
