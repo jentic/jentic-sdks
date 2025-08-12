@@ -3,7 +3,7 @@ name = "jentic-mcp"
 version = "0.7.1"
 description = "Jentic MCP Plugin Implementation"
 authors = [
-    {name = "Jentic Labs", email = "info@jenticlabs.com"},
+    {name = "Jentic", email = "hello@jentic.com"},
 ]
 dependencies = [
     "jentic>=0.9.0",

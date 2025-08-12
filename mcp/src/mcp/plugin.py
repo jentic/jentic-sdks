@@ -29,8 +29,8 @@ def get_plugin_manifest() -> dict[str, Any]:
         "auth": {"type": "none"},
         "api": {"type": "openapi", "url": f"{base_url}/openapi.json"},
         "logo_url": f"{base_url}/logo.png",
-        "contact_email": "support@jenticlabs.com",
-        "legal_info_url": "https://jenticlabs.com/legal",
+        "contact_email": "hello@jentic.com",
+        "legal_info_url": "https://jentic.com/contact",
         "version": __version__,
     }
 
