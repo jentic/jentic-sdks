@@ -30,7 +30,7 @@ def get_plugin_manifest() -> dict[str, Any]:
         "api": {"type": "openapi", "url": f"{base_url}/openapi.json"},
         "logo_url": f"{base_url}/logo.png",
         "contact_email": "hello@jentic.com",
-        "legal_info_url": "https://jentic.com/contact",
+        "legal_info_url": "https://jentic.com/terms",
         "version": __version__,
     }
 
