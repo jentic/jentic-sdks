@@ -68,7 +68,7 @@ class HTTPTransport(BaseTransport):
                 },
                 "logo_url": f"{self.config.mcp.base_url}/logo.png",
                 "contact_email": "hello@jentic.com",
-                "legal_info_url": "https://jentic.com/contact",
+                "legal_info_url": "https://jentic.com/terms",
                 "mock_status": mock_status,
             }
             return JSONResponse(manifest)
