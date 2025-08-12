@@ -20,7 +20,7 @@ class APIHubConfig(BaseModel):
     """API Knowledge Hub configuration."""
 
     url: str = Field(
-        default="https://api.jenticlabs.com", description="URL of the Jentic API Knowledge Hub"
+        default="https://api.jentic.com", description="URL of the Jentic API Knowledge Hub"
     )
     api_key: str | None = Field(
         default=None, description="API key for authenticating with the Jentic API Knowledge Hub"

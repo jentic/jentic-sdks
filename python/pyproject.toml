@@ -6,7 +6,7 @@ requires-python = ">=3.11"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Jentic Labs", email = "info@jenticlabs.com"},
+    {name = "Jentic", email = "hello@jentic.com"},
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
