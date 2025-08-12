@@ -24,7 +24,7 @@ pip install jentic
 
 ### 2. Obtain your Agent API Key
 
-Visit https://jentic.com/register to create an agent and copy the key.
+Visit https://app.jentic.com/sign-in to create an agent and copy the key.
 
 
 ```bash
