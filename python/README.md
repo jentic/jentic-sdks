@@ -164,7 +164,3 @@ The integration tests validate:
 # Run all linting for jentic
 pdm run lint
 ```
-
-## License
-
-Proprietary - Jentic

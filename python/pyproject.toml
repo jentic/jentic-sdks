@@ -4,7 +4,7 @@ version = "0.9.3"
 description = "Jentic SDK for the discovery and execution of APIs and workflows"
 requires-python = ">=3.11"
 readme = "README.md"
-license = {text = "MIT"}
+license = "Apache-2.0"
 authors = [
     {name = "Jentic Labs", email = "info@jenticlabs.com"},
 ]
