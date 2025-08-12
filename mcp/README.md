@@ -28,7 +28,7 @@ You will need to install `uv` first using:
 
 ### Agent API Key
 
-Create an agent at https://jentic.com/register and copy its API key.
+Create an agent at https://app.jentic.com/sign-in and copy its API key.
 
 ```bash
 export JENTIC_AGENT_API_KEY=<your-agent-api-key>
