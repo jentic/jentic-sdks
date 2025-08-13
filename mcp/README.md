@@ -347,7 +347,3 @@ pdm run lint
 # Run only ruff
 pdm run linter
 ```
-
-## License
-
-Proprietary - Jentic
