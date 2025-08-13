@@ -179,7 +179,7 @@ class BackendAPI:
 
         # Check for status code in output, if not set it from the response
         output = data.get("output")
-        if output and isinstance(output, dict) and output.get("status_code"):
+        if output and isinstance(output, dict) and 'status_code' in output:
             data["status_code"] = output["status_code"]
         elif not data.get("status_code"):
             data["status_code"] = response.status_code
