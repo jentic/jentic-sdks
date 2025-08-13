@@ -444,7 +444,7 @@ class ExecuteResponse(BaseModel):
 
     success: bool = Field(..., description="True when the remote execution succeeded")
     status_code: int = Field(..., description="HTTP status code for the execution")
-    output: dict[str, Any] | None = Field(
+    output: Any | None = Field(
         default=None,
         description="Raw output produced by the operation/workflow (if any)",
     )
