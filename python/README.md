@@ -2,7 +2,7 @@
 
 Jentic SDK is a comprehensive library for discovery and execution of APIs and workflows.
 
-The Jentic SDK is backed by the data in the [Jentic Public API](https://github.com/jentic/jentic-public-api) repository.
+The Jentic SDK is backed by the data in the [Jentic Public APIs](https://github.com/jentic/jentic-public-apis) repository.
 
 ## Core API & Use Cases
 
@@ -105,7 +105,7 @@ pip install jentic
 
 ### API Key
 
-See the [root README](../README.md#2-obtain-your-agent-api-key) for instructions on creating an agent and exporting your `JENTIC_AGENT_API_KEY`. Remember to set it in the environment before running any examples.
+See the [root README](https://github.com/jentic/jentic-sdks?tab=readme-ov-file#2-obtain-your-agent-api-key) for instructions on creating an agent and exporting your `JENTIC_AGENT_API_KEY`. Remember to set it in the environment before running any examples.
 
 ### Testing
 

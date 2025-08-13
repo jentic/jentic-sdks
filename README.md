@@ -12,7 +12,7 @@ See the dedicated READMEs for full details:
 - [`python/README.md`](./python/README.md) – SDK usage & API reference
 - [`mcp/README.md`](./mcp/README.md) – MCP server setup & configuration
 
-The SDK is backed by the data in the [Jentic Public API](https://github.com/jentic/jentic-public-api) repository.
+The SDK is backed by the data in the [Jentic Public APIs](https://github.com/jentic/jentic-public-apis) repository.
 
 ## Quick start
 
