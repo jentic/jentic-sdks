@@ -191,9 +191,16 @@ uvx --from \
 
 This automatically uses the default `serve --transport stdio` command defined in the `mcp` script's callback.
 
-### HTTP Mode
+### HTTP Modes
 
-To run the server in HTTP mode (e.g., for testing with `claude-cli`):
+The MCP server supports two HTTP transport modes:
+
+- **Standard HTTP**: Traditional request-response HTTP mode
+- **Streamable HTTP**: HTTP mode with streaming support, compatible with MCP Inspector
+
+#### Standard HTTP Mode
+
+To run the server in standard HTTP mode (e.g., for testing with `claude-cli`):
 
 **From Local Path (Development):**
 
@@ -214,6 +221,31 @@ uvx --from /path/to/your/project/mcp mcp serve --transport http --host 0.0.0.0 -
 uvx --from \
   git+https://github.com/jentic/jentic-sdks.git@main#subdirectory=mcp \
   mcp serve --transport http --port 8080
+```
+
+#### Streamable HTTP Mode
+
+To run the server in streamable HTTP mode (compatible with MCP Inspector):
+
+**From Local Path (Development):**
+
+```bash
+# Default streamable HTTP (port 8010)
+uvx --from /path/to/your/project/mcp mcp serve --transport streamable-http
+
+# With custom port
+uvx --from /path/to/your/project/mcp mcp serve --transport streamable-http --port 8080
+
+# With custom host
+uvx --from /path/to/your/project/mcp mcp serve --transport streamable-http --host 0.0.0.0 --port 8080
+```
+
+**From Remote Repository (Recommended):**
+
+```bash
+uvx --from \
+  git+https://github.com/jentic/jentic-sdks.git@main#subdirectory=mcp \
+  mcp serve --transport streamable-http --port 8080
 ```
 
 ### Running from a Remote Git Repository
@@ -249,6 +281,14 @@ uvx --from \
   serve --transport http --port 8080
 ```
 
+To run in streamable HTTP mode from a remote source:
+
+```bash
+uvx --from \
+  git+https://github.com/jentic/jentic-sdks.git@main#subdirectory=mcp \
+  serve --transport streamable-http --port 8080
+```
+
 ### Other Options
 
 #### Logging
@@ -257,10 +297,12 @@ uvx --from \
 # Set logging level (applies to default stdio or explicit serve)
 uvx --from /path/to/your/project/mcp mcp --log-level DEBUG
 uvx --from /path/to/your/project/mcp mcp serve --transport http --log-level DEBUG
+uvx --from /path/to/your/project/mcp mcp serve --transport streamable-http --log-level DEBUG
 
 # Log to file (applies to default stdio or explicit serve)
 uvx --from /path/to/your/project/mcp mcp --log-file jentic_mcp.log
 uvx --from /path/to/your/project/mcp mcp serve --transport http --log-file jentic_mcp.log
+uvx --from /path/to/your/project/mcp mcp serve --transport streamable-http --log-file jentic_mcp.log
 ```
 
 #### Mock Mode
@@ -273,6 +315,9 @@ uvx --from /path/to/your/project/mcp mcp --mock
 
 # Mock mode with explicit HTTP
 uvx --from /path/to/your/project/mcp mcp serve --transport http --mock
+
+# Mock mode with streamable HTTP
+uvx --from /path/to/your/project/mcp mcp serve --transport streamable-http --mock
 ```
 
 #### Environment Variables
@@ -285,6 +330,9 @@ uvx --from /path/to/your/project/mcp mcp --env-file .env
 
 # Env file with explicit HTTP
 uvx --from /path/to/your/project/mcp mcp serve --transport http --env-file .env
+
+# Env file with streamable HTTP
+uvx --from /path/to/your/project/mcp mcp serve --transport streamable-http --env-file .env
 ```
 
 ### Using with Claude
@@ -320,7 +368,6 @@ See [CLAUDE.md](CLAUDE.md) for detailed development instructions.
 ### Package Structure
 
 - `src/mcp/`: Main MCP package
-  - `transport/`: Transport implementations (HTTP, stdio)
   - `mock/`: Mock data providers for development
   - `tools.py`: Tool definitions
   - `handlers.py`: Request handlers

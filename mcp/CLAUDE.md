@@ -12,8 +12,9 @@
 - Run specific test: `pdm run test tests/test_tools.py`
 - Run linters: `pdm run lint` (includes black, isort, ruff, mypy)
 - Run MCP HTTP server: `pdm run mcp-http`
+- Run MCP streamable HTTP server: `pdm run mcp-streamable-http`
 - Run MCP stdio mode: `pdm run mcp-stdio` (Note: Use only for ad hoc testing)
-- Run with mock data: `pdm run mcp-mock-http`, `pdm run mcp-mock-stdio`
+- Run with mock data: `pdm run mcp-mock-http`, `pdm run mcp-mock-streamable-http`, `pdm run mcp-mock-stdio`
 - Run with debug stdio: `pdm run mcp-debug-stdio`
 - Run with debug logging: `pdm run mcp serve --transport http --log-level DEBUG`
 - Log to file: `pdm run mcp serve --transport http --log-file jentic_mcp.log`
