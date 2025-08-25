@@ -92,6 +92,7 @@ class TransportMode(str, Enum):
     """Transport mode options."""
 
     HTTP = "http"
+    STREAMABLE_HTTP = "streamable-http"
     STDIO = "stdio"
 
 
@@ -116,7 +117,7 @@ def main(ctx: typer.Context):
 @app.command()
 def serve(
     transport: TransportMode = typer.Option(
-        TransportMode.HTTP, "--transport", "-t", help="Transport mode (http or stdio)"
+        TransportMode.HTTP, "--transport", "-t", help="Transport mode (http, streamable-http or stdio)"
     ),
     port: int = typer.Option(
         8010, "--port", "-p", help="Port to serve the MCP plugin on (HTTP mode only)"
@@ -175,6 +176,13 @@ def serve(
     # Initialize the appropriate transport
     if transport == TransportMode.HTTP:
         transport_instance = HTTPTransport(adapter, host=host, port=port)
+    elif transport == TransportMode.STREAMABLE_HTTP:
+        from mcp.transport.streamable_http import StreamableHTTPTransport
+        transport_instance = StreamableHTTPTransport(adapter, host=host, port=port)
+        logger.info(f"Starting Streamable HTTP server on {host}:{port}")
+        logger.info(f"GET/POST: http://{host}:{port}/")
+        logger.info(f"Health: http://{host}:{port}/health")
+        logger.info("Compatible with MCP Inspector!")
     else:  # stdio mode
         logger.info("ARK² MCP Plugin initializing in stdio mode")
         logger.info(f"Log file: {log_file or os.path.join(os.getcwd(), 'jentic_ark2_mcp.log')}")
