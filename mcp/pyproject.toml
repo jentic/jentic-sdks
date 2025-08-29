@@ -49,8 +49,10 @@ test = "pytest"
 test-real-integration = "python scripts/run_real_integration_test.py"
 # Keep mcp run commands for local pdm testing if desired
 mcp-http = "python -m mcp.main serve --transport http"
+mcp-streamable-http = "python -m mcp.main serve --transport streamable-http"
 mcp-stdio = "python -m mcp.main serve --transport stdio"
 mcp-mock-http = "python -m mcp.main serve --transport http --mock"
+mcp-mock-streamable-http = "python -m mcp.main serve --transport streamable-http --mock"
 mcp-mock-stdio = "python -m mcp.main serve --transport stdio --mock"
 mcp-debug-stdio = "python -m mcp.main serve --transport stdio --mock --debug-stdio --log-level DEBUG"
 
