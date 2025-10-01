@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:471028489dce4c2a14d78d08efe7499949b7ebb53628a75485934795a12010de"
+content_hash = "sha256:cf14c28c4379f9fdac66c3294c13cfd9d7ab2c544d985e0dd1fc564afa697a0b"
 
 [[metadata.targets]]
 requires_python = ">=3.11"
@@ -68,8 +68,8 @@ files = [
 
 [[package]]
 name = "arazzo-runner"
-version = "0.8.19"
-requires_python = ">=3.11"
+version = "0.9.2"
+requires_python = "<4.0,>=3.11"
 summary = "Execution libraries and test tools for Arazzo workflows and Open API operations"
 groups = ["default"]
 dependencies = [
@@ -80,8 +80,8 @@ dependencies = [
     "requests>=2.28.0",
 ]
 files = [
-    {file = "arazzo_runner-0.8.19-py3-none-any.whl", hash = "sha256:983f61fdea1148b8b689f0e83bed967ea5041c364b5413fefde6127cfda8f2e7"},
-    {file = "arazzo_runner-0.8.19.tar.gz", hash = "sha256:3bc8200c576472500d09e4d3407e2418b57fe0812f8ac369baf9578e25d1103e"},
+    {file = "arazzo_runner-0.9.2-py3-none-any.whl", hash = "sha256:9065fd012133b37eed2f53ba0fb22d3f7c8f228a02362cb90bde01c1f736a990"},
+    {file = "arazzo_runner-0.9.2.tar.gz", hash = "sha256:29382f84a298e5f650860fad8c82de41166c9353ea3f00a2012dddbffb404fff"},
 ]
 
 [[package]]
