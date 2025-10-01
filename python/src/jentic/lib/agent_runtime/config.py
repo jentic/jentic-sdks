@@ -325,12 +325,13 @@ class JenticConfig:
                 and getattr(operation_entry, "method", None)
             ):
                 try:
+                    logger.info(f"Extracting operation IO for {operation_uuid}")
                     io_details = extract_operation_io(
                         openapi_spec,
                         operation_entry.path,
                         operation_entry.method.lower(),
-                        input_max_depth=4,
-                        output_max_depth=2,
+                        input_max_depth=6,
+                        output_max_depth=4,
                     )
                 except Exception as e:
                     logger.error(f"Failed to extract operation IO for {operation_uuid}: {e}")
