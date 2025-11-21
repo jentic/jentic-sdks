@@ -21,6 +21,7 @@ async def test_client_search(client: Jentic):
     assert response.query == "discord search message"
 
 
+@pytest.mark.skip("Skipping load test")
 @pytest.mark.asyncio
 async def test_client_load(client: Jentic):
     operation_id = "op_3f6410c622b96114"

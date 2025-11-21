@@ -3,7 +3,7 @@ import logging
 from collections.abc import Callable
 from functools import wraps
 from typing import Any, cast
-
+import os
 import httpx
 from httpx import Response
 import tenacity
@@ -179,7 +179,7 @@ class BackendAPI:
 
         # Check for status code in output, if not set it from the response
         output = data.get("output")
-        if output and isinstance(output, dict) and 'status_code' in output:
+        if output and isinstance(output, dict) and "status_code" in output:
             data["status_code"] = output["status_code"]
         elif not data.get("status_code"):
             data["status_code"] = response.status_code
@@ -193,6 +193,13 @@ class BackendAPI:
             "X-JENTIC-API-KEY": self._cfg.agent_api_key,
             "X-JENTIC-USER-AGENT": self._cfg.user_agent,
         }
+
+        if os.getenv("x-jentic-identity"):
+            headers["x-jentic-identity"] = os.getenv("x-jentic-identity")
+        if os.getenv("x-jentic-session-id"):
+            headers["x-jentic-session-id"] = os.getenv("x-jentic-session-id")
+        if os.getenv("x-jentic-agent-session-key"):
+            headers["x-jentic-agent-session-key"] = os.getenv("x-jentic-agent-session-key")
 
         # Timeouts (connect, read, write, pool)
         timeouts = httpx.Timeout(
