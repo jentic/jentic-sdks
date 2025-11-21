@@ -3,7 +3,7 @@ import logging
 from collections.abc import Callable
 from functools import wraps
 from typing import Any, cast
-
+import os
 import httpx
 from httpx import Response
 import tenacity
@@ -193,6 +193,11 @@ class BackendAPI:
             "X-JENTIC-API-KEY": self._cfg.agent_api_key,
             "X-JENTIC-USER-AGENT": self._cfg.user_agent,
         }
+
+        if os.getenv("x-jentic-identity"):
+            headers["x-jentic-identity"] = os.getenv("x-jentic-identity")
+        if os.getenv("x-jentic-session-id"):
+            headers["x-jentic-session-id"] = os.getenv("x-jentic-session-id")
 
         # Timeouts (connect, read, write, pool)
         timeouts = httpx.Timeout(
