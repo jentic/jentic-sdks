@@ -3,6 +3,7 @@ import json
 from typing import Any, Dict
 
 import jentic
+
 try:
     import click  # type: ignore
 except Exception:  # pragma: no cover - graceful fallback if click missing
@@ -78,7 +79,10 @@ def _infer_inputs(schema: Dict[str, Any] | None, *, topic: str) -> Dict[str, Any
     for name, prop_schema in properties.items():
         if name in inputs:
             continue
-        if any(k in name.lower() for k in ["query", "q", "search", "topic", "keywords", "limit", "count"]):
+        if any(
+            k in name.lower()
+            for k in ["query", "q", "search", "topic", "keywords", "limit", "count"]
+        ):
             inputs[name] = default_for(name, prop_schema)
 
     return inputs
@@ -89,7 +93,9 @@ async def concept_find_articles_about_ai(client: jentic.Jentic) -> int:
 
     query = "find articles about AI"
     print(f"Searching: {query}")
-    search_response = await client.search(jentic.SearchRequest(query=query, limit=5, filter_by_credentials=False))
+    search_response = await client.search(
+        jentic.SearchRequest(query=query, limit=5, filter_by_credentials=False)
+    )
 
     if not search_response.results:
         print("No results found.")
@@ -181,6 +187,8 @@ async def concept_send_discord_message(
         print(f"Output: {out_preview}")
 
     return 0 if exec_resp.success else 1
+
+
 def main() -> None:
     if click is None:
         print("This CLI requires 'click'. Install it with: pip install click")
@@ -206,7 +214,9 @@ def main() -> None:
         ctx.obj["agent_key"] = agent_key
         ctx.obj["environment"] = environment
 
-    @cli.command("articles-ai", help="Run the 'find articles about AI' concept (search → load → execute)")
+    @cli.command(
+        "articles-ai", help="Run the 'find articles about AI' concept (search → load → execute)"
+    )
     @click.pass_context
     def articles_ai(ctx: Any) -> None:  # noqa: ANN401 - click runtime
         config = jentic.AgentConfig(
@@ -240,4 +250,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

@@ -1,5 +1,6 @@
 import os
 from dataclasses import dataclass
+from typing import cast
 
 from jentic.lib.exc import JenticEnvironmentError, MissingAgentKeyError
 
@@ -49,7 +50,17 @@ class AgentConfig:
         if environment not in _ENDPOINTS:
             raise JenticEnvironmentError(f"Invalid environment: {environment}")
 
+        # Expose timeouts as environment variables
+        connect_timeout = cast(float, os.getenv("JENTIC_CONNECT_TIMEOUT", 10.0))
+        read_timeout = cast(float, os.getenv("JENTIC_READ_TIMEOUT", 10.0))
+        write_timeout = cast(float, os.getenv("JENTIC_WRITE_TIMEOUT", 120.0))
+        pool_timeout = cast(float, os.getenv("JENTIC_POOL_TIMEOUT", 120.0))
+
         return AgentConfig(
             agent_api_key=agent_api_key,
             environment=environment,
+            connect_timeout=connect_timeout,
+            read_timeout=read_timeout,
+            write_timeout=write_timeout,
+            pool_timeout=pool_timeout,
         )

@@ -198,8 +198,8 @@ class BackendAPI:
             headers["x-jentic-identity"] = os.getenv("x-jentic-identity")
         if os.getenv("x-jentic-session-id"):
             headers["x-jentic-session-id"] = os.getenv("x-jentic-session-id")
-        if os.getenv("x-jentic-agent-session-key"):
-            headers["x-jentic-agent-session-key"] = os.getenv("x-jentic-agent-session-key")
+        if os.getenv("x-jentic-agent-session-id"):
+            headers["x-jentic-agent-session-id"] = os.getenv("x-jentic-agent-session-id")
 
         # Timeouts (connect, read, write, pool)
         timeouts = httpx.Timeout(
