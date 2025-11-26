@@ -1,6 +1,6 @@
 [project]
 name = "jentic"
-version = "0.9.6"
+version = "0.9.7"
 description = "Jentic SDK for the discovery and execution of APIs and workflows"
 requires-python = ">=3.11"
 readme = "README.md"
