@@ -76,7 +76,7 @@ print(result)
 
 It is reccomended to use the Remote MCP server. [See instructions here](https://docs.jentic.com/guides/mcp/remote-mcp/).
 
-To expose the same capabilities via MCP, follow the instructions in [`mcp/README.md`](./mcp/README.md).
+If you would prefer to use the legacy local MCP server, follow the instructions in [`mcp/README.md`](./mcp/README.md).
 
 ```bash
 uvx --from \
