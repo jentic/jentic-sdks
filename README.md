@@ -74,6 +74,8 @@ print(result)
 
 ## Using the MCP plugin
 
+It is reccomended to use the Remote MCP server. [See instructions here](https://docs.jentic.com/guides/mcp/remote-mcp/).
+
 To expose the same capabilities via MCP, follow the instructions in [`mcp/README.md`](./mcp/README.md).
 
 ```bash
