@@ -10,6 +10,7 @@ from jentic.lib.exc import JenticEnvironmentError, MissingAgentKeyError
 _ENDPOINTS = {
     "prod": "https://api-gw.main.us-east-1.jenticprod.net/api/v1/",
     "qa": "https://api-gw.qa1.eu-west-1.jenticdev.net/api/v1/",
+    "qa2": "https://api-gw.qa2.eu-west-1.jenticdev.net/api/v1/",
 }
 
 

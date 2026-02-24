@@ -204,13 +204,44 @@ class WorkflowExecutionDetails(BaseModel):
     )
 
 
+class APIReferenceSummary(BaseModel):
+    """Lightweight API reference returned inside search results."""
+
+    api_id: str = Field(default="", description="UUID of the referenced API")
+    api_name: str = Field(default="", description="Human-readable name of the API")
+    api_version: str = Field(default="", description="Version string of the referenced API")
+
+
+def _derive_api_name(data: dict[str, Any]) -> str:
+    """Extract a single api_name from raw search-result data.
+
+    Prefers an explicit ``api_name`` string.  Falls back to the first entry
+    in ``api_references`` when the top-level field is absent (new
+    ``WorkflowSearchResult`` format).
+    """
+    api_name = data.get("api_name")
+    if api_name:
+        return str(api_name)
+
+    api_refs = data.get("api_references")
+    if api_refs and isinstance(api_refs, list) and len(api_refs) > 0:
+        first = api_refs[0]
+        if isinstance(first, dict):
+            name = first.get("api_name", "")
+            if name:
+                return str(name)
+        elif hasattr(first, "api_name") and first.api_name:
+            return str(first.api_name)
+    return ""
+
+
 class SearchResult(BaseModel):
     """Single hit returned by the semantic search endpoint."""
 
     id: str = Field(..., description="UUID of the matched entity (op_… / wf_…)")
     path: str = Field(..., description="HTTP path template of the operation (empty for workflows)")
     method: str = Field(..., description="HTTP method in upper-case (GET, POST, …)")
-    api_name: str = Field(..., description="API name that owns the match")
+    api_name: str = Field(default="", description="API name that owns the match")
     entity_type: str = Field(..., description="'operation' or 'workflow'")
     summary: str = Field(..., description="Short label or summary for the hit")
     description: str = Field(..., description="Longer textual description from the spec")
@@ -224,29 +255,35 @@ class SearchResult(BaseModel):
         default=None,
         description="Friendly workflow_id (present for workflow hits)",
     )
+    api_references: list[APIReferenceSummary] | None = Field(
+        default=None,
+        description="All API references for this entity (present for workflow hits in new format)",
+    )
 
     @model_validator(mode="before")
     @classmethod
     def set_data(cls, data: Any) -> dict[str, Any]:
+        if not isinstance(data, dict):
+            return data
+
         if data.get("entity_type") == "operation":
             summary = data.get("summary", "")
         else:
             summary = data.get("name", data.get("workflow_id", ""))
 
-        if isinstance(data, dict):
-            return {
-                "id": data.get("id", ""),
-                "entity_type": data.get("entity_type", ""),
-                "summary": summary,
-                "description": data.get("description", ""),
-                "path": data.get("path", ""),
-                "method": data.get("method", ""),
-                "api_name": data.get("api_name", ""),
-                "match_score": data.get("distance", 0.0),
-                "operation_id": data.get("operation_id", None),
-                "workflow_id": data.get("workflow_id", None),
-            }
-        return data
+        return {
+            "id": data.get("id", ""),
+            "entity_type": data.get("entity_type", ""),
+            "summary": summary,
+            "description": data.get("description", ""),
+            "path": data.get("path", ""),
+            "method": data.get("method", ""),
+            "api_name": _derive_api_name(data),
+            "match_score": data.get("distance", data.get("match_score", 0.0)),
+            "operation_id": data.get("operation_id", None),
+            "workflow_id": data.get("workflow_id", None),
+            "api_references": data.get("api_references", None),
+        }
 
 
 # Search request and response models #
