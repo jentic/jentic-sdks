@@ -30,6 +30,12 @@ def test_cfg_from_env__happy_path(monkeypatch):
     assert cfg.environment == "qa"
     assert cfg.core_api_url == "https://api-gw.qa1.eu-west-1.jenticdev.net/api/v1/"
 
+    monkeypatch.setenv("JENTIC_AGENT_API_KEY", "ak_19814bi2f98jhwg")
+    monkeypatch.setenv("JENTIC_ENVIRONMENT", "qa2")
+    cfg = AgentConfig.from_env()
+    assert cfg.environment == "qa2"
+    assert cfg.core_api_url == "https://api-gw.qa2.eu-west-1.jenticdev.net/api/v1/"
+
 
 def test_cfg_from_env__timeouts_defaults(monkeypatch):
     # Ensure required env vars are set and timeout vars are *not* set
